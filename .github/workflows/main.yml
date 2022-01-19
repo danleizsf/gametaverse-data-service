@@ -39,16 +39,13 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o main main.go && zip deployment.zip main 
 
       # Runs a set of commands using the runners shell
-      - name: Default deploy
-        uses: appleboy/lambda-action@master
+      - name: Configure AWS Credentials  
+        uses: aws-actions/configure-aws-credentials@v1 #--> Setup the Credential for the AWS cli
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          function_name: getGamerPerformance
-          zip_file: deployment.zip
-          memory_size: 128
-          timeout: 10
-          handler: main
-          role: arn:aws:iam::851823330374:role/service-role/getGamerPerformance-role-tjckx66p
-          runtime: go1.x
+        # Created the Secrets Under the Repo only with These Variables
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }} #--> Define Region of the AWS-CLI 
+      - name: Deploy
+        run: |
+          aws lambda update-function-code --function-name=getGamerPerformance --zip-file=fileb://deploy.zip
