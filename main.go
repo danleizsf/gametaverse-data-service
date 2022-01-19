@@ -13,7 +13,7 @@ import (
 
 func hello() (string, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1"),
+		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
@@ -29,7 +29,7 @@ func hello() (string, error) {
 	for _, b := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(b.Name), aws.TimeValue(b.CreationDate))
 	}
-	return "Address: Performance", nil
+	return "Address: {earning: $10}", nil
 }
 
 func exitErrorf(msg string, args ...interface{}) {
