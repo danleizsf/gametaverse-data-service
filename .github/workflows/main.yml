@@ -51,4 +51,4 @@ jobs:
           timeout: 10
           handler: main
           role: arn:aws:iam::851823330374:role/service-role/getGamerPerformance-role-tjckx66p
-          runtime: nodejs12.x
+          runtime: go 1.x
