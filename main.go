@@ -29,7 +29,7 @@ func hello() (string, error) {
 	for _, b := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(b.Name), aws.TimeValue(b.CreationDate))
 	}
-	return "Address: {earning: $10}", nil
+	return "Address: {earning: $11}", nil
 }
 
 func exitErrorf(msg string, args ...interface{}) {
