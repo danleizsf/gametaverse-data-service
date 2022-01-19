@@ -12,7 +12,7 @@ import (
 )
 
 func hello() (string, error) {
-	sess, err := session.NewSession(&aws.Config{
+	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
