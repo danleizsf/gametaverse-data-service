@@ -48,4 +48,4 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }} #--> Define Region of the AWS-CLI 
       - name: Deploy
         run: |
-          aws lambda update-function-code --function-name=getGamerPerformance --zip-file=deploy.zip
+          aws lambda update-function-code --function-name=getGamerPerformance --zip-file=fileb://deployment.zip
