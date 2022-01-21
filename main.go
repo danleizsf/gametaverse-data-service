@@ -34,7 +34,7 @@ func hello() (string, error) {
 		}
 
 		for _, item := range resp.Contents {
-			log.Printf("file name: %s\n", item.Key)
+			log.Printf("file name: %s\n", *item.Key)
 		}
 		log.Println()
 	}
