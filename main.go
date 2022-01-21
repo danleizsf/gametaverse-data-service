@@ -130,7 +130,7 @@ func converCsvStringToTransactionStructs(csvString string) []Transaction {
 
 func getDau(transactions []Transaction, timestamp int64) int {
 	date := time.Unix(timestamp, 0).UTC()
-	log.Printf("timestamp: %s, date: %s", timestamp, date)
+	log.Printf("timestamp: %d, date: %s", timestamp, date)
 	uniqueAddresses := make(map[string]bool)
 	for _, transaction := range transactions {
 		transactionDate := time.Unix(transaction.BlockTimestamp, 0).UTC()
