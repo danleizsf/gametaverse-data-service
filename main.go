@@ -50,7 +50,7 @@ func hello() (string, error) {
 			if err != nil {
 				exitErrorf("Unable to download file, %v", err)
 			}
-			log.Printf("Downloaded\n", *item.Key, numBytes)
+			log.Printf("Downloaded: %s, %v\n", *item.Key, numBytes)
 		}
 		log.Println()
 	}
