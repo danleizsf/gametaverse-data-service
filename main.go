@@ -38,7 +38,7 @@ func hello() (string, error) {
 
 		for _, item := range resp.Contents {
 			log.Printf("file name: %s\n", *item.Key)
-			file, err := os.Create(string(*item.Key))
+			file, err := os.Create(string("bo"))
 			if err != nil {
 				exitErrorf("Unable to create tmp file, %v", err)
 			}
