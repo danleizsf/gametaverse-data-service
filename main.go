@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,24 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
+
+type Transaction struct {
+	TransactionHash      string
+	Nonce                string
+	BlockHash            string
+	BlockNumber          int
+	TransactionIndex     int
+	FromAddress          string
+	ToAddress            string
+	Value                int
+	Gas                  int
+	GasPrice             int
+	Input                string
+	BlockTimestamp       int
+	MaxFeePerGas         int
+	MaxPriorityFeePerGas int
+	TransactionType      string
+}
 
 func hello() (string, error) {
 	sess, _ := session.NewSession(&aws.Config{
@@ -54,23 +74,47 @@ func hello() (string, error) {
 			}
 			bodyString := fmt.Sprintf("%s", body)
 			log.Printf("Downloaded content: %s\n", bodyString)
-			//file, err := os.Create(string(*item.Key))
-			//if err != nil {
-			//	exitErrorf("Unable to create tmp file, %v", err)
-			//}
-			//numBytes, err := downloader.Download(file,
-			//	&s3.GetObjectInput{
-			//		Bucket: aws.String(*bucket.Name),
-			//		Key:    aws.String(*item.Key),
-			//	})
-			//if err != nil {
-			//	exitErrorf("Unable to download file, %v", err)
-			//}
-			//log.Printf("Downloaded: %s, %s\n", *item.Key, string(numBytes))
 		}
 		log.Println()
 	}
 	return "address: {earning: $12}", nil
+}
+
+func converCsvStringToTransactionStructs(csvString string) []Transaction {
+	lines := strings.Split(csvString, "\n")
+	transactions := make([]Transaction, len(lines)-1)
+	for lineNum, lineString := range lines {
+		if lineNum == 0 {
+			continue
+		}
+		fields := strings.Split(lineString, ",")
+		blockNumber, _ := strconv.Atoi(fields[3])
+		transactionIndex, _ := strconv.Atoi(fields[4])
+		value, _ := strconv.Atoi(fields[7])
+		gas, _ := strconv.Atoi(fields[8])
+		gasPrice, _ := strconv.Atoi(fields[9])
+		blockTimestamp, _ := strconv.Atoi(fields[11])
+		maxFeePerGas, _ := strconv.Atoi(fields[12])
+		maxPriorityFeePerGas, _ := strconv.Atoi(fields[13])
+		transactions = append(transactions, Transaction{
+			TransactionHash:      fields[0],
+			Nonce:                fields[1],
+			BlockHash:            fields[2],
+			BlockNumber:          blockNumber,
+			TransactionIndex:     transactionIndex,
+			FromAddress:          fields[5],
+			ToAddress:            fields[6],
+			Value:                value,
+			Gas:                  gas,
+			GasPrice:             gasPrice,
+			Input:                fields[10],
+			BlockTimestamp:       blockTimestamp,
+			MaxFeePerGas:         maxFeePerGas,
+			MaxPriorityFeePerGas: maxPriorityFeePerGas,
+			TransactionType:      fields[14],
+		})
+	}
+	return transactions
 }
 
 func exitErrorf(msg string, args ...interface{}) {
