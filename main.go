@@ -38,7 +38,7 @@ func hello() (string, error) {
 
 		for _, item := range resp.Contents {
 			log.Printf("file name: %s\n", *item.Key)
-			file, err := os.Create(*item.Key)
+			file, err := os.Create(string(*item.Key))
 			if err != nil {
 				exitErrorf("Unable to create tmp file, %v", err)
 			}
@@ -50,7 +50,7 @@ func hello() (string, error) {
 			if err != nil {
 				exitErrorf("Unable to download file, %v", err)
 			}
-			log.Printf("Downloaded: %s, %v\n", *item.Key, numBytes)
+			log.Printf("Downloaded: %s, %s\n", *item.Key, string(numBytes))
 		}
 		log.Println()
 	}
