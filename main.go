@@ -2,6 +2,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -31,6 +33,7 @@ func hello() (string, error) {
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
+
 		resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(*bucket.Name)})
 		if err != nil {
 			exitErrorf("Unable to list object, %v", err)
@@ -38,19 +41,34 @@ func hello() (string, error) {
 
 		for _, item := range resp.Contents {
 			log.Printf("file name: %s\n", *item.Key)
-			file, err := os.Create(string(*item.Key))
-			if err != nil {
-				exitErrorf("Unable to create tmp file, %v", err)
-			}
-			numBytes, err := downloader.Download(file,
+			requestInput :=
 				&s3.GetObjectInput{
 					Bucket: aws.String(*bucket.Name),
 					Key:    aws.String(*item.Key),
-				})
+				}
+			result, err := svc.GetObject(requestInput)
 			if err != nil {
-				exitErrorf("Unable to download file, %v", err)
+				exitErrorf("Unable to get object, %v", err)
 			}
-			log.Printf("Downloaded: %s, %s\n", *item.Key, string(numBytes))
+			body, err := ioutil.ReadAll(result.Body)
+			if err != nil {
+				exitErrorf("Unable to get body, %v", err)
+			}
+			bodyString := fmt.Sprintf("%s", body)
+			log.Printf("Downloaded content: %s\n", bodyString)
+			//file, err := os.Create(string(*item.Key))
+			//if err != nil {
+			//	exitErrorf("Unable to create tmp file, %v", err)
+			//}
+			//numBytes, err := downloader.Download(file,
+			//	&s3.GetObjectInput{
+			//		Bucket: aws.String(*bucket.Name),
+			//		Key:    aws.String(*item.Key),
+			//	})
+			//if err != nil {
+			//	exitErrorf("Unable to download file, %v", err)
+			//}
+			//log.Printf("Downloaded: %s, %s\n", *item.Key, string(numBytes))
 		}
 		log.Println()
 	}
