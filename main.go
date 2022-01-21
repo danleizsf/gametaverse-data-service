@@ -82,7 +82,7 @@ func hello() (string, error) {
 			bodyString := fmt.Sprintf("%s", body)
 			transactions := converCsvStringToTransactionStructs(bodyString)
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-			daus[int64(dateTimestamp)] = getDau(transactions, dateTimestampint64())
+			daus[int64(dateTimestamp)] = getDau(transactions, int64(dateTimestamp))
 		}
 	}
 	return fmt.Sprintf("daus: %v", daus), nil
@@ -134,7 +134,7 @@ func getDau(transactions []Transaction, timestamp int64) int {
 	uniqueAddresses := make(map[string]bool)
 	for _, transaction := range transactions {
 		transactionDate := time.Unix(transaction.BlockTimestamp, 0).UTC()
-		log.Printf("transactionData: %s, date: %s", transactionDate, date)
+		//log.Printf("transactionData: %s, date: %s", transactionDate, date)
 		if transactionDate.Equal(date) {
 			uniqueAddresses[transaction.FromAddress] = true
 			uniqueAddresses[transaction.ToAddress] = true
