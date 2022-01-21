@@ -102,6 +102,7 @@ func converCsvStringToTransactionStructs(csvString string) []Transaction {
 		}
 		if count < 8 {
 			log.Printf("lineString: %s, fields: %v", lineString, fields)
+			log.Printf("transactions: %v", transactions)
 		}
 		count += 1
 		blockNumber, _ := strconv.Atoi(fields[3])
