@@ -136,7 +136,7 @@ func getDau(transactions []Transaction, timestamp int64) int {
 	for _, transaction := range transactions {
 		transactionDate := time.Unix(transaction.BlockTimestamp, 0).UTC()
 		if count < 8 {
-			log.Printf("transactionData: %s, date: %s", transactionDate, date)
+			log.Printf("blockTimestamp: %d, transactionDate: %s, date: %s", transaction.BlockTimestamp, transactionDate, date)
 		}
 		count += 1
 		if transactionDate.Equal(date) {
