@@ -96,6 +96,9 @@ func converCsvStringToTransactionStructs(csvString string) []Transaction {
 			continue
 		}
 		fields := strings.Split(lineString, ",")
+		if len(fields) < 15 {
+			continue
+		}
 		blockNumber, _ := strconv.Atoi(fields[3])
 		transactionIndex, _ := strconv.Atoi(fields[4])
 		value, _ := strconv.Atoi(fields[7])
