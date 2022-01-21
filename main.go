@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -21,7 +20,6 @@ func hello() (string, error) {
 	})
 
 	svc := s3.New(sess)
-	downloader := s3manager.NewDownloader(sess)
 
 	result, err := svc.ListBuckets(nil)
 
