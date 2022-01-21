@@ -145,7 +145,7 @@ func getDau(transactions []Transaction, timestamp int64) int {
 			log.Printf("transaction: %v, transactionDate: %s, date: %s", transaction, transactionDate, date)
 		}
 		count += 1
-		if transactionDate.Equal(date) {
+		if transactionDate.Year() == date.Year() && transactionDate.Month() == date.Month() && transactionDate.Day() == date.Day() {
 			uniqueAddresses[transaction.FromAddress] = true
 			uniqueAddresses[transaction.ToAddress] = true
 		}
