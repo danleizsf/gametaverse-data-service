@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
@@ -17,6 +19,7 @@ func hello() (string, error) {
 	})
 
 	svc := s3.New(sess)
+	downloader := s3manager.NewDownloader(sess)
 
 	result, err := svc.ListBuckets(nil)
 
@@ -35,6 +38,19 @@ func hello() (string, error) {
 
 		for _, item := range resp.Contents {
 			log.Printf("file name: %s\n", *item.Key)
+			file, err := os.Create(*item.Key)
+			if err != nil {
+				exitErrorf("Unable to create tmp file, %v", err)
+			}
+			numBytes, err := downloader.Download(file,
+				&s3.GetObjectInput{
+					Bucket: aws.String(*bucket.Name),
+					Key:    aws.String(*item.Key),
+				})
+			if err != nil {
+				exitErrorf("Unable to download file, %v", err)
+			}
+			log.Printf("Downloaded\n", *item.Key, numBytes)
 		}
 		log.Println()
 	}
