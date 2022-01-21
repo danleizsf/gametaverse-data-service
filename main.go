@@ -132,9 +132,13 @@ func getDau(transactions []Transaction, timestamp int64) int {
 	date := time.Unix(timestamp, 0).UTC()
 	log.Printf("timestamp: %d, date: %s", timestamp, date)
 	uniqueAddresses := make(map[string]bool)
+	count := 0
 	for _, transaction := range transactions {
 		transactionDate := time.Unix(transaction.BlockTimestamp, 0).UTC()
-		//log.Printf("transactionData: %s, date: %s", transactionDate, date)
+		if count < 8 {
+			log.Printf("transactionData: %s, date: %s", transactionDate, date)
+		}
+		count += 1
 		if transactionDate.Equal(date) {
 			uniqueAddresses[transaction.FromAddress] = true
 			uniqueAddresses[transaction.ToAddress] = true
