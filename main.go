@@ -82,7 +82,7 @@ func hello() (string, error) {
 			bodyString := fmt.Sprintf("%s", body)
 			transactions := converCsvStringToTransactionStructs(bodyString)
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-			daus[int64(dateTimestamp)] = getDau(transactions, 111)
+			daus[int64(dateTimestamp)] = getDau(transactions, int64(dateTimestamp))
 		}
 	}
 	return fmt.Sprintf("daus: %v", daus), nil
