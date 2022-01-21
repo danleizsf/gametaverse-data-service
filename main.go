@@ -26,8 +26,17 @@ func hello() (string, error) {
 
 	log.Printf("Buckets:")
 
-	for _, b := range result.Buckets {
-		log.Printf("* %s created on %s\n", aws.StringValue(b.Name), aws.TimeValue(b.CreationDate))
+	for _, bucket := range result.Buckets {
+		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
+		resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(*bucket.Name)})
+		if err != nil {
+			exitErrorf("Unable to list object, %v", err)
+		}
+
+		for _, item := range resp.Contents {
+			log.Printf("file name: %s\n", item.Key)
+		}
+		log.Println()
 	}
 	return "address: {earning: $12}", nil
 }
