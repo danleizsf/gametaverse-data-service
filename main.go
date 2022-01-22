@@ -86,7 +86,7 @@ func hello() (string, error) {
 			daus[dateString] = getDau(transactions, int64(dateTimestamp))
 		}
 	}
-	return fmt.Sprintf("daus: %v", daus), nil
+	return fmt.Sprintf("{starsharks: %v}", daus), nil
 }
 
 func converCsvStringToTransactionStructs(csvString string) []Transaction {
