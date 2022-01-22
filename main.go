@@ -83,7 +83,7 @@ func hello() (string, error) {
 			transactions := converCsvStringToTransactionStructs(bodyString)
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 			dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			log.Printf(dateString)
+			log.Printf("timestamp %d, formated string %s", dateTimestamp, dateString)
 			daus[dateString] = getDau(transactions, int64(dateTimestamp))
 		}
 	}
