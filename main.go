@@ -54,7 +54,7 @@ func hello() (string, error) {
 	}
 
 	log.Printf("Buckets:")
-	daus := make(map[time.Time]int)
+	daus := make(map[string]int)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
@@ -82,8 +82,8 @@ func hello() (string, error) {
 			bodyString := fmt.Sprintf("%s", body)
 			transactions := converCsvStringToTransactionStructs(bodyString)
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-			date := time.Unix(int64(dateTimestamp), 0).UTC()
-			daus[date] = getDau(transactions, int64(dateTimestamp))
+			dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-01-01")
+			daus[dateString] = getDau(transactions, int64(dateTimestamp))
 		}
 	}
 	return fmt.Sprintf("daus: %v", daus), nil
