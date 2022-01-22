@@ -82,9 +82,11 @@ func hello() (string, error) {
 			bodyString := fmt.Sprintf("%s", body)
 			transactions := converCsvStringToTransactionStructs(bodyString)
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-			dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			log.Printf("timestamp %d, formated string %s", dateTimestamp, dateString)
-			daus[dateString] = getDau(transactions, int64(dateTimestamp))
+			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+			dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
+			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
+			//log.Printf("timestamp %d, formated string %s", dateTimestamp, dateString)
+			daus[dateFormattedString] = getDau(transactions, int64(dateTimestamp))
 		}
 	}
 	return fmt.Sprintf("{starsharks: %v}", daus), nil
