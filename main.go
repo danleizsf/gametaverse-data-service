@@ -92,11 +92,11 @@ func hello() (string, error) {
 			bodyString := fmt.Sprintf("%s", body)
 			//transactions := converCsvStringToTransactionStructs(bodyString)
 			transfers := converCsvStringToTransferStructs(bodyString)
+			log.Printf("transfer num: %d", len(transfers))
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 			dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
 			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
-			//log.Printf("timestamp %d, formated string %s", dateTimestamp, dateString)
 			//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
 			daus[dateFormattedString] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
 		}
@@ -154,6 +154,7 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 	lines := strings.Split(csvString, "\n")
 	transfers := make([]Transfer, 0)
 	count := 0
+	log.Printf("enterred converCsvStringToTransferStructs")
 	for lineNum, lineString := range lines {
 		if lineNum == 0 {
 			continue
