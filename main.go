@@ -160,6 +160,9 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 			continue
 		}
 		fields := strings.Split(lineString, ",")
+		if len(fields) < 7 {
+			continue
+		}
 		if count < 8 {
 			log.Printf("lineString: %s, fields: %v", lineString, fields)
 			log.Printf("transfers: %v", transfers)
