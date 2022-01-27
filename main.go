@@ -36,13 +36,13 @@ type Transaction struct {
 }
 
 type Transfer struct {
-	TokenAddress      string
-	FromAddress          string
-	ToAddress            string
-	Value                int
-	TransactionHash      string
-	LogIndex int
-	BlockNumber          int
+	TokenAddress    string
+	FromAddress     string
+	ToAddress       string
+	Value           int
+	TransactionHash string
+	LogIndex        int
+	BlockNumber     int
 }
 
 type Dau struct {
@@ -160,9 +160,6 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 			continue
 		}
 		fields := strings.Split(lineString, ",")
-		if len(fields) < 15 {
-			continue
-		}
 		if count < 8 {
 			log.Printf("lineString: %s, fields: %v", lineString, fields)
 			log.Printf("transfers: %v", transfers)
@@ -172,13 +169,13 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 		value, _ := strconv.Atoi(fields[3])
 		logIndex, _ := strconv.Atoi(fields[3])
 		transfers = append(transfers, Transfer{
-			TokenAddress:      fields[0],
-			FromAddress:                fields[1],
-			ToAddress:            fields[2],
-			Value:                value,
+			TokenAddress:    fields[0],
+			FromAddress:     fields[1],
+			ToAddress:       fields[2],
+			Value:           value,
 			TransactionHash: fields[4],
-			LogIndex: logIndex,
-			BlockNumber: blockNumber,
+			LogIndex:        logIndex,
+			BlockNumber:     blockNumber,
 		})
 	}
 	return transfers
