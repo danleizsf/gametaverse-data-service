@@ -154,7 +154,7 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 	lines := strings.Split(csvString, "\n")
 	transfers := make([]Transfer, 0)
 	count := 0
-	log.Printf("enterred converCsvStringToTransferStructs")
+	log.Printf("enterred converCsvStringToTransferStructs, content len: %d", len(lines))
 	for lineNum, lineString := range lines {
 		if lineNum == 0 {
 			continue
