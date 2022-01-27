@@ -165,14 +165,14 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 		if len(fields) < 7 {
 			continue
 		}
-		if count < 8 {
-			log.Printf("lineString: %s, fields: %v", lineString, fields)
-			log.Printf("transfers: %v", transfers)
-		}
 		count += 1
 		blockNumber, _ := strconv.Atoi(fields[6])
 		value, _ := strconv.ParseInt(fields[3], 10, 64)
 		logIndex, _ := strconv.Atoi(fields[5])
+		if count < 8 {
+			log.Printf("lineString: %s, fields: %v", lineString, fields)
+			log.Printf("value: %v", value)
+		}
 		transfers = append(transfers, Transfer{
 			TokenAddress:    fields[0],
 			FromAddress:     fields[1],
