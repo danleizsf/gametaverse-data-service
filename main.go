@@ -39,7 +39,7 @@ type Transfer struct {
 	TokenAddress    string
 	FromAddress     string
 	ToAddress       string
-	Value           int
+	Value           int64
 	TransactionHash string
 	LogIndex        int
 	BlockNumber     int
@@ -65,7 +65,7 @@ func hello() (string, error) {
 
 	log.Printf("Buckets:")
 	daus := make(map[string]int)
-	dailyTransactionVolume := make(map[string]int)
+	dailyTransactionVolume := make(map[string]int64)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
@@ -171,7 +171,7 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 		}
 		count += 1
 		blockNumber, _ := strconv.Atoi(fields[6])
-		value, _ := strconv.Atoi(fields[3])
+		value, _ := strconv.ParseInt(fields[3], 10, 64)
 		logIndex, _ := strconv.Atoi(fields[5])
 		transfers = append(transfers, Transfer{
 			TokenAddress:    fields[0],
@@ -221,8 +221,8 @@ func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
 	return len(uniqueAddresses)
 }
 
-func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) int {
-	volume := 0
+func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) int64 {
+	volume := int64(0)
 	count := 0
 	for _, transfer := range transfers {
 		if count < 8 {
