@@ -212,8 +212,8 @@ func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
 			log.Printf("transfer: %v", transfer)
 		}
 		count += 1
-		uniqueAddresses[transaction.FromAddress] = true
-		uniqueAddresses[transaction.ToAddress] = true
+		uniqueAddresses[transfer.FromAddress] = true
+		uniqueAddresses[transfer.ToAddress] = true
 	}
 	return len(uniqueAddresses)
 }
