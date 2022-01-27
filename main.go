@@ -65,6 +65,7 @@ func hello() (string, error) {
 
 	log.Printf("Buckets:")
 	daus := make(map[string]int)
+	dailyTransactionVolume := make(map[string]int)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
@@ -99,9 +100,10 @@ func hello() (string, error) {
 			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
 			//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
 			daus[dateFormattedString] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
+			dailyTransactionVolume[dateFormattedString] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
 		}
 	}
-	return fmt.Sprintf("{starsharks: %v}", daus), nil
+	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v}}", daus, dailyTransactionVolume), nil
 }
 
 func converCsvStringToTransactionStructs(csvString string) []Transaction {
@@ -218,6 +220,20 @@ func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
 	}
 	return len(uniqueAddresses)
 }
+
+func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) int {
+	volume := 0
+	count := 0
+	for _, transfer := range transfers {
+		if count < 8 {
+			log.Printf("transfer: %v", transfer)
+		}
+		count += 1
+		volume += transfer.Value / 1000000000000000000
+	}
+	return volume
+}
+
 func exitErrorf(msg string, args ...interface{}) {
 	log.Printf(msg + "\n")
 	os.Exit(1)
