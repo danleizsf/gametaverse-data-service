@@ -226,7 +226,7 @@ func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) in
 	count := 0
 	for _, transfer := range transfers {
 		if count < 8 {
-			log.Printf("value: %v", transfer.Value/1000000000000000000)
+			log.Printf("transfer: %v, value: %v", transfer, transfer.Value/1000000000000000000)
 		}
 		count += 1
 		volume += transfer.Value / 1000000000000000000
