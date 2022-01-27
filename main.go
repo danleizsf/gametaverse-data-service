@@ -172,7 +172,7 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 		count += 1
 		blockNumber, _ := strconv.Atoi(fields[6])
 		value, _ := strconv.Atoi(fields[3])
-		logIndex, _ := strconv.Atoi(fields[3])
+		logIndex, _ := strconv.Atoi(fields[5])
 		transfers = append(transfers, Transfer{
 			TokenAddress:    fields[0],
 			FromAddress:     fields[1],
