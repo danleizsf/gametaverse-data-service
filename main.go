@@ -103,7 +103,7 @@ func hello() (string, error) {
 			dailyTransactionVolume[dateFormattedString] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
 		}
 	}
-	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v}}", daus, dailyTransactionVolume), nil
+	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v SEA Token}}", daus, dailyTransactionVolume), nil
 }
 
 func converCsvStringToTransactionStructs(csvString string) []Transaction {
