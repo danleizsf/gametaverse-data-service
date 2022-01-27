@@ -35,6 +35,16 @@ type Transaction struct {
 	TransactionType      string
 }
 
+type Transfer struct {
+	TokenAddress      string
+	FromAddress          string
+	ToAddress            string
+	Value                int
+	TransactionHash      string
+	LogIndex int
+	BlockNumber          int
+}
+
 type Dau struct {
 	Date        string
 	ActiveUsers int
@@ -80,13 +90,15 @@ func hello() (string, error) {
 				exitErrorf("Unable to get body, %v", err)
 			}
 			bodyString := fmt.Sprintf("%s", body)
-			transactions := converCsvStringToTransactionStructs(bodyString)
+			//transactions := converCsvStringToTransactionStructs(bodyString)
+			transfers := converCsvStringToTransferStructs(bodyString)
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 			dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
 			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
 			//log.Printf("timestamp %d, formated string %s", dateTimestamp, dateString)
-			daus[dateFormattedString] = getDau(transactions, int64(dateTimestamp))
+			//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
+			daus[dateFormattedString] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
 		}
 	}
 	return fmt.Sprintf("{starsharks: %v}", daus), nil
@@ -138,7 +150,40 @@ func converCsvStringToTransactionStructs(csvString string) []Transaction {
 	return transactions
 }
 
-func getDau(transactions []Transaction, timestamp int64) int {
+func converCsvStringToTransferStructs(csvString string) []Transfer {
+	lines := strings.Split(csvString, "\n")
+	transfers := make([]Transfer, 0)
+	count := 0
+	for lineNum, lineString := range lines {
+		if lineNum == 0 {
+			continue
+		}
+		fields := strings.Split(lineString, ",")
+		if len(fields) < 15 {
+			continue
+		}
+		if count < 8 {
+			log.Printf("lineString: %s, fields: %v", lineString, fields)
+			log.Printf("transfers: %v", transfers)
+		}
+		count += 1
+		blockNumber, _ := strconv.Atoi(fields[6])
+		value, _ := strconv.Atoi(fields[3])
+		logIndex, _ := strconv.Atoi(fields[3])
+		transfers = append(transfers, Transfer{
+			TokenAddress:      fields[0],
+			FromAddress:                fields[1],
+			ToAddress:            fields[2],
+			Value:                value,
+			TransactionHash: fields[4],
+			LogIndex: logIndex,
+			BlockNumber: blockNumber,
+		})
+	}
+	return transfers
+}
+
+func getDauFromTransactions(transactions []Transaction, timestamp int64) int {
 	date := time.Unix(timestamp, 0).UTC()
 	log.Printf("timestamp: %d, date: %s", timestamp, date)
 	uniqueAddresses := make(map[string]bool)
@@ -153,6 +198,22 @@ func getDau(transactions []Transaction, timestamp int64) int {
 			uniqueAddresses[transaction.FromAddress] = true
 			uniqueAddresses[transaction.ToAddress] = true
 		}
+	}
+	return len(uniqueAddresses)
+}
+
+func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
+	date := time.Unix(timestamp, 0).UTC()
+	log.Printf("timestamp: %d, date: %s", timestamp, date)
+	uniqueAddresses := make(map[string]bool)
+	count := 0
+	for _, transfer := range transfers {
+		if count < 8 {
+			log.Printf("transfer: %v", transfer)
+		}
+		count += 1
+		uniqueAddresses[transaction.FromAddress] = true
+		uniqueAddresses[transaction.ToAddress] = true
 	}
 	return len(uniqueAddresses)
 }
