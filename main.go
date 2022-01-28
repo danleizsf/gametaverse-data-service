@@ -18,8 +18,8 @@ import (
 )
 
 type Input struct {
-	Method string `jsong:"method"`
-	Data   string
+	Method string `json:"method"`
+	Data   string `json:"data"`
 }
 type Transaction struct {
 	TransactionHash      string
