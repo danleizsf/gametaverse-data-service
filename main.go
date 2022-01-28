@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -18,6 +17,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+type Input struct {
+	Method string `jsong:"method"`
+	Data   string
+}
 type Transaction struct {
 	TransactionHash      string
 	Nonce                string
@@ -240,7 +243,7 @@ func getGameData() (string, error) {
 	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v SEA Token}}", daus, dailyTransactionVolume), nil
 }
 
-func getUserData() (string, error) {
+func getUserData(address string) (string, error) {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -296,8 +299,13 @@ func getUserData() (string, error) {
 	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v SEA Token}}", daus, dailyTransactionVolume), nil
 }
 
-func process(ctx context.Context, req events.APIGatewayProxyRequest) (string, error) {
-	return getGameData()
+func process(ctx context.Context, input Input) (string, error) {
+	if input.Method == "getGameData" {
+		return getGameData()
+	} else if input.Method == "getUserData" {
+		return getUserData(input.Data)
+	}
+	return "", nil
 }
 func main() {
 	// Make the handler available for Remove Procedure Call by AWS Lambda
