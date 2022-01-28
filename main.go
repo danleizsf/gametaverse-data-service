@@ -66,10 +66,6 @@ func converCsvStringToTransactionStructs(csvString string) []Transaction {
 		if len(fields) < 15 {
 			continue
 		}
-		if count < 8 {
-			log.Printf("lineString: %s, fields: %v", lineString, fields)
-			log.Printf("transactions: %v", transactions)
-		}
 		count += 1
 		blockNumber, _ := strconv.Atoi(fields[3])
 		transactionIndex, _ := strconv.Atoi(fields[4])
@@ -174,7 +170,7 @@ func getUserTransactionVolume(address string, transfers []Transfer) uint64 {
 	for _, transfer := range transfers {
 		if transfer.FromAddress == address || transfer.ToAddress == address {
 			transactionVolume += transfer.Value
-			log.Printf("address: %s, value: %v", address, transfer.Value)
+			log.Printf("address: %s, transactionHash: %s, value: %v", address, transfer.TransactionHash, transfer.Value)
 		}
 	}
 	return transactionVolume / 1000000000000000000
