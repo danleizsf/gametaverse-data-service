@@ -169,6 +169,21 @@ func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
 	return len(uniqueAddresses)
 }
 
+func getUserTransactionVolume(address string, transfers []Transfer) uint64 {
+	transactionVolume := uint64(0)
+	count := 0
+	for _, transfer := range transfers {
+		if count < 8 {
+			log.Printf("transfer: %v", transfer)
+		}
+		count += 1
+		if transfer.FromAddress == address || transfer.ToAddress == address {
+			transactionVolume += transfer.Value
+		}
+	}
+	return transactionVolume
+}
+
 func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) uint64 {
 	volume := uint64(0)
 	count := 0
@@ -257,7 +272,6 @@ func getUserData(address string) (string, error) {
 	}
 
 	log.Printf("Buckets:")
-	daus := make(map[string]int)
 	dailyTransactionVolume := make(map[string]uint64)
 
 	for _, bucket := range result.Buckets {
@@ -292,11 +306,10 @@ func getUserData(address string) (string, error) {
 			dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
 			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
 			//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-			daus[dateFormattedString] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
-			dailyTransactionVolume[dateFormattedString] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
+			dailyTransactionVolume[dateFormattedString] = getUserTransactionVolume(address, transfers)
 		}
 	}
-	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v SEA Token}}", daus, dailyTransactionVolume), nil
+	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
 }
 
 func process(ctx context.Context, input Input) (string, error) {
