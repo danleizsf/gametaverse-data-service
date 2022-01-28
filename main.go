@@ -43,7 +43,7 @@ type Transfer struct {
 	TokenAddress    string
 	FromAddress     string
 	ToAddress       string
-	Value           uint64
+	Value           float64
 	TransactionHash string
 	LogIndex        int
 	BlockNumber     int
@@ -111,7 +111,7 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 		}
 		count += 1
 		blockNumber, _ := strconv.Atoi(fields[6])
-		value, _ := strconv.ParseUint(fields[3], 10, 64)
+		value, _ := strconv.ParseFloat(fields[3], 64)
 		logIndex, _ := strconv.Atoi(fields[5])
 		if count < 8 {
 			log.Printf("lineString: %s, fields: %v", lineString, fields)
@@ -165,8 +165,8 @@ func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
 	return len(uniqueAddresses)
 }
 
-func getUserTransactionVolume(address string, transfers []Transfer) uint64 {
-	transactionVolume := uint64(0)
+func getUserTransactionVolume(address string, transfers []Transfer) float64 {
+	transactionVolume := float64(0)
 	for _, transfer := range transfers {
 		if transfer.FromAddress == address || transfer.ToAddress == address {
 			transactionVolume += transfer.Value
@@ -176,8 +176,8 @@ func getUserTransactionVolume(address string, transfers []Transfer) uint64 {
 	return transactionVolume / 1000000000000000000
 }
 
-func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) uint64 {
-	volume := uint64(0)
+func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) float64 {
+	volume := float64(0)
 	count := 0
 	for _, transfer := range transfers {
 		if count < 8 {
@@ -209,7 +209,7 @@ func getGameData() (string, error) {
 
 	log.Printf("Buckets:")
 	daus := make(map[string]int)
-	dailyTransactionVolume := make(map[string]uint64)
+	dailyTransactionVolume := make(map[string]float64)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
@@ -264,7 +264,7 @@ func getUserData(address string) (string, error) {
 	}
 
 	log.Printf("Buckets:")
-	dailyTransactionVolume := make(map[string]uint64)
+	dailyTransactionVolume := make(map[string]float64)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
