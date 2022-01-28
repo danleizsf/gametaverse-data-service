@@ -181,7 +181,7 @@ func getUserTransactionVolume(address string, transfers []Transfer) uint64 {
 			transactionVolume += transfer.Value
 		}
 	}
-	return transactionVolume
+	return transactionVolume / 1000000000000000000
 }
 
 func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) uint64 {
