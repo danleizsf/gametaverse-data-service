@@ -171,14 +171,10 @@ func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
 
 func getUserTransactionVolume(address string, transfers []Transfer) uint64 {
 	transactionVolume := uint64(0)
-	count := 0
 	for _, transfer := range transfers {
-		if count < 8 {
-			log.Printf("transfer: %v", transfer)
-		}
-		count += 1
 		if transfer.FromAddress == address || transfer.ToAddress == address {
 			transactionVolume += transfer.Value
+			log.Printf("address: %s, value: %v", address, transfer.Value)
 		}
 	}
 	return transactionVolume / 1000000000000000000
