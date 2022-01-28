@@ -300,6 +300,7 @@ func getUserData(address string) (string, error) {
 }
 
 func process(ctx context.Context, input Input) (string, error) {
+	log.Printf("intput: %v", input)
 	if input.Method == "getGameData" {
 		return getGameData()
 	} else if input.Method == "getUserData" {
