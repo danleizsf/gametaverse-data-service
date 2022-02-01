@@ -248,7 +248,7 @@ func getGameDau() map[string]int {
 	return daus
 }
 
-func getGameTransactionVolumes() map[string]float64 {
+func getGameDailyTransactionVolumes() map[string]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -357,10 +357,10 @@ func getUserData(address string) (string, error) {
 
 func process(ctx context.Context, input Input) (string, error) {
 	log.Printf("intput: %v", input)
-	if input.Method == "getGameDaus" {
+	if input.Method == "getDaus" {
 		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau()), nil
-	} else if input.Method == "getGameDailyTransactionVolumes" {
-		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameTransactionVolumes()), nil
+	} else if input.Method == "getDailyTransactionVolumes" {
+		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes()), nil
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Data)
 	} else if input.Method == "getUserRetentionRate" {
