@@ -54,12 +54,6 @@ type Dau struct {
 	ActiveUsers int
 }
 
-type Response struct {
-	StatusCode int               `json:"statusCode"`
-	Headers    map[string]string `json:"headers"`
-	Body       string            `json:"body"`
-}
-
 func converCsvStringToTransactionStructs(csvString string) []Transaction {
 	lines := strings.Split(csvString, "\n")
 	transactions := make([]Transaction, 0)
@@ -200,7 +194,7 @@ func exitErrorf(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func getGameData() string {
+func getGameData() (string, error) {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -253,10 +247,10 @@ func getGameData() string {
 			dailyTransactionVolume[dateFormattedString] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
 		}
 	}
-	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v SEA Token}}", daus, dailyTransactionVolume)
+	return fmt.Sprintf("{starsharks: {dau: %v, dailyTransactionVolume: %v SEA Token}}", daus, dailyTransactionVolume), nil
 }
 
-func getUserData(address string) string {
+func getUserData(address string) (string, error) {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -307,47 +301,23 @@ func getUserData(address string) string {
 			dailyTransactionVolume[dateFormattedString] = getUserTransactionVolume(address, transfers)
 		}
 	}
-	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume)
+	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
 }
 
-func process(ctx context.Context, input Input) (Response, error) {
+func process(ctx context.Context, input Input) (string, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getGameData" {
-		return Response{
-			StatusCode: 200,
-			Headers:    map[string]string{"Content-Type": "application/json"},
-			Body:       getGameData(),
-		}, nil
+		return getGameData()
 	} else if input.Method == "getUserData" {
-		return Response{
-			StatusCode: 200,
-			Headers:    map[string]string{"Content-Type": "application/json"},
-			Body:       getUserData(input.Data),
-		}, nil
+		return getUserData(input.Data)
 	} else if input.Method == "getUserRetentionRate" {
-		return Response{
-			StatusCode: 200,
-			Headers:    map[string]string{"Content-Type": "application/json"},
-			Body:       "{\"jsonrpc\":\"2.0\",\"result\":0.25}",
-		}, nil
+		return "{\"jsonrpc\":\"2.0\",\"result\":0.25}", nil
 	} else if input.Method == "getUserRepurchaseRate" {
-		return Response{
-			StatusCode: 200,
-			Headers:    map[string]string{"Content-Type": "application/json"},
-			Body:       "{\"jsonrpc\":\"2.0\",\"result\":0.75}",
-		}, nil
+		return "{\"jsonrpc\":\"2.0\",\"result\":0.75}", nil
 	} else if input.Method == "getUserSpendingDistribution" {
-		return Response{
-			StatusCode: 200,
-			Headers:    map[string]string{"Content-Type": "application/json"},
-			Body:       "{\"jsonrpc\":\"2.0\",\"result\":{14:0.001,16:0.002,17:0.001,24:0.06,26:0.12,40:0.04,80:0.001}}",
-		}, nil
+		return "{\"jsonrpc\":\"2.0\",\"result\":{14:0.001,16:0.002,17:0.001,24:0.06,26:0.12,40:0.04,80:0.001}}", nil
 	}
-	return Response{
-		StatusCode: 404,
-		Headers:    map[string]string{"Content-Type": "application/json"},
-		Body:       "",
-	}, nil
+	return "", nil
 }
 func main() {
 	// Make the handler available for Remove Procedure Call by AWS Lambda
