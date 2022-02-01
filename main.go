@@ -310,6 +310,12 @@ func process(ctx context.Context, input Input) (string, error) {
 		return getGameData()
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Data)
+	} else if input.Method == "getUserRetentionRate" {
+		return "{\"jsonrpc\":\"2.0\",\"result\":0.25}", nil
+	} else if input.Method == "getUserRepurchaseRate" {
+		return "{\"jsonrpc\":\"2.0\",\"result\":0.75}", nil
+	} else if input.Method == "getUserSpendingDistribution" {
+		return "{\"jsonrpc\":\"2.0\",\"result\":{14:0.001,16:0.002,17:0.001,24:0.06,26:0.12,40:0.04,80:0.001}}", nil
 	}
 	return "", nil
 }
