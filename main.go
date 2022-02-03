@@ -457,18 +457,18 @@ func generateSpendingDistribution(perUserSpending map[string]int64) map[int64]in
 	}
 	return spendingDistribution
 }
-func process(ctx context.Context, input Input) (string, error) {
+func process(ctx context.Context, input Input) (interface{}, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
 		log.Printf("Input: %v", input)
 
 		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(generateTimeObjs(input))), nil
-		return generateJsonResponse(getGameDau(generateTimeObjs(input)))
+		return getGameDau(generateTimeObjs(input)), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
 		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes(generateTimeObjs(input))), nil
 		response := getGameDailyTransactionVolumes(generateTimeObjs(input))
 		log.Printf("getGameDailyTransactionVolumes returns: %v", response)
-		return generateJsonResponse(response)
+		return response, nil
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Params[0].Address)
 	} else if input.Method == "getUserRetentionRate" {
@@ -477,7 +477,8 @@ func process(ctx context.Context, input Input) (string, error) {
 		return "{\"jsonrpc\":\"2.0\",\"result\":0.75}", nil
 	} else if input.Method == "getUserSpendingDistribution" {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return generateJsonResponse(response)
+		return response, nil
+		//return generateJsonResponse(response)
 	}
 	return "", nil
 }
