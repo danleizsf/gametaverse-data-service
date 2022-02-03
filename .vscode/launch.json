@@ -1,0 +1,63 @@
+{
+    "configurations": [
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "lambda-go1.x:HelloWorldFunction (go1.x)",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/lambda-go1.x/template.yaml",
+                "logicalId": "HelloWorldFunction"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {},
+                "runtime": "go1.x"
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "API lambda-go1.x:HelloWorldFunction (go1.x)",
+            "invokeTarget": {
+                "target": "api",
+                "templatePath": "${workspaceFolder}/lambda-go1.x/template.yaml",
+                "logicalId": "HelloWorldFunction"
+            },
+            "api": {
+                "path": "/hello",
+                "httpMethod": "GET",
+                "payload": {
+                    "json": {}
+                }
+            },
+            "lambda": {
+                "runtime": "go1.x"
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "gametaverse-data-service:gametaverse-data-service (go1.x)",
+            "invokeTarget": {
+                "target": "code",
+                "projectRoot": "${workspaceFolder}/",
+                "lambdaHandler": "main"
+            },
+            "lambda": {
+                "runtime": "go1.x",
+                "payload": {
+                    "json": {
+                        "method": "getDaus",
+                        "params": [
+                            {
+                                "timestamp": 1642896000
+                            }
+                        ]
+                    }
+                },
+                "environmentVariables": {}
+            }
+        }
+    ]
+}

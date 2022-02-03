@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'lambda-go1.x
+
+  Sample SAM Template for lambda-go1.x
+
+  '
+Globals:
+  Function:
+    Timeout: 5
+Resources:
+  GametaverseDataServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GametaverseDataServiceFunction
+      Handler: gametaverse-data-service
+      Runtime: go1.x
+      Architectures:
+      - x86_64
+      Tracing: Active
+      Events:
+        CatchAll:
+          Type: Api
+          Properties:
+            Path: /test
+            Method: POST
+      Environment:
+        Variables:
+          PARAM1: VALUE
+    Metadata:
+      SamResourceId: GametaverseDataServiceFunction
+Outputs:
+  GametaverseDataServiceAPI:
+    Description: API Gateway endpoint URL for Prod environment for First Function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  GametaverseDataServiceFunction:
+    Description: First Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunction
+      - Arn
+  GametaverseDataServiceFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunctionRole
+      - Arn
