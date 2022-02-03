@@ -230,11 +230,16 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 			log.Printf("file name: %s\n", *item.Key)
 			timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
 			time := time.Unix(timestamp, 0)
+			eligibleToProcess := false
 			for _, targetTime := range targetTimes {
 				log.Printf("targetTime: %v, time: %v", targetTime, time)
-				if targetTime.Year() != time.Year() || targetTime.Month() != time.Month() || targetTime.Day() != time.Day() {
-					continue
+				if targetTime.Year() == time.Year() || targetTime.Month() == time.Month() || targetTime.Day() == time.Day() {
+					eligibleToProcess = true
+					break
 				}
+			}
+			if !eligibleToProcess {
+				continue
 			}
 			log.Printf("filtered time: %v", time)
 
