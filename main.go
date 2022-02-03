@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -461,9 +462,13 @@ func process(ctx context.Context, input Input) (string, error) {
 	if input.Method == "getDaus" {
 		log.Printf("Input: %v", input)
 
-		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(generateTimeObjs(input))), nil
+		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(generateTimeObjs(input))), nil
+		return generateJsonResponse(getGameDau(generateTimeObjs(input)))
 	} else if input.Method == "getDailyTransactionVolumes" {
-		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes(generateTimeObjs(input))), nil
+		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes(generateTimeObjs(input))), nil
+		response := getGameDailyTransactionVolumes(generateTimeObjs(input))
+		log.Printf("getGameDailyTransactionVolumes returns: %v", response)
+		return generateJsonResponse(response)
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Params[0].Address)
 	} else if input.Method == "getUserRetentionRate" {
@@ -501,4 +506,10 @@ func generateTimeObjs(input Input) []time.Time {
 		}
 	}
 	return times
+}
+
+func generateJsonResponse(response interface{}) (string, error) {
+
+	jsonString, _ := json.Marshal(response)
+	return string(jsonString), nil
 }
