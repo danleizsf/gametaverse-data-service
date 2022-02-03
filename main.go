@@ -24,9 +24,9 @@ type Input struct {
 
 type Param struct {
 	Address       string `json:"address"`
-	Timestamp     int    `json:"timestamp"`
-	FromTimestamp int    `json:"fromTimestamp"`
-	ToTimestamp   int    `json:"toTimestamp"`
+	Timestamp     int64  `json:"timestamp"`
+	FromTimestamp int64  `json:"fromTimestamp"`
+	ToTimestamp   int64  `json:"toTimestamp"`
 }
 
 type Transaction struct {
@@ -202,7 +202,7 @@ func exitErrorf(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func getGameDau() map[string]int {
+func getGameDau(targetTimes []time.Time) map[int64]int {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -216,7 +216,7 @@ func getGameDau() map[string]int {
 	}
 
 	log.Printf("Buckets:")
-	daus := make(map[string]int)
+	daus := make(map[int64]int)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
@@ -228,6 +228,14 @@ func getGameDau() map[string]int {
 
 		for _, item := range resp.Contents {
 			log.Printf("file name: %s\n", *item.Key)
+			timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+			time := time.Unix(timestamp, 0)
+			for _, targetTime := range targetTimes {
+				if targetTime.Year() != time.Year() || targetTime.Month() != time.Month() || targetTime.Day() != time.Day() {
+					continue
+				}
+			}
+
 			requestInput :=
 				&s3.GetObjectInput{
 					Bucket: aws.String(*bucket.Name),
@@ -247,10 +255,8 @@ func getGameDau() map[string]int {
 			log.Printf("transfer num: %d", len(transfers))
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
-			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
 			//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-			daus[dateFormattedString] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
+			daus[timestamp] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
 		}
 	}
 	return daus
@@ -367,7 +373,13 @@ func process(ctx context.Context, input Input) (string, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
 		log.Printf("Input: %v", input)
-		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau()), nil
+		times := make([]time.Time, 0)
+		for _, param := range input.Params {
+			if param.Timestamp != 0 {
+				times = append(times, time.Unix(param.Timestamp, 0))
+			}
+		}
+		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(times)), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
 		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes()), nil
 	} else if input.Method == "getUserData" {
