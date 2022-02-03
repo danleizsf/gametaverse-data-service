@@ -261,7 +261,7 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 	return daus
 }
 
-func getGameDailyTransactionVolumes(targetTimes []time.Time) map[int64]float64 {
+func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -287,6 +287,11 @@ func getGameDailyTransactionVolumes(targetTimes []time.Time) map[int64]float64 {
 
 		for _, item := range resp.Contents {
 			log.Printf("file name: %s\n", *item.Key)
+			timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+			timeObj := time.Unix(timestamp, 0)
+			if !isEligibleToProcess(timeObj, targetTimeObjs) {
+				continue
+			}
 			requestInput :=
 				&s3.GetObjectInput{
 					Bucket: aws.String(*bucket.Name),
