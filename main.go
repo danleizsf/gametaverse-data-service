@@ -185,15 +185,15 @@ func getUserTransactionVolume(address string, transfers []Transfer) float64 {
 	return transactionVolume / 1000000000000000000
 }
 
-func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) float64 {
-	volume := float64(0)
+func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) int64 {
+	volume := int64(0)
 	count := 0
 	for _, transfer := range transfers {
 		if count < 8 {
 			log.Printf("transfer: %v, value: %v", transfer, transfer.Value/1000000000000000000)
 		}
 		count += 1
-		volume += transfer.Value / 1000000000000000000
+		volume += int64(transfer.Value / 1000000000000000000)
 	}
 	return volume
 }
@@ -262,7 +262,7 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 	return daus
 }
 
-func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]float64 {
+func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -276,7 +276,7 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]float6
 	}
 
 	log.Printf("Buckets:")
-	dailyTransactionVolume := make(map[int64]float64)
+	dailyTransactionVolume := make(map[int64]int64)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
