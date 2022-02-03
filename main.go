@@ -430,6 +430,9 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 func getPerUserSpending(transfers []Transfer) map[string]float64 {
 	perUserSpending := make(map[string]float64)
 	for _, transfer := range transfers {
+		if transfer.FromAddress == "0x0000000000000000000000000000000000000000" {
+			continue
+		}
 		if spending, ok := perUserSpending[transfer.FromAddress]; ok {
 			perUserSpending[transfer.FromAddress] = spending + transfer.Value/1000000000000000000
 		} else {
@@ -472,6 +475,7 @@ func process(ctx context.Context, input Input) (string, error) {
 	}
 	return "", nil
 }
+
 func main() {
 	// Make the handler available for Remove Procedure Call by AWS Lambda
 	lambda.Start(process)
