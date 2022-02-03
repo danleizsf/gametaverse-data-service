@@ -229,19 +229,11 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 		for _, item := range resp.Contents {
 			log.Printf("file name: %s\n", *item.Key)
 			timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-			time := time.Unix(timestamp, 0)
-			eligibleToProcess := false
-			for _, targetTime := range targetTimes {
-				log.Printf("targetTime: %v, time: %v", targetTime, time)
-				if targetTime.Year() == time.Year() && targetTime.Month() == time.Month() && targetTime.Day() == time.Day() {
-					eligibleToProcess = true
-					break
-				}
-			}
-			if !eligibleToProcess {
+			timeObj := time.Unix(timestamp, 0)
+			if !isEligibleToProcess(timeObj, targetTimes) {
 				continue
 			}
-			log.Printf("filtered time: %v", time)
+			log.Printf("filtered time: %v", timeObj)
 
 			requestInput :=
 				&s3.GetObjectInput{
@@ -269,7 +261,7 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 	return daus
 }
 
-func getGameDailyTransactionVolumes() map[string]float64 {
+func getGameDailyTransactionVolumes(targetTimes []time.Time) map[int64]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -283,7 +275,7 @@ func getGameDailyTransactionVolumes() map[string]float64 {
 	}
 
 	log.Printf("Buckets:")
-	dailyTransactionVolume := make(map[string]float64)
+	dailyTransactionVolume := make(map[int64]float64)
 
 	for _, bucket := range result.Buckets {
 		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
@@ -314,9 +306,7 @@ func getGameDailyTransactionVolumes() map[string]float64 {
 			log.Printf("transfer num: %d", len(transfers))
 			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
-			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
-			dailyTransactionVolume[dateFormattedString] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
+			dailyTransactionVolume[int64(dateTimestamp)] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
 		}
 	}
 	return dailyTransactionVolume
@@ -380,15 +370,10 @@ func process(ctx context.Context, input Input) (string, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
 		log.Printf("Input: %v", input)
-		times := make([]time.Time, 0)
-		for _, param := range input.Params {
-			if param.Timestamp != 0 {
-				times = append(times, time.Unix(param.Timestamp, 0))
-			}
-		}
-		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(times)), nil
+
+		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(generateTimeObjs(input))), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
-		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes()), nil
+		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes(generateTimeObjs(input))), nil
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Params[0].Address)
 	} else if input.Method == "getUserRetentionRate" {
@@ -403,4 +388,26 @@ func process(ctx context.Context, input Input) (string, error) {
 func main() {
 	// Make the handler available for Remove Procedure Call by AWS Lambda
 	lambda.Start(process)
+}
+
+func isEligibleToProcess(timeObj time.Time, targetTimeObjs []time.Time) bool {
+	eligibleToProcess := false
+	for _, targetTimeObj := range targetTimeObjs {
+		log.Printf("targetTime: %v, time: %v", targetTimeObj, timeObj)
+		if targetTimeObj.Year() == timeObj.Year() && targetTimeObj.Month() == timeObj.Month() && targetTimeObj.Day() == timeObj.Day() {
+			eligibleToProcess = true
+			break
+		}
+	}
+	return eligibleToProcess
+}
+
+func generateTimeObjs(input Input) []time.Time {
+	times := make([]time.Time, 0)
+	for _, param := range input.Params {
+		if param.Timestamp != 0 {
+			times = append(times, time.Unix(param.Timestamp, 0))
+		}
+	}
+	return times
 }
