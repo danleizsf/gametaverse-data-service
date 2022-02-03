@@ -372,7 +372,7 @@ func getUserData(address string) (string, error) {
 	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
 }
 
-func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]int64 {
+func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -443,19 +443,25 @@ func getPerUserSpending(transfers []Transfer) map[string]int64 {
 	return perUserSpending
 }
 
-func generateSpendingDistribution(perUserSpending map[string]int64) map[int64]int64 {
-	spendingDistribution := make(map[int64]int64)
+func generateSpendingDistribution(perUserSpending map[string]int64) map[int64]float64 {
+	spendingValueDistribution := make(map[int64]int64)
+	totalSpending := float64(0)
 	for _, spending := range perUserSpending {
 		if spending < 1 {
 			continue
 		}
-		if _, ok := spendingDistribution[spending]; ok {
-			spendingDistribution[spending] += 1
+		if _, ok := spendingValueDistribution[spending]; ok {
+			spendingValueDistribution[spending] += 1
 		} else {
-			spendingDistribution[spending] = 1
+			spendingValueDistribution[spending] = 1
 		}
+		totalSpending += float64(spending)
 	}
-	return spendingDistribution
+	spendingPercentageDistribution := make(map[int64]float64)
+	for spending, value := range spendingValueDistribution {
+		spendingPercentageDistribution[spending] = float64(value) / totalSpending
+	}
+	return spendingPercentageDistribution
 }
 func process(ctx context.Context, input Input) (interface{}, error) {
 	log.Printf("intput: %v", input)
