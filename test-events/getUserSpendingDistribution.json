@@ -1,0 +1,9 @@
+{
+	"jsonrpc":"2.0",
+	"method":"getUserSpendingDistribution",
+	"params":[{
+        "gameId": "StarSharks",
+        "fromTimestamp": 1642636800,
+        "toTimestamp": 1642896000
+    }]
+}
