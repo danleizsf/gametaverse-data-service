@@ -18,9 +18,17 @@ import (
 )
 
 type Input struct {
-	Method string `json:"method"`
-	Data   string `json:"data"`
+	Method string  `json:"method"`
+	Params []Param `json:"params"`
 }
+
+type Param struct {
+	Address       string `json:"address"`
+	Timestamp     int    `json:"timestamp"`
+	FromTimestamp int    `json:"fromTimestamp"`
+	ToTimestamp   int    `json:"toTimestamp"`
+}
+
 type Transaction struct {
 	TransactionHash      string
 	Nonce                string
@@ -358,11 +366,12 @@ func getUserData(address string) (string, error) {
 func process(ctx context.Context, input Input) (string, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
+		log.Printf("Input: %v", input)
 		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau()), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
 		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes()), nil
 	} else if input.Method == "getUserData" {
-		return getUserData(input.Data)
+		return getUserData(input.Params[0].Address)
 	} else if input.Method == "getUserRetentionRate" {
 		return "{\"jsonrpc\":\"2.0\",\"result\":0.25}", nil
 	} else if input.Method == "getUserRepurchaseRate" {
