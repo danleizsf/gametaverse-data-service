@@ -442,6 +442,9 @@ func getPerUserSpending(transfers []Transfer) map[string]float64 {
 func generateSpendingDistribution(perUserSpending map[string]float64) map[float64]int64 {
 	spendingDistribution := make(map[float64]int64)
 	for _, spending := range perUserSpending {
+		if spending < 1 {
+			continue
+		}
 		if _, ok := spendingDistribution[spending]; ok {
 			spendingDistribution[spending] += 1
 		} else {
