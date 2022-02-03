@@ -1,0 +1,13 @@
+{
+    "jsonrpc":"2.0",
+    "method": "getDailyTransactionVolumes",
+    "params":[{
+        "timestamp": 1642636800
+    }, {
+        "timestamp": 1642723200
+    }, {
+        "timestamp": 1642809600
+    }, {
+        "timestamp": 1642896000
+    }]
+}
