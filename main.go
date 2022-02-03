@@ -233,7 +233,7 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 			eligibleToProcess := false
 			for _, targetTime := range targetTimes {
 				log.Printf("targetTime: %v, time: %v", targetTime, time)
-				if targetTime.Year() == time.Year() || targetTime.Month() == time.Month() || targetTime.Day() == time.Day() {
+				if targetTime.Year() == time.Year() && targetTime.Month() == time.Month() && targetTime.Day() == time.Day() {
 					eligibleToProcess = true
 					break
 				}
