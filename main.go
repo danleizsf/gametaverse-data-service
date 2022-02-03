@@ -372,7 +372,7 @@ func getUserData(address string) (string, error) {
 	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
 }
 
-func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[float64]int64 {
+func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]int64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -428,23 +428,23 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 	return generateSpendingDistribution(perUserSpending)
 }
 
-func getPerUserSpending(transfers []Transfer) map[string]float64 {
-	perUserSpending := make(map[string]float64)
+func getPerUserSpending(transfers []Transfer) map[string]int64 {
+	perUserSpending := make(map[string]int64)
 	for _, transfer := range transfers {
 		if transfer.FromAddress == "0x0000000000000000000000000000000000000000" {
 			continue
 		}
 		if spending, ok := perUserSpending[transfer.FromAddress]; ok {
-			perUserSpending[transfer.FromAddress] = spending + transfer.Value/1000000000000000000
+			perUserSpending[transfer.FromAddress] = spending + int64(transfer.Value/1000000000000000000)
 		} else {
-			perUserSpending[transfer.FromAddress] = transfer.Value / 1000000000000000000
+			perUserSpending[transfer.FromAddress] = int64(transfer.Value / 1000000000000000000)
 		}
 	}
 	return perUserSpending
 }
 
-func generateSpendingDistribution(perUserSpending map[string]float64) map[float64]int64 {
-	spendingDistribution := make(map[float64]int64)
+func generateSpendingDistribution(perUserSpending map[string]int64) map[int64]int64 {
+	spendingDistribution := make(map[int64]int64)
 	for _, spending := range perUserSpending {
 		if spending < 1 {
 			continue
