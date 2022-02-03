@@ -476,7 +476,8 @@ func process(ctx context.Context, input Input) (string, error) {
 	} else if input.Method == "getUserRepurchaseRate" {
 		return "{\"jsonrpc\":\"2.0\",\"result\":0.75}", nil
 	} else if input.Method == "getUserSpendingDistribution" {
-		return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))), nil
+		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return generateJsonResponse(response)
 	}
 	return "", nil
 }
