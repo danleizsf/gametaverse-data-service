@@ -431,9 +431,9 @@ func getPerUserSpending(transfers []Transfer) map[string]float64 {
 	perUserSpending := make(map[string]float64)
 	for _, transfer := range transfers {
 		if spending, ok := perUserSpending[transfer.FromAddress]; ok {
-			perUserSpending[transfer.FromAddress] = spending + transfer.Value
+			perUserSpending[transfer.FromAddress] = spending + transfer.Value/1000000000000000000
 		} else {
-			perUserSpending[transfer.FromAddress] = transfer.Value
+			perUserSpending[transfer.FromAddress] = transfer.Value / 1000000000000000000
 		}
 	}
 	return perUserSpending
