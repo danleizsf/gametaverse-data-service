@@ -30,6 +30,8 @@ type Param struct {
 	ToTimestamp   int64  `json:"toTimestamp"`
 }
 
+var bucketName = "gametaverse-bucket"
+
 type Transaction struct {
 	TransactionHash      string
 	Nonce                string
@@ -259,51 +261,40 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 
 
 	svc := s3.New(sess)
 
-	result, err := svc.ListBuckets(nil)
-
-	if err != nil {
-		exitErrorf("Unable to list buckets, %v", err)
-	}
-
-	log.Printf("Buckets:")
 	dailyTransactionVolume := make(map[int64]int64)
 
-	for _, bucket := range result.Buckets {
-		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
 
-		resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(*bucket.Name)})
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if !isEligibleToProcess(timeObj, targetTimeObjs) {
+			continue
+		}
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(bucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
 		if err != nil {
-			exitErrorf("Unable to list object, %v", err)
+			exitErrorf("Unable to get object, %v", err)
 		}
-
-		for _, item := range resp.Contents {
-			log.Printf("file name: %s\n", *item.Key)
-			timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-			timeObj := time.Unix(timestamp, 0)
-			if !isEligibleToProcess(timeObj, targetTimeObjs) {
-				continue
-			}
-			requestInput :=
-				&s3.GetObjectInput{
-					Bucket: aws.String(*bucket.Name),
-					Key:    aws.String(*item.Key),
-				}
-			result, err := svc.GetObject(requestInput)
-			if err != nil {
-				exitErrorf("Unable to get object, %v", err)
-			}
-			body, err := ioutil.ReadAll(result.Body)
-			if err != nil {
-				exitErrorf("Unable to get body, %v", err)
-			}
-			bodyString := fmt.Sprintf("%s", body)
-			//transactions := converCsvStringToTransactionStructs(bodyString)
-			transfers := converCsvStringToTransferStructs(bodyString)
-			log.Printf("transfer num: %d", len(transfers))
-			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			dailyTransactionVolume[int64(dateTimestamp)] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
 		}
+		bodyString := fmt.Sprintf("%s", body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := converCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		dailyTransactionVolume[int64(dateTimestamp)] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
 	}
 	return dailyTransactionVolume
 }
@@ -315,49 +306,38 @@ func getUserData(address string) (string, error) {
 
 	svc := s3.New(sess)
 
-	result, err := svc.ListBuckets(nil)
-
-	if err != nil {
-		exitErrorf("Unable to list buckets, %v", err)
-	}
-
-	log.Printf("Buckets:")
 	dailyTransactionVolume := make(map[string]float64)
 
-	for _, bucket := range result.Buckets {
-		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
 
-		resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(*bucket.Name)})
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(bucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
 		if err != nil {
-			exitErrorf("Unable to list object, %v", err)
+			exitErrorf("Unable to get object, %v", err)
 		}
-
-		for _, item := range resp.Contents {
-			log.Printf("file name: %s\n", *item.Key)
-			requestInput :=
-				&s3.GetObjectInput{
-					Bucket: aws.String(*bucket.Name),
-					Key:    aws.String(*item.Key),
-				}
-			result, err := svc.GetObject(requestInput)
-			if err != nil {
-				exitErrorf("Unable to get object, %v", err)
-			}
-			body, err := ioutil.ReadAll(result.Body)
-			if err != nil {
-				exitErrorf("Unable to get body, %v", err)
-			}
-			bodyString := fmt.Sprintf("%s", body)
-			//transactions := converCsvStringToTransactionStructs(bodyString)
-			transfers := converCsvStringToTransferStructs(bodyString)
-			log.Printf("transfer num: %d", len(transfers))
-			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
-			dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
-			//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-			dailyTransactionVolume[dateFormattedString] = getUserTransactionVolume(address, transfers)
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
 		}
+		bodyString := fmt.Sprintf("%s", body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := converCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
+		dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
+		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
+		dailyTransactionVolume[dateFormattedString] = getUserTransactionVolume(address, transfers)
 	}
 	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
 }
@@ -369,49 +349,40 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 
 	svc := s3.New(sess)
 
-	result, err := svc.ListBuckets(nil)
+	totalTransfers := make([]Transfer, 0)
 
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
 	if err != nil {
-		exitErrorf("Unable to list buckets, %v", err)
+		exitErrorf("Unable to list object, %v", err)
 	}
 
-	totalTransfers := make([]Transfer, 0)
-	for _, bucket := range result.Buckets {
-		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+			continue
+		}
 
-		resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(*bucket.Name)})
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(bucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
 		if err != nil {
-			exitErrorf("Unable to list object, %v", err)
+			exitErrorf("Unable to get object, %v", err)
 		}
-
-		for _, item := range resp.Contents {
-			log.Printf("file name: %s\n", *item.Key)
-			timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-			timeObj := time.Unix(timestamp, 0)
-			if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
-				continue
-			}
-
-			requestInput :=
-				&s3.GetObjectInput{
-					Bucket: aws.String(*bucket.Name),
-					Key:    aws.String(*item.Key),
-				}
-			result, err := svc.GetObject(requestInput)
-			if err != nil {
-				exitErrorf("Unable to get object, %v", err)
-			}
-			body, err := ioutil.ReadAll(result.Body)
-			if err != nil {
-				exitErrorf("Unable to get body, %v", err)
-			}
-			bodyString := fmt.Sprintf("%s", body)
-			//transactions := converCsvStringToTransactionStructs(bodyString)
-			transfers := converCsvStringToTransferStructs(bodyString)
-			log.Printf("transfer num: %d", len(transfers))
-			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			totalTransfers = append(totalTransfers, transfers...)
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
 		}
+		bodyString := fmt.Sprintf("%s", body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := converCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		totalTransfers = append(totalTransfers, transfers...)
 	}
 	perUserSpending := getPerUserSpending(totalTransfers)
 
