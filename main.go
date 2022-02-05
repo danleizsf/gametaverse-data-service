@@ -175,9 +175,7 @@ func getDauFromTransactions(transactions []Transaction, timestamp int64) int {
 	return len(uniqueAddresses)
 }
 
-func getActiveUserNumFromTransfers(transfers []Transfer, timestamp int64) int {
-	date := time.Unix(timestamp, 0).UTC()
-	log.Printf("timestamp: %d, date: %s", timestamp, date)
+func getActiveUserNumFromTransfers(transfers []Transfer) int {
 	uniqueAddresses := make(map[string]bool)
 	count := 0
 	for _, transfer := range transfers {
@@ -261,10 +259,9 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 		//transactions := converCsvStringToTransactionStructs(bodyString)
 		transfers := converCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
-		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-		daus[timestamp] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
+		daus[timestamp] = getActiveUserNumFromTransfers(transfers)
 	}
 	return daus
 }
@@ -454,7 +451,8 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Params[0].Address)
 	} else if input.Method == "getUserRetentionRate" {
-		return "{\"jsonrpc\":\"2.0\",\"result\":0.25}", nil
+		response := getUserRetentionRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
 	} else if input.Method == "getUserRepurchaseRate" {
 		return "{\"jsonrpc\":\"2.0\",\"result\":0.75}", nil
 	} else if input.Method == "getUserSpendingDistribution" {
@@ -659,4 +657,80 @@ func generateRoiDistribution(perUserRoiInDays map[string]int64) map[int64]float6
 		daysPercentageDistribution[days] = float64(value) / totalDays
 	}
 	return daysPercentageDistribution
+}
+
+func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"),
+	})
+
+	svc := s3.New(sess)
+	userRetentionRate := float64(0)
+	newUsers := getNewUsers(fromTimeObj, toTimeObj, *svc)
+	fromDateTimestamp := fromTimeObj.Second()
+	toDateTimestamp := toTimeObj.Second()
+
+	requestInput :=
+		&s3.GetObjectInput{
+			Bucket: aws.String(dailyTransferBucketName),
+			Key:    aws.String(fmt.Sprintf("%d-in-game-token-transfers-with-timestamp.csv", fromDateTimestamp)),
+		}
+
+	result, err := svc.GetObject(requestInput)
+	if err != nil {
+		exitErrorf("Unable to get object, %v", err)
+	}
+	body, err := ioutil.ReadAll(result.Body)
+	bodyString := fmt.Sprintf("%s", body)
+	fromDateTransfers := converCsvStringToTransferStructs(bodyString)
+
+	requestInput =
+		&s3.GetObjectInput{
+			Bucket: aws.String(dailyTransferBucketName),
+			Key:    aws.String(fmt.Sprintf("%d-in-game-token-transfers-with-timestamp.csv", toDateTimestamp)),
+		}
+
+	result, err = svc.GetObject(requestInput)
+	if err != nil {
+		exitErrorf("Unable to get object, %v", err)
+	}
+	body, err = ioutil.ReadAll(result.Body)
+	bodyString = fmt.Sprintf("%s", body)
+	toDateTransfers := converCsvStringToTransferStructs(bodyString)
+
+	fromDateActiveUserNumber := getActiveUserNumFromTransfers(fromDateTransfers)
+	toDateActiveUserNumber := getActiveUserNumFromTransfers(toDateTransfers)
+	userRetentionRate = float64(toDateActiveUserNumber-len(newUsers)) / float64(fromDateActiveUserNumber)
+	return userRetentionRate
+}
+
+func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]bool {
+	requestInput :=
+		&s3.GetObjectInput{
+			Bucket: aws.String(userBucketName),
+			Key:    aws.String("per-user-join-time.json"),
+		}
+	result, err := svc.GetObject(requestInput)
+	if err != nil {
+		exitErrorf("Unable to get object, %v", err)
+	}
+	body, err := ioutil.ReadAll(result.Body)
+
+	m := map[string]map[string]string{}
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		//log.Printf("body: %s", fmt.Sprintf("%s", body))
+		exitErrorf("Unable to unmarshall user meta info, %v", err)
+	}
+
+	newUsers := map[string]bool{}
+	for address, userMetaInfo := range m {
+		timestamp, _ := strconv.Atoi(userMetaInfo["timestamp"])
+		userJoinTimestampObj := time.Unix(int64(timestamp), 0)
+		if userJoinTimestampObj.Before(fromTimeObj) || userJoinTimestampObj.After(toTimeObj) {
+			continue
+		}
+		newUsers[address] = true
+	}
+	return newUsers
 }
