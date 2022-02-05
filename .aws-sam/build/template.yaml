@@ -8,7 +8,7 @@ Description: 'lambda-go1.x
 Globals:
   Function:
     Timeout: 60
-    MemorySize: 2000
+    MemorySize: 512
 Resources:
   GametaverseDataServiceFunction:
     Type: AWS::Serverless::Function

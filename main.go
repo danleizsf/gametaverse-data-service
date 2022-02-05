@@ -502,7 +502,7 @@ func generateJsonResponse(response interface{}) (string, error) {
 	return string(jsonString), nil
 }
 
-func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[string]int {
+func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -609,7 +609,7 @@ func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[string]int {
 		eligibleTargetUserTransfers[userAddress] = transfers
 	}
 
-	eligibleTargetUserRoi := map[string]int{}
+	eligibleTargetUserRoi := map[string]int64{}
 	for userAddress, transfers := range eligibleTargetUserTransfers {
 		value := -1
 		transferIdx := -1
@@ -632,10 +632,31 @@ func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[string]int {
 		}
 		initialTransferTimeObj := time.Unix(int64(transfers[0].Timestamp), 0)
 		profitTransferTimeObj := time.Unix(int64(transfers[transferIdx].Timestamp), 0)
-		eligibleTargetUserRoi[userAddress] = int(math.Ceil(profitTransferTimeObj.Sub(initialTransferTimeObj).Hours() / 24))
+		eligibleTargetUserRoi[userAddress] = int64(math.Ceil(profitTransferTimeObj.Sub(initialTransferTimeObj).Hours() / 24))
 	}
 
 	//log.Printf("eligibleTargetUserTransfers is: %v", eligibleTargetUserTransfers)
 	//log.Printf("eligibleTargetUserRoi is: %v", eligibleTargetUserRoi)
-	return eligibleTargetUserRoi
+	return generateRoiDistribution(eligibleTargetUserRoi)
+}
+
+func generateRoiDistribution(perUserRoiInDays map[string]int64) map[int64]float64 {
+	RoiDayDistribution := make(map[int64]int64)
+	totalDays := float64(0)
+	for _, days := range perUserRoiInDays {
+		if days < 1 {
+			continue
+		}
+		if _, ok := RoiDayDistribution[days]; ok {
+			RoiDayDistribution[days] += 1
+		} else {
+			RoiDayDistribution[days] = 1
+		}
+		totalDays += float64(days)
+	}
+	daysPercentageDistribution := make(map[int64]float64)
+	for days, value := range RoiDayDistribution {
+		daysPercentageDistribution[days] = float64(value) / totalDays
+	}
+	return daysPercentageDistribution
 }
