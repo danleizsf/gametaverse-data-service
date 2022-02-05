@@ -210,54 +210,44 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 
 	svc := s3.New(sess)
 
-	result, err := svc.ListBuckets(nil)
-
-	if err != nil {
-		exitErrorf("Unable to list buckets, %v", err)
-	}
-
-	log.Printf("Buckets:")
 	daus := make(map[int64]int)
 
-	for _, bucket := range result.Buckets {
-		log.Printf("* %s created on %s\n", aws.StringValue(bucket.Name), aws.TimeValue(bucket.CreationDate))
+	bucketName := "gametaverse-bucket"
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
 
-		resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(*bucket.Name)})
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if !isEligibleToProcess(timeObj, targetTimes) {
+			continue
+		}
+		log.Printf("filtered time: %v", timeObj)
+
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(bucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
 		if err != nil {
-			exitErrorf("Unable to list object, %v", err)
+			exitErrorf("Unable to get object, %v", err)
 		}
-
-		for _, item := range resp.Contents {
-			log.Printf("file name: %s\n", *item.Key)
-			timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-			timeObj := time.Unix(timestamp, 0)
-			if !isEligibleToProcess(timeObj, targetTimes) {
-				continue
-			}
-			log.Printf("filtered time: %v", timeObj)
-
-			requestInput :=
-				&s3.GetObjectInput{
-					Bucket: aws.String(*bucket.Name),
-					Key:    aws.String(*item.Key),
-				}
-			result, err := svc.GetObject(requestInput)
-			if err != nil {
-				exitErrorf("Unable to get object, %v", err)
-			}
-			body, err := ioutil.ReadAll(result.Body)
-			if err != nil {
-				exitErrorf("Unable to get body, %v", err)
-			}
-			bodyString := fmt.Sprintf("%s", body)
-			//transactions := converCsvStringToTransactionStructs(bodyString)
-			transfers := converCsvStringToTransferStructs(bodyString)
-			log.Printf("transfer num: %d", len(transfers))
-			dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-			//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-			//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-			daus[timestamp] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
 		}
+		bodyString := fmt.Sprintf("%s", body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := converCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
+		daus[timestamp] = getActiveUserNumFromTransfers(transfers, int64(dateTimestamp))
 	}
 	return daus
 }
