@@ -179,9 +179,6 @@ func getActiveUserNumFromTransfers(transfers []Transfer) int {
 	uniqueAddresses := make(map[string]bool)
 	count := 0
 	for _, transfer := range transfers {
-		if count < 8 {
-			log.Printf("transfer: %v", transfer)
-		}
 		count += 1
 		uniqueAddresses[transfer.FromAddress] = true
 		uniqueAddresses[transfer.ToAddress] = true
@@ -667,8 +664,8 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	svc := s3.New(sess)
 	userRetentionRate := float64(0)
 	newUsers := getNewUsers(fromTimeObj, toTimeObj, *svc)
-	fromDateTimestamp := fromTimeObj.Second()
-	toDateTimestamp := toTimeObj.Second()
+	fromDateTimestamp := fromTimeObj.Unix()
+	toDateTimestamp := toTimeObj.Unix()
 
 	requestInput :=
 		&s3.GetObjectInput{
