@@ -30,7 +30,8 @@ type Param struct {
 	ToTimestamp   int64  `json:"toTimestamp"`
 }
 
-var bucketName = "gametaverse-bucket"
+var dailyTransferBucketName = "gametaverse-bucket"
+var userBucketName = "gametaverse-user-bucket"
 
 type Transaction struct {
 	TransactionHash      string
@@ -58,11 +59,17 @@ type Transfer struct {
 	TransactionHash string
 	LogIndex        int
 	BlockNumber     int
+	Timestamp       int
 }
 
 type Dau struct {
 	Date        string
 	ActiveUsers int
+}
+
+type UserMetaInfo struct {
+	Timestamp       int64  `json:"timestamp"`
+	TransactionHash string `json:"transaction_hash"`
 }
 
 func converCsvStringToTransactionStructs(csvString string) []Transaction {
@@ -117,16 +124,21 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 			continue
 		}
 		fields := strings.Split(lineString, ",")
-		if len(fields) < 7 {
+		if len(fields) < 8 {
+			continue
+		}
+		token_address := fields[0]
+		if token_address != "0x26193c7fa4354ae49ec53ea2cebc513dc39a10aa" {
 			continue
 		}
 		count += 1
+		timestamp, _ := strconv.Atoi(fields[7])
 		blockNumber, _ := strconv.Atoi(fields[6])
 		value, _ := strconv.ParseFloat(fields[3], 64)
 		logIndex, _ := strconv.Atoi(fields[5])
 		if count < 8 {
-			log.Printf("lineString: %s, fields: %v", lineString, fields)
-			log.Printf("value: %v", value)
+			//log.Printf("lineString: %s, fields: %v", lineString, fields)
+			//log.Printf("value: %v", value)
 		}
 		transfers = append(transfers, Transfer{
 			TokenAddress:    fields[0],
@@ -136,6 +148,7 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 			TransactionHash: fields[4],
 			LogIndex:        logIndex,
 			BlockNumber:     blockNumber,
+			Timestamp:       timestamp,
 		})
 	}
 	return transfers
@@ -263,7 +276,7 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 
 
 	dailyTransactionVolume := make(map[int64]int64)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
 	if err != nil {
 		exitErrorf("Unable to list object, %v", err)
 	}
@@ -277,7 +290,7 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 
 		}
 		requestInput :=
 			&s3.GetObjectInput{
-				Bucket: aws.String(bucketName),
+				Bucket: aws.String(dailyTransferBucketName),
 				Key:    aws.String(*item.Key),
 			}
 		result, err := svc.GetObject(requestInput)
@@ -308,7 +321,7 @@ func getUserData(address string) (string, error) {
 
 	dailyTransactionVolume := make(map[string]float64)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
 	if err != nil {
 		exitErrorf("Unable to list object, %v", err)
 	}
@@ -317,7 +330,7 @@ func getUserData(address string) (string, error) {
 		log.Printf("file name: %s\n", *item.Key)
 		requestInput :=
 			&s3.GetObjectInput{
-				Bucket: aws.String(bucketName),
+				Bucket: aws.String(dailyTransferBucketName),
 				Key:    aws.String(*item.Key),
 			}
 		result, err := svc.GetObject(requestInput)
@@ -351,7 +364,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 
 	totalTransfers := make([]Transfer, 0)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
 	if err != nil {
 		exitErrorf("Unable to list object, %v", err)
 	}
@@ -366,7 +379,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 
 		requestInput :=
 			&s3.GetObjectInput{
-				Bucket: aws.String(bucketName),
+				Bucket: aws.String(dailyTransferBucketName),
 				Key:    aws.String(*item.Key),
 			}
 		result, err := svc.GetObject(requestInput)
@@ -444,6 +457,10 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		return "{\"jsonrpc\":\"2.0\",\"result\":0.75}", nil
 	} else if input.Method == "getUserSpendingDistribution" {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
+		//return generateJsonResponse(response)
+	} else if input.Method == "getRoi" {
+		response := getRoi(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 		//return generateJsonResponse(response)
 	}
