@@ -740,16 +740,24 @@ func getRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
 	}
-	perUserPurchaseCounts := map[string]int64{}
+	perUserTransfers := map[string][]Transfer{}
 	repurchaseUserCount := 0
 	for _, transfer := range totalTransfers {
-		perUserPurchaseCounts[transfer.FromAddress] += 1
+		if _, ok := perUserTransfers[transfer.FromAddress]; ok {
+			perUserTransfers[transfer.FromAddress] = append(perUserTransfers[transfer.FromAddress], transfer)
+		}
 	}
-	for _, purchaseCount := range perUserPurchaseCounts {
-		if purchaseCount >= 2 {
+	for _, transfers := range perUserTransfers {
+		if len(transfers) == 0 {
+			continue
+		}
+		sort.Slice(transfers, func(i, j int) bool {
+			return transfers[i].Timestamp < transfers[j].Timestamp
+		})
+		if transfers[len(transfers)-1].Timestamp-transfers[0].Timestamp > 86400 {
 			repurchaseUserCount += 1
 		}
 	}
-	log.Printf("total user count: %d, repurhase user count: %d", len(perUserPurchaseCounts), repurchaseUserCount)
-	return float64(repurchaseUserCount) / float64(len(perUserPurchaseCounts))
+	log.Printf("total user count: %d, repurhase user count: %d", len(perUserTransfers), repurchaseUserCount)
+	return float64(repurchaseUserCount) / float64(len(perUserTransfers))
 }
