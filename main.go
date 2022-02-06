@@ -96,7 +96,7 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 	} else if input.Method == "getUserRetentionRate" {
 		response := getUserRetentionRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
-	} else if input.Method == "getRepurchaseRate" {
+	} else if input.Method == "getUserRepurchaseRate" {
 		response := getRepurchaseRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserSpendingDistribution" {
