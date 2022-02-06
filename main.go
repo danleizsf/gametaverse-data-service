@@ -745,6 +745,8 @@ func getRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	for _, transfer := range totalTransfers {
 		if _, ok := perUserTransfers[transfer.FromAddress]; ok {
 			perUserTransfers[transfer.FromAddress] = append(perUserTransfers[transfer.FromAddress], transfer)
+		} else {
+			perUserTransfers[transfer.FromAddress] = make([]Transfer, 0)
 		}
 	}
 	for _, transfers := range perUserTransfers {
