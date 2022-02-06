@@ -103,12 +103,12 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 		//return generateJsonResponse(response)
-	} else if input.Method == "getProfitDistribution" {
-		response := getProfitDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+	} else if input.Method == "getUserProfitDistribution" {
+		response := getUserProfitDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 		//return generateJsonResponse(response)
-	} else if input.Method == "getRoi" {
-		response := getRoi(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+	} else if input.Method == "getUserRoi" {
+		response := getUserRoi(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 		//return generateJsonResponse(response)
 	}
@@ -491,7 +491,7 @@ func generateTimeObjs(input Input) []time.Time {
 	return times
 }
 
-func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
+func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -771,7 +771,7 @@ func getRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	return float64(repurchaseUserCount) / float64(len(perUserTransfers))
 }
 
-func getProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]float64 {
+func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
