@@ -74,47 +74,47 @@ type UserMetaInfo struct {
 	TransactionHash string `json:"transaction_hash"`
 }
 
-func converCsvStringToTransactionStructs(csvString string) []Transaction {
-	lines := strings.Split(csvString, "\n")
-	transactions := make([]Transaction, 0)
-	count := 0
-	for lineNum, lineString := range lines {
-		if lineNum == 0 {
-			continue
-		}
-		fields := strings.Split(lineString, ",")
-		if len(fields) < 15 {
-			continue
-		}
-		count += 1
-		blockNumber, _ := strconv.Atoi(fields[3])
-		transactionIndex, _ := strconv.Atoi(fields[4])
-		value, _ := strconv.Atoi(fields[7])
-		gas, _ := strconv.Atoi(fields[8])
-		gasPrice, _ := strconv.Atoi(fields[9])
-		blockTimestamp, _ := strconv.Atoi(fields[11])
-		maxFeePerGas, _ := strconv.Atoi(fields[12])
-		maxPriorityFeePerGas, _ := strconv.Atoi(fields[13])
-		transactions = append(transactions, Transaction{
-			TransactionHash:      fields[0],
-			Nonce:                fields[1],
-			BlockHash:            fields[2],
-			BlockNumber:          blockNumber,
-			TransactionIndex:     transactionIndex,
-			FromAddress:          fields[5],
-			ToAddress:            fields[6],
-			Value:                value,
-			Gas:                  gas,
-			GasPrice:             gasPrice,
-			Input:                fields[10],
-			BlockTimestamp:       int64(blockTimestamp),
-			MaxFeePerGas:         maxFeePerGas,
-			MaxPriorityFeePerGas: maxPriorityFeePerGas,
-			TransactionType:      fields[14],
-		})
-	}
-	return transactions
-}
+//func converCsvStringToTransactionStructs(csvString string) []Transaction {
+//	lines := strings.Split(csvString, "\n")
+//	transactions := make([]Transaction, 0)
+//	count := 0
+//	for lineNum, lineString := range lines {
+//		if lineNum == 0 {
+//			continue
+//		}
+//		fields := strings.Split(lineString, ",")
+//		if len(fields) < 15 {
+//			continue
+//		}
+//		count += 1
+//		blockNumber, _ := strconv.Atoi(fields[3])
+//		transactionIndex, _ := strconv.Atoi(fields[4])
+//		value, _ := strconv.Atoi(fields[7])
+//		gas, _ := strconv.Atoi(fields[8])
+//		gasPrice, _ := strconv.Atoi(fields[9])
+//		blockTimestamp, _ := strconv.Atoi(fields[11])
+//		maxFeePerGas, _ := strconv.Atoi(fields[12])
+//		maxPriorityFeePerGas, _ := strconv.Atoi(fields[13])
+//		transactions = append(transactions, Transaction{
+//			TransactionHash:      fields[0],
+//			Nonce:                fields[1],
+//			BlockHash:            fields[2],
+//			BlockNumber:          blockNumber,
+//			TransactionIndex:     transactionIndex,
+//			FromAddress:          fields[5],
+//			ToAddress:            fields[6],
+//			Value:                value,
+//			Gas:                  gas,
+//			GasPrice:             gasPrice,
+//			Input:                fields[10],
+//			BlockTimestamp:       int64(blockTimestamp),
+//			MaxFeePerGas:         maxFeePerGas,
+//			MaxPriorityFeePerGas: maxPriorityFeePerGas,
+//			TransactionType:      fields[14],
+//		})
+//	}
+//	return transactions
+//}
 
 func converCsvStringToTransferStructs(csvString string) []Transfer {
 	lines := strings.Split(csvString, "\n")
@@ -138,10 +138,6 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 		blockNumber, _ := strconv.Atoi(fields[6])
 		value, _ := strconv.ParseFloat(fields[3], 64)
 		logIndex, _ := strconv.Atoi(fields[5])
-		if count < 8 {
-			//log.Printf("lineString: %s, fields: %v", lineString, fields)
-			//log.Printf("value: %v", value)
-		}
 		transfers = append(transfers, Transfer{
 			TokenAddress:    fields[0],
 			FromAddress:     fields[1],
@@ -156,24 +152,24 @@ func converCsvStringToTransferStructs(csvString string) []Transfer {
 	return transfers
 }
 
-func getDauFromTransactions(transactions []Transaction, timestamp int64) int {
-	date := time.Unix(timestamp, 0).UTC()
-	log.Printf("timestamp: %d, date: %s", timestamp, date)
-	uniqueAddresses := make(map[string]bool)
-	count := 0
-	for _, transaction := range transactions {
-		transactionDate := time.Unix(transaction.BlockTimestamp, 0).UTC()
-		if count < 8 {
-			log.Printf("transaction: %v, transactionDate: %s, date: %s", transaction, transactionDate, date)
-		}
-		count += 1
-		if transactionDate.Year() == date.Year() && transactionDate.Month() == date.Month() && transactionDate.Day() == date.Day() {
-			uniqueAddresses[transaction.FromAddress] = true
-			uniqueAddresses[transaction.ToAddress] = true
-		}
-	}
-	return len(uniqueAddresses)
-}
+//func getDauFromTransactions(transactions []Transaction, timestamp int64) int {
+//	date := time.Unix(timestamp, 0).UTC()
+//	log.Printf("timestamp: %d, date: %s", timestamp, date)
+//	uniqueAddresses := make(map[string]bool)
+//	count := 0
+//	for _, transaction := range transactions {
+//		transactionDate := time.Unix(transaction.BlockTimestamp, 0).UTC()
+//		if count < 8 {
+//			log.Printf("transaction: %v, transactionDate: %s, date: %s", transaction, transactionDate, date)
+//		}
+//		count += 1
+//		if transactionDate.Year() == date.Year() && transactionDate.Month() == date.Month() && transactionDate.Day() == date.Day() {
+//			uniqueAddresses[transaction.FromAddress] = true
+//			uniqueAddresses[transaction.ToAddress] = true
+//		}
+//	}
+//	return len(uniqueAddresses)
+//}
 
 func getActiveUsersFromTransfers(transfers []Transfer) map[string]bool {
 	uniqueAddresses := make(map[string]bool)
@@ -252,7 +248,7 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 		if err != nil {
 			exitErrorf("Unable to get body, %v", err)
 		}
-		bodyString := fmt.Sprintf("%s", body)
+		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
 		transfers := converCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
@@ -297,7 +293,7 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 
 		if err != nil {
 			exitErrorf("Unable to get body, %v", err)
 		}
-		bodyString := fmt.Sprintf("%s", body)
+		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
 		transfers := converCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
@@ -337,7 +333,7 @@ func getUserData(address string) (string, error) {
 		if err != nil {
 			exitErrorf("Unable to get body, %v", err)
 		}
-		bodyString := fmt.Sprintf("%s", body)
+		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
 		transfers := converCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
@@ -386,7 +382,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 		if err != nil {
 			exitErrorf("Unable to get body, %v", err)
 		}
-		bodyString := fmt.Sprintf("%s", body)
+		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
 		transfers := converCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
@@ -420,11 +416,7 @@ func generateSpendingDistribution(perUserSpending map[string]int64) map[int64]fl
 		if spending < 1 {
 			continue
 		}
-		if _, ok := spendingValueDistribution[spending]; ok {
-			spendingValueDistribution[spending] += 1
-		} else {
-			spendingValueDistribution[spending] = 1
-		}
+		spendingValueDistribution[spending] += 1
 		totalSpending += float64(spending)
 	}
 	spendingPercentageDistribution := make(map[int64]float64)
@@ -491,12 +483,6 @@ func generateTimeObjs(input Input) []time.Time {
 	return times
 }
 
-func generateJsonResponse(response interface{}) (string, error) {
-
-	jsonString, _ := json.Marshal(response)
-	return string(jsonString), nil
-}
-
 func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
@@ -533,7 +519,7 @@ func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 		if err != nil {
 			exitErrorf("Unable to get body, %v", err)
 		}
-		bodyString := fmt.Sprintf("%s", body)
+		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
 		transfers := converCsvStringToTransferStructs(bodyString)
 		eligibleTransfers = append(eligibleTransfers, transfers...)
@@ -614,11 +600,7 @@ func generateRoiDistribution(perUserRoiInDays map[string]int64) map[int64]float6
 		if days < 1 {
 			continue
 		}
-		if _, ok := RoiDayDistribution[days]; ok {
-			RoiDayDistribution[days] += 1
-		} else {
-			RoiDayDistribution[days] = 1
-		}
+		RoiDayDistribution[days] += 1
 		totalDays += float64(days)
 	}
 	daysPercentageDistribution := make(map[int64]float64)
@@ -648,7 +630,10 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		exitErrorf("Unable to get object, %v", err)
 	}
 	body, err := ioutil.ReadAll(result.Body)
-	bodyString := fmt.Sprintf("%s", body)
+	if err != nil {
+		exitErrorf("Unable to read body, %v", err)
+	}
+	bodyString := string(body)
 	fromDateTransfers := converCsvStringToTransferStructs(bodyString)
 
 	requestInput =
@@ -671,7 +656,7 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	fromDateActiveUsers := getActiveUsersFromTransfers(fromDateTransfers)
 	toDateActiveUsers := getActiveUsersFromTransfers(toDateTransfers)
 	retentionedUsers := map[string]bool{}
-	for fromDateUser, _ := range fromDateActiveUsers {
+	for fromDateUser := range fromDateActiveUsers {
 		if _, ok := toDateActiveUsers[fromDateUser]; ok {
 			retentionedUsers[fromDateUser] = true
 		}
