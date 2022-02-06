@@ -744,9 +744,12 @@ func getRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	repurchaseUserCount := 0
 	for _, transfer := range totalTransfers {
 		perUserPurchaseCounts[transfer.FromAddress] += 1
-		if perUserPurchaseCounts[transfer.FromAddress] >= 2 {
+	}
+	for _, purchaseCount := range perUserPurchaseCounts {
+		if purchaseCount >= 2 {
 			repurchaseUserCount += 1
 		}
 	}
+	log.Printf("total user count: %d, repurhase user count: %d", len(perUserPurchaseCounts), repurchaseUserCount)
 	return float64(repurchaseUserCount) / float64(len(perUserPurchaseCounts))
 }
