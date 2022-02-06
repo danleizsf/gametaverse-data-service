@@ -505,35 +505,7 @@ func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 	svc := s3.New(sess)
 
 	eligibleTransfers := make([]Transfer, 0)
-
-	requestInput :=
-		&s3.GetObjectInput{
-			Bucket: aws.String(userBucketName),
-			Key:    aws.String("per-user-join-time.json"),
-		}
-	result, err := svc.GetObject(requestInput)
-	if err != nil {
-		exitErrorf("Unable to get object, %v", err)
-	}
-	body, err := ioutil.ReadAll(result.Body)
-
-	m := map[string]map[string]string{}
-	err = json.Unmarshal(body, &m)
-	if err != nil {
-		//log.Printf("body: %s", fmt.Sprintf("%s", body))
-		exitErrorf("Unable to unmarshall user meta info, %v", err)
-	}
-
-	targetUsers := map[string]bool{}
-	for address, userMetaInfo := range m {
-		timestamp, _ := strconv.Atoi(userMetaInfo["timestamp"])
-		userJoinTimestampObj := time.Unix(int64(timestamp), 0)
-		if userJoinTimestampObj.Before(fromTimeObjs) || userJoinTimestampObj.After(toTimeObj) {
-			continue
-		}
-		targetUsers[address] = true
-	}
-	//log.Printf("targetUsers", targetUsers)
+	targetUsers := getNewUsers(fromTimeObjs, toTimeObj, *svc)
 
 	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
 	if err != nil {
@@ -690,7 +662,10 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		exitErrorf("Unable to get object, %v", err)
 	}
 	body, err = ioutil.ReadAll(result.Body)
-	bodyString = fmt.Sprintf("%s", body)
+	if err != nil {
+		exitErrorf("Unable to read body, %v", err)
+	}
+	bodyString = string(body)
 	toDateTransfers := converCsvStringToTransferStructs(bodyString)
 
 	fromDateActiveUsers := getActiveUsersFromTransfers(fromDateTransfers)
@@ -715,6 +690,9 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 		exitErrorf("Unable to get object, %v", err)
 	}
 	body, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		exitErrorf("Unable to read body, %v", err)
+	}
 
 	m := map[string]map[string]string{}
 	err = json.Unmarshal(body, &m)
