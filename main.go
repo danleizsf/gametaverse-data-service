@@ -34,6 +34,11 @@ type Param struct {
 
 var dailyTransferBucketName = "gametaverse-bucket"
 var userBucketName = "gametaverse-user-bucket"
+var seaTokenUnit = 1000000000000000000
+var starSharksInGameContracts = map[string]bool{
+	"0x0000000000000000000000000000000000000000": true,
+	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
+}
 
 type Transaction struct {
 	TransactionHash      string
@@ -96,6 +101,10 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		return response, nil
 	} else if input.Method == "getUserSpendingDistribution" {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
+		//return generateJsonResponse(response)
+	} else if input.Method == "getProfitDistribution" {
+		response := getProfitDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 		//return generateJsonResponse(response)
 	} else if input.Method == "getRoi" {
@@ -428,7 +437,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 	}
 	perUserSpending := getPerUserSpending(totalTransfers)
 
-	return generateSpendingDistribution(perUserSpending)
+	return generateValueDistribution(perUserSpending)
 }
 
 func getPerUserSpending(transfers []Transfer) map[string]int64 {
@@ -446,22 +455,20 @@ func getPerUserSpending(transfers []Transfer) map[string]int64 {
 	return perUserSpending
 }
 
-func generateSpendingDistribution(perUserSpending map[string]int64) map[int64]float64 {
-	spendingValueDistribution := make(map[int64]int64)
-	totalSpending := float64(0)
-	for _, spending := range perUserSpending {
-		if spending < 1 {
-			continue
-		}
-		spendingValueDistribution[spending] += 1
-		totalSpending += float64(spending)
+func generateValueDistribution(perUserValue map[string]int64) map[int64]float64 {
+	valueDistribution := make(map[int64]int64)
+	totalFrequency := int64(0)
+	for _, value := range perUserValue {
+		valueDistribution[value] += 1
+		totalFrequency += 1
 	}
-	spendingPercentageDistribution := make(map[int64]float64)
-	for spending, value := range spendingValueDistribution {
-		spendingPercentageDistribution[spending] = float64(value) / totalSpending
+	valuePercentageDistribution := make(map[int64]float64)
+	for value, frequency := range valueDistribution {
+		valuePercentageDistribution[value] = float64(frequency) / float64(totalFrequency)
 	}
-	return spendingPercentageDistribution
+	return valuePercentageDistribution
 }
+
 func isEligibleToProcess(timeObj time.Time, targetTimeObjs []time.Time) bool {
 	eligibleToProcess := false
 	for _, targetTimeObj := range targetTimeObjs {
@@ -762,4 +769,61 @@ func getRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	}
 	log.Printf("total user count: %d, repurhase user count: %d", len(perUserTransfers), repurchaseUserCount)
 	return float64(repurchaseUserCount) / float64(len(perUserTransfers))
+}
+
+func getProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]float64 {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"),
+	})
+
+	svc := s3.New(sess)
+
+	totalTransfers := make([]Transfer, 0)
+
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
+
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+			continue
+		}
+
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(dailyTransferBucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
+		if err != nil {
+			exitErrorf("Unable to get object, %v", err)
+		}
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
+		}
+		bodyString := string(body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		totalTransfers = append(totalTransfers, transfers...)
+	}
+	perUserProfit := make(map[string]int64)
+	for _, transfer := range totalTransfers {
+		if _, ok := starSharksInGameContracts[transfer.FromAddress]; ok {
+			continue
+		}
+		if _, ok := starSharksInGameContracts[transfer.ToAddress]; ok {
+			continue
+		}
+		perUserProfit[transfer.FromAddress] -= int64(transfer.Value / float64(seaTokenUnit))
+		perUserProfit[transfer.ToAddress] += int64(transfer.Value / float64(seaTokenUnit))
+	}
+
+	return generateValueDistribution(perUserProfit)
 }
