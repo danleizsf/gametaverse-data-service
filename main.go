@@ -74,6 +74,43 @@ type UserMetaInfo struct {
 	TransactionHash string `json:"transaction_hash"`
 }
 
+func process(ctx context.Context, input Input) (interface{}, error) {
+	log.Printf("intput: %v", input)
+	if input.Method == "getDaus" {
+		log.Printf("Input: %v", input)
+
+		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(generateTimeObjs(input))), nil
+		return getGameDau(generateTimeObjs(input)), nil
+	} else if input.Method == "getDailyTransactionVolumes" {
+		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes(generateTimeObjs(input))), nil
+		response := getGameDailyTransactionVolumes(generateTimeObjs(input))
+		log.Printf("getGameDailyTransactionVolumes returns: %v", response)
+		return response, nil
+	} else if input.Method == "getUserData" {
+		return getUserData(input.Params[0].Address)
+	} else if input.Method == "getUserRetentionRate" {
+		response := getUserRetentionRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
+	} else if input.Method == "getUserRepurchaseRate" {
+		response := getRepurchaseRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
+	} else if input.Method == "getUserSpendingDistribution" {
+		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
+		//return generateJsonResponse(response)
+	} else if input.Method == "getRoi" {
+		response := getRoi(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
+		//return generateJsonResponse(response)
+	}
+	return "", nil
+}
+
+func main() {
+	// Make the handler available for Remove Procedure Call by AWS Lambda
+	lambda.Start(process)
+}
+
 //func converCsvStringToTransactionStructs(csvString string) []Transaction {
 //	lines := strings.Split(csvString, "\n")
 //	transactions := make([]Transaction, 0)
@@ -116,7 +153,7 @@ type UserMetaInfo struct {
 //	return transactions
 //}
 
-func converCsvStringToTransferStructs(csvString string) []Transfer {
+func convertCsvStringToTransferStructs(csvString string) []Transfer {
 	lines := strings.Split(csvString, "\n")
 	transfers := make([]Transfer, 0)
 	count := 0
@@ -250,7 +287,7 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := converCsvStringToTransferStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
@@ -295,7 +332,7 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := converCsvStringToTransferStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
@@ -335,7 +372,7 @@ func getUserData(address string) (string, error) {
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := converCsvStringToTransferStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
@@ -384,7 +421,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := converCsvStringToTransferStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
@@ -425,42 +462,6 @@ func generateSpendingDistribution(perUserSpending map[string]int64) map[int64]fl
 	}
 	return spendingPercentageDistribution
 }
-func process(ctx context.Context, input Input) (interface{}, error) {
-	log.Printf("intput: %v", input)
-	if input.Method == "getDaus" {
-		log.Printf("Input: %v", input)
-
-		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(generateTimeObjs(input))), nil
-		return getGameDau(generateTimeObjs(input)), nil
-	} else if input.Method == "getDailyTransactionVolumes" {
-		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes(generateTimeObjs(input))), nil
-		response := getGameDailyTransactionVolumes(generateTimeObjs(input))
-		log.Printf("getGameDailyTransactionVolumes returns: %v", response)
-		return response, nil
-	} else if input.Method == "getUserData" {
-		return getUserData(input.Params[0].Address)
-	} else if input.Method == "getUserRetentionRate" {
-		response := getUserRetentionRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return response, nil
-	} else if input.Method == "getUserRepurchaseRate" {
-		return "{\"jsonrpc\":\"2.0\",\"result\":0.75}", nil
-	} else if input.Method == "getUserSpendingDistribution" {
-		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return response, nil
-		//return generateJsonResponse(response)
-	} else if input.Method == "getRoi" {
-		response := getRoi(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return response, nil
-		//return generateJsonResponse(response)
-	}
-	return "", nil
-}
-
-func main() {
-	// Make the handler available for Remove Procedure Call by AWS Lambda
-	lambda.Start(process)
-}
-
 func isEligibleToProcess(timeObj time.Time, targetTimeObjs []time.Time) bool {
 	eligibleToProcess := false
 	for _, targetTimeObj := range targetTimeObjs {
@@ -521,7 +522,7 @@ func getRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := converCsvStringToTransferStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
 		eligibleTransfers = append(eligibleTransfers, transfers...)
 	}
 
@@ -634,7 +635,7 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		exitErrorf("Unable to read body, %v", err)
 	}
 	bodyString := string(body)
-	fromDateTransfers := converCsvStringToTransferStructs(bodyString)
+	fromDateTransfers := convertCsvStringToTransferStructs(bodyString)
 
 	requestInput =
 		&s3.GetObjectInput{
@@ -651,7 +652,7 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		exitErrorf("Unable to read body, %v", err)
 	}
 	bodyString = string(body)
-	toDateTransfers := converCsvStringToTransferStructs(bodyString)
+	toDateTransfers := convertCsvStringToTransferStructs(bodyString)
 
 	fromDateActiveUsers := getActiveUsersFromTransfers(fromDateTransfers)
 	toDateActiveUsers := getActiveUsersFromTransfers(toDateTransfers)
@@ -696,4 +697,56 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 		newUsers[address] = true
 	}
 	return newUsers
+}
+
+func getRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"),
+	})
+
+	svc := s3.New(sess)
+
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
+
+	totalTransfers := make([]Transfer, 0)
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+			continue
+		}
+
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(dailyTransferBucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
+		if err != nil {
+			exitErrorf("Unable to get object, %v", err)
+		}
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
+		}
+		bodyString := string(body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		totalTransfers = append(totalTransfers, transfers...)
+	}
+	perUserPurchaseCounts := map[string]int64{}
+	repurchaseUserCount := 0
+	for _, transfer := range totalTransfers {
+		perUserPurchaseCounts[transfer.FromAddress] += 1
+		if perUserPurchaseCounts[transfer.FromAddress] >= 2 {
+			repurchaseUserCount += 1
+		}
+	}
+	return float64(repurchaseUserCount) / float64(len(perUserPurchaseCounts))
 }
