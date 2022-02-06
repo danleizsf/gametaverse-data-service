@@ -175,7 +175,7 @@ func getDauFromTransactions(transactions []Transaction, timestamp int64) int {
 	return len(uniqueAddresses)
 }
 
-func getActiveUserNumFromTransfers(transfers []Transfer) int {
+func getActiveUsersFromTransfers(transfers []Transfer) map[string]bool {
 	uniqueAddresses := make(map[string]bool)
 	count := 0
 	for _, transfer := range transfers {
@@ -183,7 +183,7 @@ func getActiveUserNumFromTransfers(transfers []Transfer) int {
 		uniqueAddresses[transfer.FromAddress] = true
 		uniqueAddresses[transfer.ToAddress] = true
 	}
-	return len(uniqueAddresses)
+	return uniqueAddresses
 }
 
 func getUserTransactionVolume(address string, transfers []Transfer) float64 {
@@ -258,7 +258,7 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-		daus[timestamp] = getActiveUserNumFromTransfers(transfers)
+		daus[timestamp] = len(getActiveUsersFromTransfers(transfers))
 	}
 	return daus
 }
@@ -662,8 +662,6 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	})
 
 	svc := s3.New(sess)
-	userRetentionRate := float64(0)
-	newUsers := getNewUsers(fromTimeObj, toTimeObj, *svc)
 	fromDateTimestamp := fromTimeObj.Unix()
 	toDateTimestamp := toTimeObj.Unix()
 
@@ -695,10 +693,15 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	bodyString = fmt.Sprintf("%s", body)
 	toDateTransfers := converCsvStringToTransferStructs(bodyString)
 
-	fromDateActiveUserNumber := getActiveUserNumFromTransfers(fromDateTransfers)
-	toDateActiveUserNumber := getActiveUserNumFromTransfers(toDateTransfers)
-	userRetentionRate = float64(toDateActiveUserNumber-len(newUsers)) / float64(fromDateActiveUserNumber)
-	return userRetentionRate
+	fromDateActiveUsers := getActiveUsersFromTransfers(fromDateTransfers)
+	toDateActiveUsers := getActiveUsersFromTransfers(toDateTransfers)
+	retentionedUsers := map[string]bool{}
+	for fromDateUser, _ := range fromDateActiveUsers {
+		if _, ok := toDateActiveUsers[fromDateUser]; ok {
+			retentionedUsers[fromDateUser] = true
+		}
+	}
+	return float64(len(retentionedUsers)) / float64(len(fromDateActiveUsers))
 }
 
 func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]bool {
