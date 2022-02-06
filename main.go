@@ -97,7 +97,7 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := getUserRetentionRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserRepurchaseRate" {
-		response := getRepurchaseRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		response := getUserRepurchaseRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserSpendingDistribution" {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
@@ -706,7 +706,7 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 	return newUsers
 }
 
-func getRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
+func getUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
