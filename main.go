@@ -40,11 +40,12 @@ var starSharksInGameContracts = map[string]bool{
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
 var starSharksStartingDate = time.Unix(1639612800, 0)
+var dayInSec = 86400
 
 type Dau struct {
-	DateTimestamp    int64 `json:"dateTimestamp"`
-	ActiveUsers      int64 `json:"activeUsers"`
-	NewlyJoinedUsers int64 `json:"newlyUsers"`
+	DateTimestamp int64 `json:"dateTimestamp"`
+	ActiveUsers   int64 `json:"activeUsers"`
+	NewUsers      int64 `json:"newUsers"`
 }
 
 type DailyTransactionVolume struct {
@@ -307,11 +308,11 @@ func getGameDau(targetTimes []time.Time) []Dau {
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
 		perUserTransfers := getActiveUsersFromTransfers(transfers)
-		newUsers := getNewUsers(starSharksStartingDate, time.Now(), *svc)
+		newUsers := getNewUsers(timeObj, time.Unix(timestamp+int64(dayInSec), 0), *svc)
 		daus[timestamp] = Dau{
-			DateTimestamp:    timestamp,
-			ActiveUsers:      int64(len(perUserTransfers)),
-			NewlyJoinedUsers: int64(len(newUsers)),
+			DateTimestamp: timestamp,
+			ActiveUsers:   int64(len(perUserTransfers)),
+			NewUsers:      int64(len(newUsers)),
 		}
 	}
 	result := make([]Dau, len(daus))
@@ -826,7 +827,7 @@ func getUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		sort.Slice(transfers, func(i, j int) bool {
 			return transfers[i].Timestamp < transfers[j].Timestamp
 		})
-		if transfers[len(transfers)-1].Timestamp-transfers[0].Timestamp > 86400 {
+		if transfers[len(transfers)-1].Timestamp-transfers[0].Timestamp > dayInSec {
 			repurchaseUserCount += 1
 		}
 	}
