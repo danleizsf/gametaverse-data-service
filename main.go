@@ -603,17 +603,17 @@ func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 
 func generateRoiDistribution(perUserRoiInDays map[string]int64) map[int64]float64 {
 	RoiDayDistribution := make(map[int64]int64)
-	totalDays := float64(0)
+	totalCount := float64(0)
 	for _, days := range perUserRoiInDays {
 		if days < 1 {
 			continue
 		}
 		RoiDayDistribution[days] += 1
-		totalDays += float64(days)
+		totalCount += 1
 	}
 	daysPercentageDistribution := make(map[int64]float64)
-	for days, value := range RoiDayDistribution {
-		daysPercentageDistribution[days] = float64(value) / totalDays
+	for days, count := range RoiDayDistribution {
+		daysPercentageDistribution[days] = float64(count) / totalCount
 	}
 	return daysPercentageDistribution
 }
