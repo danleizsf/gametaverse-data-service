@@ -50,6 +50,11 @@ type DailyTransactionVolume struct {
 	TransactionVolume int64 `json:"transactionVolume"`
 }
 
+type ValueFrequencyPercentage struct {
+	Value               int64   `json:"value"`
+	FrequencyPercentage float64 `json:"frequencyPercentage"`
+}
+
 type Transaction struct {
 	TransactionHash      string
 	Nonce                string
@@ -87,14 +92,9 @@ type UserMetaInfo struct {
 func process(ctx context.Context, input Input) (interface{}, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
-		log.Printf("Input: %v", input)
-
-		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDau(generateTimeObjs(input))), nil
 		return getGameDau(generateTimeObjs(input)), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
-		//return fmt.Sprintf("{\"jsonrpc\":\"2.0\",\"result\":%v}", getGameDailyTransactionVolumes(generateTimeObjs(input))), nil
 		response := getGameDailyTransactionVolumes(generateTimeObjs(input))
-		log.Printf("getGameDailyTransactionVolumes returns: %v", response)
 		return response, nil
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Params[0].Address)
@@ -107,7 +107,6 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 	} else if input.Method == "getUserSpendingDistribution" {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
-		//return generateJsonResponse(response)
 	} else if input.Method == "getUserProfitDistribution" {
 		response := getUserProfitDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
@@ -423,7 +422,7 @@ func getUserData(address string) (string, error) {
 	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
 }
 
-func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]float64 {
+func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -473,7 +472,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) map
 func getPerUserSpending(transfers []Transfer) map[string]int64 {
 	perUserSpending := make(map[string]int64)
 	for _, transfer := range transfers {
-		if transfer.FromAddress == "0x0000000000000000000000000000000000000000" {
+		if _, ok := starSharksInGameContracts[transfer.FromAddress]; ok {
 			continue
 		}
 		if spending, ok := perUserSpending[transfer.FromAddress]; ok {
@@ -485,7 +484,7 @@ func getPerUserSpending(transfers []Transfer) map[string]int64 {
 	return perUserSpending
 }
 
-func generateValueDistribution(perUserValue map[string]int64) map[int64]float64 {
+func generateValueDistribution(perUserValue map[string]int64) []ValueFrequencyPercentage {
 	valueDistribution := make(map[int64]int64)
 	totalFrequency := int64(0)
 	for _, value := range perUserValue {
@@ -496,7 +495,19 @@ func generateValueDistribution(perUserValue map[string]int64) map[int64]float64 
 	for value, frequency := range valueDistribution {
 		valuePercentageDistribution[value] = float64(frequency) / float64(totalFrequency)
 	}
-	return valuePercentageDistribution
+	result := make([]ValueFrequencyPercentage, len(valuePercentageDistribution))
+	idx := 0
+	for value, percentage := range valuePercentageDistribution {
+		result[idx] = ValueFrequencyPercentage{
+			Value:               value,
+			FrequencyPercentage: percentage,
+		}
+		idx += 1
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Value < result[j].Value
+	})
+	return result
 }
 
 func isEligibleToProcess(timeObj time.Time, targetTimeObjs []time.Time) bool {
@@ -801,7 +812,7 @@ func getUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	return float64(repurchaseUserCount) / float64(len(perUserTransfers))
 }
 
-func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) map[int64]float64 {
+func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})

@@ -1,6 +1,6 @@
 {
 	"jsonrpc":"2.0",
-	"method":"getProfitDistribution",
+	"method":"getUserProfitDistribution",
 	"params":[{
         "gameId": "StarSharks",
         "fromTimestamp": 1642636800,
