@@ -532,7 +532,7 @@ func generateTimeObjs(input Input) []time.Time {
 	return times
 }
 
-func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
+func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -642,7 +642,7 @@ func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) map[int64]float64 {
 	return generateRoiDistribution(eligibleTargetUserRoi)
 }
 
-func generateRoiDistribution(perUserRoiInDays map[string]int64) map[int64]float64 {
+func generateRoiDistribution(perUserRoiInDays map[string]int64) []ValueFrequencyPercentage {
 	RoiDayDistribution := make(map[int64]int64)
 	totalCount := float64(0)
 	for _, days := range perUserRoiInDays {
@@ -656,7 +656,19 @@ func generateRoiDistribution(perUserRoiInDays map[string]int64) map[int64]float6
 	for days, count := range RoiDayDistribution {
 		daysPercentageDistribution[days] = float64(count) / totalCount
 	}
-	return daysPercentageDistribution
+	result := make([]ValueFrequencyPercentage, len(daysPercentageDistribution))
+	idx := 0
+	for value, frequencyPercentage := range daysPercentageDistribution {
+		result[idx] = ValueFrequencyPercentage{
+			Value:               value,
+			FrequencyPercentage: frequencyPercentage,
+		}
+		idx += 1
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Value < result[j].Value
+	})
+	return result
 }
 
 func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
