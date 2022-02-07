@@ -44,6 +44,12 @@ type Dau struct {
 	DateTimestamp int64 `json:"dateTimestamp"`
 	ActiveUsers   int64 `json:"activeUsers"`
 }
+
+type DailyTransactionVolume struct {
+	DateTimestamp     int64 `json:"dateTimestamp"`
+	TransactionVolume int64 `json:"transactionVolume"`
+}
+
 type Transaction struct {
 	TransactionHash      string
 	Nonce                string
@@ -316,7 +322,7 @@ func getGameDau(targetTimes []time.Time) []Dau {
 	return result
 }
 
-func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 {
+func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransactionVolume {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -358,7 +364,20 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		dailyTransactionVolume[int64(dateTimestamp)] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
 	}
-	return dailyTransactionVolume
+
+	result := make([]DailyTransactionVolume, len(dailyTransactionVolume))
+	idx := 0
+	for dateTimestamp, transactionVolume := range dailyTransactionVolume {
+		result[idx] = DailyTransactionVolume{
+			DateTimestamp:     dateTimestamp,
+			TransactionVolume: transactionVolume,
+		}
+		idx += 1
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].DateTimestamp < result[j].DateTimestamp
+	})
+	return result
 }
 
 func getUserData(address string) (string, error) {
