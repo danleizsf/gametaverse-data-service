@@ -3,7 +3,7 @@
 	"method":"getUserRoi",
 	"params":[{
         "gameId": "StarSharks",
-        "fromTimestamp": 1642636800,
-        "toTimestamp": 1642723200
+        "fromTimestamp": 1641772800,
+        "toTimestamp": 1641945600
     }]
 }

@@ -39,10 +39,12 @@ var starSharksInGameContracts = map[string]bool{
 	"0x0000000000000000000000000000000000000000": true,
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
+var starSharksStartingDate = time.Unix(1639612800, 0)
 
 type Dau struct {
-	DateTimestamp int64 `json:"dateTimestamp"`
-	ActiveUsers   int64 `json:"activeUsers"`
+	DateTimestamp    int64 `json:"dateTimestamp"`
+	ActiveUsers      int64 `json:"activeUsers"`
+	NewlyJoinedUsers int64 `json:"newlyUsers"`
 }
 
 type DailyTransactionVolume struct {
@@ -268,7 +270,7 @@ func getGameDau(targetTimes []time.Time) []Dau {
 
 	svc := s3.New(sess)
 
-	daus := make(map[int64]int)
+	daus := make(map[int64]Dau)
 
 	bucketName := "gametaverse-bucket"
 	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
@@ -304,15 +306,18 @@ func getGameDau(targetTimes []time.Time) []Dau {
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-		daus[timestamp] = len(getActiveUsersFromTransfers(transfers))
+		perUserTransfers := getActiveUsersFromTransfers(transfers)
+		newUsers := getNewUsers(starSharksStartingDate, time.Now(), *svc)
+		daus[timestamp] = Dau{
+			DateTimestamp:    timestamp,
+			ActiveUsers:      int64(len(perUserTransfers)),
+			NewlyJoinedUsers: int64(len(newUsers)),
+		}
 	}
 	result := make([]Dau, len(daus))
 	idx := 0
-	for dateTimestamp, dau := range daus {
-		result[idx] = Dau{
-			DateTimestamp: dateTimestamp,
-			ActiveUsers:   int64(dau),
-		}
+	for _, dau := range daus {
+		result[idx] = dau
 		idx += 1
 	}
 	sort.Slice(result, func(i, j int) bool {
@@ -582,6 +587,7 @@ func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 				targetUserTransfers[transfer.FromAddress] = append(targetUserTransfers[transfer.FromAddress], transfer)
 			} else {
 				targetUserTransfers[transfer.FromAddress] = make([]Transfer, 0)
+				targetUserTransfers[transfer.FromAddress] = append(targetUserTransfers[transfer.FromAddress], transfer)
 			}
 		}
 		if _, ok := targetUsers[transfer.ToAddress]; ok {
@@ -589,6 +595,7 @@ func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 				targetUserTransfers[transfer.ToAddress] = append(targetUserTransfers[transfer.ToAddress], transfer)
 			} else {
 				targetUserTransfers[transfer.ToAddress] = make([]Transfer, 0)
+				targetUserTransfers[transfer.ToAddress] = append(targetUserTransfers[transfer.ToAddress], transfer)
 			}
 		}
 	}
@@ -632,13 +639,16 @@ func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 				break
 			}
 		}
+
+		if value < 0 {
+			continue
+		}
+
 		initialTransferTimeObj := time.Unix(int64(transfers[0].Timestamp), 0)
 		profitTransferTimeObj := time.Unix(int64(transfers[transferIdx].Timestamp), 0)
 		eligibleTargetUserRoi[userAddress] = int64(math.Ceil(profitTransferTimeObj.Sub(initialTransferTimeObj).Hours() / 24))
 	}
 
-	//log.Printf("eligibleTargetUserTransfers is: %v", eligibleTargetUserTransfers)
-	//log.Printf("eligibleTargetUserRoi is: %v", eligibleTargetUserRoi)
 	return generateRoiDistribution(eligibleTargetUserRoi)
 }
 
