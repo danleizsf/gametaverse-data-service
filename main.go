@@ -39,7 +39,9 @@ var starSharksInGameContracts = map[string]bool{
 	"0x0000000000000000000000000000000000000000": true,
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
-var starSharksStartingDate = time.Unix(1639612800, 0)
+
+//var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
+
 var dayInSec = 86400
 
 type Dau struct {
