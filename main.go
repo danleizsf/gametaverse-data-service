@@ -40,6 +40,10 @@ var starSharksInGameContracts = map[string]bool{
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
 
+type Dau struct {
+	DateTimestamp int64 `json:"dateTimestamp"`
+	ActiveUsers   int64 `json:"activeUsers"`
+}
 type Transaction struct {
 	TransactionHash      string
 	Nonce                string
@@ -67,11 +71,6 @@ type Transfer struct {
 	LogIndex        int
 	BlockNumber     int
 	Timestamp       int
-}
-
-type Dau struct {
-	Date        string
-	ActiveUsers int
 }
 
 type UserMetaInfo struct {
@@ -257,7 +256,7 @@ func exitErrorf(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func getGameDau(targetTimes []time.Time) map[int64]int {
+func getGameDau(targetTimes []time.Time) []Dau {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -302,7 +301,19 @@ func getGameDau(targetTimes []time.Time) map[int64]int {
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
 		daus[timestamp] = len(getActiveUsersFromTransfers(transfers))
 	}
-	return daus
+	result := make([]Dau, len(daus))
+	idx := 0
+	for dateTimestamp, dau := range daus {
+		result[idx] = Dau{
+			DateTimestamp: dateTimestamp,
+			ActiveUsers:   int64(dau),
+		}
+		idx += 1
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].DateTimestamp < result[j].DateTimestamp
+	})
+	return result
 }
 
 func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) map[int64]int64 {
