@@ -40,7 +40,7 @@ var starSharksInGameContracts = map[string]bool{
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
 
-//var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
+var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
 
 var dayInSec = 86400
 
@@ -58,6 +58,12 @@ type DailyTransactionVolume struct {
 type ValueFrequencyPercentage struct {
 	Value               int64   `json:"value"`
 	FrequencyPercentage float64 `json:"frequencyPercentage"`
+}
+
+type UserActivity struct {
+	UserAddress      string `json:"userAddress"`
+	TotalDatesCount  int64  `json:"totalDatesCount"`
+	ActiveDatesCount int64  `json:"activeDatesCount"`
 }
 
 type Transaction struct {
@@ -118,6 +124,10 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		//return generateJsonResponse(response)
 	} else if input.Method == "getUserRoi" {
 		response := getUserRoi(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return response, nil
+		//return generateJsonResponse(response)
+	} else if input.Method == "getUserActiveDates" {
+		response := getUserActiveDates(starSharksStartingDate, time.Now())
 		return response, nil
 		//return generateJsonResponse(response)
 	}
@@ -835,6 +845,87 @@ func getUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	}
 	log.Printf("total user count: %d, repurhase user count: %d", len(perUserTransfers), repurchaseUserCount)
 	return float64(repurchaseUserCount) / float64(len(perUserTransfers))
+}
+
+func getUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time) []UserActivity {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"),
+	})
+
+	svc := s3.New(sess)
+
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
+
+	totalTransfers := make([]Transfer, 0)
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+			continue
+		}
+
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(dailyTransferBucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
+		if err != nil {
+			exitErrorf("Unable to get object, %v", err)
+		}
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
+		}
+		bodyString := string(body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		totalTransfers = append(totalTransfers, transfers...)
+	}
+	perUserTransfers := map[string][]Transfer{}
+	for _, transfer := range totalTransfers {
+		if _, ok := perUserTransfers[transfer.FromAddress]; ok {
+			perUserTransfers[transfer.FromAddress] = append(perUserTransfers[transfer.FromAddress], transfer)
+		} else {
+			perUserTransfers[transfer.FromAddress] = make([]Transfer, 0)
+		}
+	}
+	perUserActivities := make([]UserActivity, 0) //len(perUserTransfers))
+	idx := 0
+	for userAddress, transfers := range perUserTransfers {
+		if len(transfers) == 0 {
+			continue
+		}
+		sort.Slice(transfers, func(i, j int) bool {
+			return transfers[i].Timestamp < transfers[j].Timestamp
+		})
+		totalDatesCount := transfers[len(transfers)-1].Timestamp/dayInSec - transfers[0].Timestamp/dayInSec + 1
+		activeDatesCount := 1
+		currentDate := transfers[0].Timestamp / dayInSec
+		for _, transfer := range transfers {
+			if transfer.Timestamp/dayInSec != currentDate {
+				activeDatesCount += 1
+				currentDate = transfer.Timestamp / dayInSec
+			}
+		}
+
+		//if userAddress == "0x27eafaf87860c290c185c1105cbedeb3b742c748" {
+		//	log.Printf("for user %s, totalDatesCount %d, activeDatesCount %d", userAddress, totalDatesCount, activeDatesCount)
+		//	for _, transfer := range transfers {
+		//		log.Printf("transfer timestamp %d, date %d", transfer.Timestamp, transfer.Timestamp/dayInSec)
+		//	}
+		//	perUserActivities[idx] = UserActivity{UserAddress: userAddress, TotalDatesCount: int64(totalDatesCount), ActiveDatesCount: int64(activeDatesCount)}
+		//}
+		perUserActivities = append(perUserActivities, UserActivity{UserAddress: userAddress, TotalDatesCount: int64(totalDatesCount), ActiveDatesCount: int64(activeDatesCount)})
+		idx += 1
+	}
+	return perUserActivities
 }
 
 func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
