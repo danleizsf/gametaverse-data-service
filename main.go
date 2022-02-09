@@ -35,21 +35,27 @@ type Param struct {
 var dailyTransferBucketName = "gametaverse-bucket"
 var userBucketName = "gametaverse-user-bucket"
 var seaTokenUnit = 1000000000000000000
-var starSharksInGameContracts = map[string]bool{
+var starSharksGameWalletAddresses = map[string]bool{
 	"0x0000000000000000000000000000000000000000": true,
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
+var starSharksRentingContractAddresses = "0xe9e092e46a75d192d9d7d3942f11f116fd2f7ca9"
+var starSharksPurchasingContractAddresses = "0x1f7acc330fe462a9468aa47ecdb543787577e1e7"
 
 var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
 
 var dayInSec = 86400
 
 type Dau struct {
-	DateTimestamp int64 `json:"dateTimestamp"`
-	ActiveUsers   int64 `json:"activeUsers"`
-	NewUsers      int64 `json:"newUsers"`
+	DateTimestamp int64      `json:"dateTimestamp"`
+	ActiveUsers   PayerCount `json:"activeUsers"`
+	NewUsers      PayerCount `json:"newUsers"`
 }
 
+type PayerCount struct {
+	RenterCount    int64 `json:"renterCount"`
+	PurchaserCount int64 `json:"purchaserCount"`
+}
 type DailyTransactionVolume struct {
 	DateTimestamp     int64 `json:"dateTimestamp"`
 	TransactionVolume int64 `json:"transactionVolume"`
@@ -81,7 +87,6 @@ type Transaction struct {
 	BlockTimestamp       int64
 	MaxFeePerGas         int
 	MaxPriorityFeePerGas int
-	TransactionType      string
 }
 
 type Transfer struct {
@@ -93,6 +98,7 @@ type Transfer struct {
 	LogIndex        int
 	BlockNumber     int
 	Timestamp       int
+	ContractAddress string
 }
 
 type UserMetaInfo struct {
@@ -100,10 +106,17 @@ type UserMetaInfo struct {
 	TransactionHash string `json:"transaction_hash"`
 }
 
+type payerType int64
+
+const (
+	Renter    payerType = 0
+	Purchaser payerType = 1
+)
+
 func process(ctx context.Context, input Input) (interface{}, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
-		return getGameDau(generateTimeObjs(input)), nil
+		return getGameDaus(generateTimeObjs(input)), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
 		response := getGameDailyTransactionVolumes(generateTimeObjs(input))
 		return response, nil
@@ -212,6 +225,7 @@ func convertCsvStringToTransferStructs(csvString string) []Transfer {
 			LogIndex:        logIndex,
 			BlockNumber:     blockNumber,
 			Timestamp:       timestamp,
+			ContractAddress: fields[8],
 		})
 	}
 	return transfers
@@ -276,7 +290,7 @@ func exitErrorf(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func getGameDau(targetTimes []time.Time) []Dau {
+func getGameDaus(targetTimes []time.Time) []Dau {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -319,12 +333,44 @@ func getGameDau(targetTimes []time.Time) []Dau {
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-		perUserTransfers := getActiveUsersFromTransfers(transfers)
+		perPayerTransfers := getPerPayerTransfers(transfers)
+		//perUserTransfers := getActiveUsersFromTransfers(transfers)
+		totalPerPayerType := getPerPayerType(perPayerTransfers)
+		totalRenterCount, totalPurchaserCount := 0, 0
+		for _, payerType := range totalPerPayerType {
+			if payerType == Renter {
+				totalRenterCount += 1
+			} else if payerType == Purchaser {
+				totalPurchaserCount += 1
+			}
+		}
+
 		newUsers := getNewUsers(timeObj, time.Unix(timestamp+int64(dayInSec), 0), *svc)
+		perNewPayerTransfers := map[string][]Transfer{}
+		for payerAddress, transfers := range perPayerTransfers {
+			if _, ok := newUsers[payerAddress]; ok {
+				perNewPayerTransfers[payerAddress] = transfers
+			}
+		}
+		perNewPayerType := getPerPayerType(perNewPayerTransfers)
+		newRenterCount, newPurchaserCount := 0, 0
+		for _, payerType := range perNewPayerType {
+			if payerType == Renter {
+				newRenterCount += 1
+			} else if payerType == Purchaser {
+				newPurchaserCount += 1
+			}
+		}
 		daus[timestamp] = Dau{
 			DateTimestamp: timestamp,
-			ActiveUsers:   int64(len(perUserTransfers)),
-			NewUsers:      int64(len(newUsers)),
+			ActiveUsers: PayerCount{
+				RenterCount:    int64(totalRenterCount),
+				PurchaserCount: int64(totalPurchaserCount),
+			},
+			NewUsers: PayerCount{
+				RenterCount:    int64(newRenterCount),
+				PurchaserCount: int64(newPurchaserCount),
+			},
 		}
 	}
 	result := make([]Dau, len(daus))
@@ -490,7 +536,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) []V
 func getPerUserSpending(transfers []Transfer) map[string]int64 {
 	perUserSpending := make(map[string]int64)
 	for _, transfer := range transfers {
-		if _, ok := starSharksInGameContracts[transfer.FromAddress]; ok {
+		if _, ok := starSharksGameWalletAddresses[transfer.FromAddress]; ok {
 			continue
 		}
 		if spending, ok := perUserSpending[transfer.FromAddress]; ok {
@@ -972,10 +1018,10 @@ func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) []Val
 	}
 	perUserProfit := make(map[string]int64)
 	for _, transfer := range totalTransfers {
-		if _, ok := starSharksInGameContracts[transfer.FromAddress]; ok {
+		if _, ok := starSharksGameWalletAddresses[transfer.FromAddress]; ok {
 			continue
 		}
-		if _, ok := starSharksInGameContracts[transfer.ToAddress]; ok {
+		if _, ok := starSharksGameWalletAddresses[transfer.ToAddress]; ok {
 			continue
 		}
 		perUserProfit[transfer.FromAddress] -= int64(transfer.Value / float64(seaTokenUnit))
@@ -983,4 +1029,37 @@ func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) []Val
 	}
 
 	return generateValueDistribution(perUserProfit)
+}
+
+func getPerPayerTransfers(transfers []Transfer) map[string][]Transfer {
+	perUserTransfers := map[string][]Transfer{}
+	for _, transfer := range transfers {
+		if _, ok := perUserTransfers[transfer.FromAddress]; ok {
+			perUserTransfers[transfer.FromAddress] = append(perUserTransfers[transfer.FromAddress], transfer)
+		} else {
+			perUserTransfers[transfer.FromAddress] = make([]Transfer, 0)
+		}
+	}
+	return perUserTransfers
+}
+
+func getPerPayerType(perPayerTransfers map[string][]Transfer) map[string]payerType {
+	perPayerType := map[string]payerType{}
+	for payerAddress, transfers := range perPayerTransfers {
+		totalRentingValue := float64(0)
+		totalInvestingValue := float64(0)
+		for _, transfer := range transfers {
+			if transfer.ContractAddress == starSharksPurchasingContractAddresses {
+				totalInvestingValue += transfer.Value / float64(dayInSec)
+			} else if transfer.ContractAddress == starSharksRentingContractAddresses {
+				totalRentingValue += transfer.Value / float64(dayInSec)
+			}
+		}
+		if totalInvestingValue > totalRentingValue {
+			perPayerType[payerAddress] = Purchaser
+		} else {
+			perPayerType[payerAddress] = Renter
+		}
+	}
+	return perPayerType
 }
