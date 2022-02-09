@@ -39,8 +39,9 @@ var starSharksGameWalletAddresses = map[string]bool{
 	"0x0000000000000000000000000000000000000000": true,
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
-var starSharksRentingContractAddresses = "0xe9e092e46a75d192d9d7d3942f11f116fd2f7ca9"
-var starSharksPurchasingContractAddresses = "0x1f7acc330fe462a9468aa47ecdb543787577e1e7"
+var starSharksRentContractAddresses = "0xe9e092e46a75d192d9d7d3942f11f116fd2f7ca9"
+var starSharksPurchaseContractAddresses = "0x1f7acc330fe462a9468aa47ecdb543787577e1e7"
+var starSharksWithdrawContractAddresses = "0x94019518f82762bb94280211d19d4ac025d98583"
 
 var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
 
@@ -57,8 +58,13 @@ type PayerCount struct {
 	PurchaserCount int64 `json:"purchaserCount"`
 }
 type DailyTransactionVolume struct {
-	DateTimestamp     int64 `json:"dateTimestamp"`
-	TransactionVolume int64 `json:"transactionVolume"`
+	DateTimestamp          int64                 `json:"dateTimestamp"`
+	TotalTransactionVolume UserTransactionVolume `json:"totalTransactionVolume"`
+}
+type UserTransactionVolume struct {
+	RenterTransactionVolume     int64 `json:"renterTransactionVolume`
+	PurchaserTransactionVolume  int64 `json:"purchaserTransactionVolume`
+	WithdrawerTransactionVolume int64 `json:"withdrawerTransactionVolume`
 }
 
 type ValueFrequencyPercentage struct {
@@ -272,17 +278,22 @@ func getUserTransactionVolume(address string, transfers []Transfer) float64 {
 	return transactionVolume / 1000000000000000000
 }
 
-func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) int64 {
-	volume := int64(0)
-	count := 0
+func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) UserTransactionVolume {
+	renterTransactionVolume, purchaserTransactionVolume, withdrawerTransactionVolume := int64(0), int64(0), int64(0)
 	for _, transfer := range transfers {
-		if count < 8 {
-			log.Printf("transfer: %v, value: %v", transfer, transfer.Value/1000000000000000000)
+		if transfer.ContractAddress == starSharksRentContractAddresses {
+			renterTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
+		} else if transfer.ContractAddress == starSharksPurchaseContractAddresses {
+			purchaserTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
+		} else if transfer.ContractAddress == starSharksWithdrawContractAddresses {
+			withdrawerTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
 		}
-		count += 1
-		volume += int64(transfer.Value / 1000000000000000000)
 	}
-	return volume
+	return UserTransactionVolume{
+		RenterTransactionVolume:     renterTransactionVolume,
+		PurchaserTransactionVolume:  purchaserTransactionVolume,
+		WithdrawerTransactionVolume: withdrawerTransactionVolume,
+	}
 }
 
 func exitErrorf(msg string, args ...interface{}) {
@@ -392,7 +403,7 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransacti
 
 	svc := s3.New(sess)
 
-	dailyTransactionVolume := make(map[int64]int64)
+	dailyTransactionVolume := make(map[int64]UserTransactionVolume)
 
 	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
 	if err != nil {
@@ -432,8 +443,8 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransacti
 	idx := 0
 	for dateTimestamp, transactionVolume := range dailyTransactionVolume {
 		result[idx] = DailyTransactionVolume{
-			DateTimestamp:     dateTimestamp,
-			TransactionVolume: transactionVolume,
+			DateTimestamp:          dateTimestamp,
+			TotalTransactionVolume: transactionVolume,
 		}
 		idx += 1
 	}
@@ -1049,9 +1060,9 @@ func getPerPayerType(perPayerTransfers map[string][]Transfer) map[string]payerTy
 		totalRentingValue := float64(0)
 		totalInvestingValue := float64(0)
 		for _, transfer := range transfers {
-			if transfer.ContractAddress == starSharksPurchasingContractAddresses {
+			if transfer.ContractAddress == starSharksPurchaseContractAddresses {
 				totalInvestingValue += transfer.Value / float64(dayInSec)
-			} else if transfer.ContractAddress == starSharksRentingContractAddresses {
+			} else if transfer.ContractAddress == starSharksRentContractAddresses {
 				totalRentingValue += transfer.Value / float64(dayInSec)
 			}
 		}
