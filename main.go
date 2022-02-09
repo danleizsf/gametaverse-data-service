@@ -983,7 +983,7 @@ func getUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time) []UserActivi
 		idx += 1
 	}
 	sort.Slice(perUserActivities, func(i, j int) bool {
-		return perUserActivities[i].TotalDatesCount < perUserActivities[j].TotalDatesCount
+		return perUserActivities[i].TotalDatesCount > perUserActivities[j].TotalDatesCount
 	})
 	return perUserActivities
 }
