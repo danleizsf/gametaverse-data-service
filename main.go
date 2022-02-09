@@ -62,9 +62,9 @@ type DailyTransactionVolume struct {
 	TotalTransactionVolume UserTransactionVolume `json:"totalTransactionVolume"`
 }
 type UserTransactionVolume struct {
-	RenterTransactionVolume     int64 `json:"renterTransactionVolume`
-	PurchaserTransactionVolume  int64 `json:"purchaserTransactionVolume`
-	WithdrawerTransactionVolume int64 `json:"withdrawerTransactionVolume`
+	RenterTransactionVolume     int64 `json:"renterTransactionVolume"`
+	PurchaserTransactionVolume  int64 `json:"purchaserTransactionVolume"`
+	WithdrawerTransactionVolume int64 `json:"withdrawerTransactionVolume"`
 }
 
 type ValueFrequencyPercentage struct {
