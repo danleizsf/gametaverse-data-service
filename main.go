@@ -982,6 +982,9 @@ func getUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time) []UserActivi
 		perUserActivities = append(perUserActivities, UserActivity{UserAddress: userAddress, TotalDatesCount: int64(totalDatesCount), ActiveDatesCount: int64(activeDatesCount)})
 		idx += 1
 	}
+	sort.Slice(perUserActivities, func(i, j int) bool {
+		return perUserActivities[i].TotalDatesCount < perUserActivities[j].TotalDatesCount
+	})
 	return perUserActivities
 }
 
