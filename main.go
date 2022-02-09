@@ -47,9 +47,9 @@ var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
 var dayInSec = 86400
 
 type Dau struct {
-	DateTimestamp int64      `json:"dateTimestamp"`
-	ActiveUsers   PayerCount `json:"activeUsers"`
-	NewUsers      PayerCount `json:"newUsers"`
+	DateTimestamp    int64      `json:"dateTimestamp"`
+	TotalActiveUsers PayerCount `json:"totalActiveUsers"`
+	NewActiveUsers   PayerCount `json:"newActiveUsers"`
 }
 
 type PayerCount struct {
@@ -363,11 +363,11 @@ func getGameDaus(targetTimes []time.Time) []Dau {
 		}
 		daus[timestamp] = Dau{
 			DateTimestamp: timestamp,
-			ActiveUsers: PayerCount{
+			TotalActiveUsers: PayerCount{
 				RenterCount:    int64(totalRenterCount),
 				PurchaserCount: int64(totalPurchaserCount),
 			},
-			NewUsers: PayerCount{
+			NewActiveUsers: PayerCount{
 				RenterCount:    int64(newRenterCount),
 				PurchaserCount: int64(newPurchaserCount),
 			},
