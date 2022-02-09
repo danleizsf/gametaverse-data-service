@@ -41,6 +41,7 @@ var starSharksGameWalletAddresses = map[string]bool{
 }
 var starSharksRentContractAddresses = "0xe9e092e46a75d192d9d7d3942f11f116fd2f7ca9"
 var starSharksPurchaseContractAddresses = "0x1f7acc330fe462a9468aa47ecdb543787577e1e7"
+var starSharksAuctionContractAddresses = "0xd78be0b93a3c9d1a9323bca03184accf1a57e548"
 var starSharksWithdrawContractAddresses = "0x94019518f82762bb94280211d19d4ac025d98583"
 
 var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
@@ -283,7 +284,7 @@ func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) Us
 	for _, transfer := range transfers {
 		if transfer.ContractAddress == starSharksRentContractAddresses {
 			renterTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
-		} else if transfer.ContractAddress == starSharksPurchaseContractAddresses {
+		} else if transfer.ContractAddress == starSharksPurchaseContractAddresses || transfer.ContractAddress == starSharksAuctionContractAddresses {
 			purchaserTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
 		} else if transfer.ContractAddress == starSharksWithdrawContractAddresses {
 			withdrawerTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
@@ -1063,7 +1064,7 @@ func getPerPayerType(perPayerTransfers map[string][]Transfer) map[string]payerTy
 		totalRentingValue := float64(0)
 		totalInvestingValue := float64(0)
 		for _, transfer := range transfers {
-			if transfer.ContractAddress == starSharksPurchaseContractAddresses {
+			if transfer.ContractAddress == starSharksPurchaseContractAddresses || transfer.ContractAddress == starSharksAuctionContractAddresses {
 				totalInvestingValue += transfer.Value / float64(dayInSec)
 			} else if transfer.ContractAddress == starSharksRentContractAddresses {
 				totalRentingValue += transfer.Value / float64(dayInSec)
