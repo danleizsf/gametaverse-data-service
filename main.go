@@ -162,6 +162,7 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserProfitDistribution" {
+		log.Printf("input address %s", input.Params[0].Address)
 		response := getUserProfitDistribution(input.Params[0].Address, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 		//return generateJsonResponse(response)
@@ -1146,7 +1147,7 @@ func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 	}
 }
 
-func getUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
+func getUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTimeObj time.Time) UserRoiDetail {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -1188,22 +1189,19 @@ func getUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTime
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
 	}
-	perUserProfit := make(map[string]int64)
+
+	userRoiDetail := UserRoiDetail{}
 	for _, transfer := range totalTransfers {
-		if _, ok := starSharksGameWalletAddresses[transfer.FromAddress]; ok {
-			continue
+		if transfer.FromAddress == userAddress {
+			userRoiDetail.TotalSpending += int64(transfer.Value / float64(seaTokenUnit))
+			userRoiDetail.TotalProfit -= int64(transfer.Value / float64(seaTokenUnit))
+		} else if transfer.ToAddress == userAddress {
+			userRoiDetail.TotalProfit += int64(transfer.Value / float64(seaTokenUnit))
 		}
-		if _, ok := starSharksGameWalletAddresses[transfer.ToAddress]; ok {
-			continue
-		}
-		if transfer.FromAddress != userAddress || transfer.ToAddress != userAddress {
-			continue
-		}
-		perUserProfit[transfer.FromAddress] -= int64(transfer.Value / float64(seaTokenUnit))
-		perUserProfit[transfer.ToAddress] += int64(transfer.Value / float64(seaTokenUnit))
 	}
 
-	return generateValueDistribution(perUserProfit)
+	userRoiDetail.UserAddress = userAddress
+	return userRoiDetail
 }
 
 func getPerPayerTransfers(transfers []Transfer) map[string][]Transfer {
