@@ -68,6 +68,18 @@ type UserTransactionVolume struct {
 	WithdrawerTransactionVolume int64 `json:"withdrawerTransactionVolume"`
 }
 
+type UserRoiDetail struct {
+	UserAddress       string `json:"userAddress"`
+	JoinDateTimestamp int64  `json:"joinDateTimestamp"`
+	TotalSpending     int64  `json:"totalSpending"`
+	TotalProfit       int64  `json:"totalProfit"`
+}
+
+type AllUserRoiDetails struct {
+	OverallProfitableRate float64         `json:"overallProfitableRate"`
+	UserRoiDetails        []UserRoiDetail `json:"userRoiDetails"`
+}
+
 type ValueFrequencyPercentage struct {
 	Value               int64   `json:"value"`
 	FrequencyPercentage float64 `json:"frequencyPercentage"`
@@ -150,6 +162,9 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := getUserActiveDates(starSharksStartingDate, time.Now())
 		return response, nil
 		//return generateJsonResponse(response)
+	} else if input.Method == "getNewUserProfitableRate" {
+		response := getNewUserProfitableRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Now())
+		return response, nil
 	}
 	return "", nil
 }
@@ -806,7 +821,7 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	return float64(len(retentionedUsers)) / float64(len(fromDateActiveUsers))
 }
 
-func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]bool {
+func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]int64 {
 	requestInput :=
 		&s3.GetObjectInput{
 			Bucket: aws.String(userBucketName),
@@ -828,14 +843,14 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 		exitErrorf("Unable to unmarshall user meta info, %v", err)
 	}
 
-	newUsers := map[string]bool{}
+	newUsers := map[string]int64{}
 	for address, userMetaInfo := range m {
 		timestamp, _ := strconv.Atoi(userMetaInfo["timestamp"])
 		userJoinTimestampObj := time.Unix(int64(timestamp), 0)
 		if userJoinTimestampObj.Before(fromTimeObj) || userJoinTimestampObj.After(toTimeObj) {
 			continue
 		}
-		newUsers[address] = true
+		newUsers[address] = int64(timestamp)
 	}
 	return newUsers
 }
@@ -987,6 +1002,101 @@ func getUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time) []UserActivi
 		return perUserActivities[i].TotalDatesCount > perUserActivities[j].TotalDatesCount
 	})
 	return perUserActivities
+}
+
+func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUserRoiDetails {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"),
+	})
+
+	svc := s3.New(sess)
+
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
+
+	newUsers := getNewUsers(fromTimeObj, toTimeObj, *svc)
+
+	totalTransfers := make([]Transfer, 0)
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+			continue
+		}
+
+		requestInput :=
+			&s3.GetObjectInput{
+				Bucket: aws.String(dailyTransferBucketName),
+				Key:    aws.String(*item.Key),
+			}
+		result, err := svc.GetObject(requestInput)
+		if err != nil {
+			exitErrorf("Unable to get object, %v", err)
+		}
+		body, err := ioutil.ReadAll(result.Body)
+		if err != nil {
+			exitErrorf("Unable to get body, %v", err)
+		}
+		bodyString := string(body)
+		//transactions := converCsvStringToTransactionStructs(bodyString)
+		transfers := convertCsvStringToTransferStructs(bodyString)
+		log.Printf("transfer num: %d", len(transfers))
+		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+		totalTransfers = append(totalTransfers, transfers...)
+	}
+	perNewUserRoiDetail := map[string]*UserRoiDetail{}
+	for _, transfer := range totalTransfers {
+		//if transfer.FromAddress != "0xfff5de86577b3f778ac6cc236384ed6db1825bff" && transfer.ToAddress != "0xfff5de86577b3f778ac6cc236384ed6db1825bff" {
+		//	continue
+		//}
+
+		//log.Printf("user %s transfer %v", "0xfff5de86577b3f778ac6cc236384ed6db1825bff", transfer)
+		if joinedTimestamp, ok := newUsers[transfer.FromAddress]; ok {
+			value := transfer.Value / float64(seaTokenUnit)
+			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
+				userRoiDetails.TotalProfit -= int64(value)
+				userRoiDetails.TotalSpending += int64(value)
+			} else {
+				perNewUserRoiDetail[transfer.FromAddress] = &UserRoiDetail{
+					UserAddress:       transfer.FromAddress,
+					JoinDateTimestamp: joinedTimestamp,
+					TotalSpending:     int64(value),
+					TotalProfit:       int64(-value),
+				}
+			}
+		}
+		if joinedTimestamp, ok := newUsers[transfer.ToAddress]; ok {
+			value := transfer.Value / float64(seaTokenUnit)
+			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
+				userRoiDetails.TotalProfit += int64(value)
+			} else {
+				perNewUserRoiDetail[transfer.ToAddress] = &UserRoiDetail{
+					UserAddress:       transfer.ToAddress,
+					JoinDateTimestamp: joinedTimestamp,
+					TotalSpending:     0,
+					TotalProfit:       int64(value),
+				}
+			}
+		}
+	}
+	userRoiDetails := make([]UserRoiDetail, len(perNewUserRoiDetail))
+	profitableUserCount := 0
+	idx := 0
+	for _, userRoiDetail := range perNewUserRoiDetail {
+		userRoiDetails[idx] = *userRoiDetail
+		idx += 1
+		if userRoiDetail.TotalProfit > 0 {
+			profitableUserCount += 1
+		}
+	}
+
+	return AllUserRoiDetails{
+		UserRoiDetails:        userRoiDetails,
+		OverallProfitableRate: float64(profitableUserCount) / float64(len(perNewUserRoiDetail)),
+	}
 }
 
 func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
