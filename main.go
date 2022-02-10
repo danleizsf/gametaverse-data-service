@@ -34,6 +34,7 @@ type Param struct {
 
 var dailyTransferBucketName = "gametaverse-bucket"
 var userBucketName = "gametaverse-user-bucket"
+var priceBucketName = "gametaverse-price-bucket"
 var seaTokenUnit = 1000000000000000000
 var starSharksGameWalletAddresses = map[string]bool{
 	"0x0000000000000000000000000000000000000000": true,
@@ -89,6 +90,16 @@ type UserActivity struct {
 	UserAddress      string `json:"userAddress"`
 	TotalDatesCount  int64  `json:"totalDatesCount"`
 	ActiveDatesCount int64  `json:"activeDatesCount"`
+}
+
+type PriceHistory struct {
+	ContractAddress string  `json:"contract_address"`
+	Prices          []Price `json:"Prices"`
+}
+
+type Price struct {
+	Date  string  `json:"date"`
+	Price float64 `json:"price"`
 }
 
 type Transaction struct {
@@ -855,6 +866,31 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 	return newUsers
 }
 
+func getPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) PriceHistory {
+	requestInput :=
+		&s3.GetObjectInput{
+			Bucket: aws.String(priceBucketName),
+			Key:    aws.String("sea-token-price-history.json"),
+		}
+	result, err := svc.GetObject(requestInput)
+	if err != nil {
+		exitErrorf("Unable to get object, %v", err)
+	}
+	body, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		exitErrorf("Unable to read body, %v", err)
+	}
+
+	priceHistory := PriceHistory{}
+	err = json.Unmarshal(body, &priceHistory)
+	if err != nil {
+		//log.Printf("body: %s", fmt.Sprintf("%s", body))
+		exitErrorf("Unable to unmarshall user meta info, %v", err)
+	}
+
+	return priceHistory
+}
+
 func getUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
@@ -1048,6 +1084,14 @@ func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 		totalTransfers = append(totalTransfers, transfers...)
 	}
 	perNewUserRoiDetail := map[string]*UserRoiDetail{}
+
+	priceHistory := getPriceHistory("sea", fromTimeObj, toTimeObj, *svc)
+	priceHisoryMap := map[int64]float64{}
+	layout := "2006-01-02"
+	for _, price := range priceHistory.Prices {
+		timeObj, _ := time.Parse(layout, price.Date)
+		priceHisoryMap[timeObj.Unix()] = price.Price
+	}
 	for _, transfer := range totalTransfers {
 		//if transfer.FromAddress != "0xfff5de86577b3f778ac6cc236384ed6db1825bff" && transfer.ToAddress != "0xfff5de86577b3f778ac6cc236384ed6db1825bff" {
 		//	continue
@@ -1055,7 +1099,8 @@ func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 
 		//log.Printf("user %s transfer %v", "0xfff5de86577b3f778ac6cc236384ed6db1825bff", transfer)
 		if joinedTimestamp, ok := newUsers[transfer.FromAddress]; ok {
-			value := transfer.Value / float64(seaTokenUnit)
+			dateTimestamp := (joinedTimestamp / int64(dayInSec)) * int64(dayInSec)
+			value := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
 				userRoiDetails.TotalProfit -= int64(value)
 				userRoiDetails.TotalSpending += int64(value)
@@ -1093,6 +1138,8 @@ func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 		}
 	}
 
+	//log.Printf("priceHistory: %v", priceHistory)
+	//return AllUserRoiDetails{}
 	return AllUserRoiDetails{
 		UserRoiDetails:        userRoiDetails,
 		OverallProfitableRate: float64(profitableUserCount) / float64(len(perNewUserRoiDetail)),
