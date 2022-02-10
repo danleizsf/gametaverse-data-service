@@ -162,7 +162,7 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserProfitDistribution" {
-		response := getUserProfitDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		response := getUserProfitDistribution(input.Params[0].Address, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 		//return generateJsonResponse(response)
 	} else if input.Method == "getUserRoi" {
@@ -1146,7 +1146,7 @@ func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 	}
 }
 
-func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
+func getUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -1194,6 +1194,9 @@ func getUserProfitDistribution(fromTimeObj time.Time, toTimeObj time.Time) []Val
 			continue
 		}
 		if _, ok := starSharksGameWalletAddresses[transfer.ToAddress]; ok {
+			continue
+		}
+		if transfer.FromAddress != userAddress || transfer.ToAddress != userAddress {
 			continue
 		}
 		perUserProfit[transfer.FromAddress] -= int64(transfer.Value / float64(seaTokenUnit))
