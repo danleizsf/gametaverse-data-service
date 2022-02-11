@@ -36,7 +36,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Build binary
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o main main.go && zip deployment.zip main 
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o main *.go && zip deployment.zip main 
 
       # Runs a set of commands using the runners shell
       - name: Configure AWS Credentials  
