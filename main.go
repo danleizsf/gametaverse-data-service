@@ -383,7 +383,7 @@ func getGameDaus(targetTimes []time.Time) []Dau {
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
 		perPayerTransfers := getPerPayerTransfers(transfers)
 		//perUserTransfers := getActiveUsersFromTransfers(transfers)
-		totalPerPayerType := getPerPayerType(perPayerTransfers)
+		totalPerPayerType := GetPerPayerType(perPayerTransfers)
 		totalRenterCount, totalPurchaserCount := 0, 0
 		for _, payerType := range totalPerPayerType {
 			if payerType == Renter {
@@ -400,7 +400,7 @@ func getGameDaus(targetTimes []time.Time) []Dau {
 				perNewPayerTransfers[payerAddress] = transfers
 			}
 		}
-		perNewPayerType := getPerPayerType(perNewPayerTransfers)
+		perNewPayerType := GetPerPayerType(perNewPayerTransfers)
 		newRenterCount, newPurchaserCount := 0, 0
 		for _, payerType := range perNewPayerType {
 			if payerType == Renter {
