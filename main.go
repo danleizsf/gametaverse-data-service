@@ -70,10 +70,10 @@ type UserTransactionVolume struct {
 }
 
 type UserRoiDetail struct {
-	UserAddress       string `json:"userAddress"`
-	JoinDateTimestamp int64  `json:"joinDateTimestamp"`
-	TotalSpending     int64  `json:"totalSpending"`
-	TotalProfit       int64  `json:"totalProfit"`
+	UserAddress       string  `json:"userAddress"`
+	JoinDateTimestamp int64   `json:"joinDateTimestamp"`
+	TotalSpending     float64 `json:"totalSpending"`
+	TotalProfit       float64 `json:"totalProfit"`
 }
 
 type AllUserRoiDetails struct {
@@ -1103,27 +1103,27 @@ func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 			dateTimestamp := (joinedTimestamp / int64(dayInSec)) * int64(dayInSec)
 			value := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
-				userRoiDetails.TotalProfit -= int64(value)
-				userRoiDetails.TotalSpending += int64(value)
+				userRoiDetails.TotalProfit -= value
+				userRoiDetails.TotalSpending += value
 			} else {
 				perNewUserRoiDetail[transfer.FromAddress] = &UserRoiDetail{
 					UserAddress:       transfer.FromAddress,
 					JoinDateTimestamp: joinedTimestamp,
-					TotalSpending:     int64(value),
-					TotalProfit:       int64(-value),
+					TotalSpending:     value,
+					TotalProfit:       value,
 				}
 			}
 		}
 		if joinedTimestamp, ok := newUsers[transfer.ToAddress]; ok {
 			value := transfer.Value / float64(seaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
-				userRoiDetails.TotalProfit += int64(value)
+				userRoiDetails.TotalProfit += value
 			} else {
 				perNewUserRoiDetail[transfer.ToAddress] = &UserRoiDetail{
 					UserAddress:       transfer.ToAddress,
 					JoinDateTimestamp: joinedTimestamp,
 					TotalSpending:     0,
-					TotalProfit:       int64(value),
+					TotalProfit:       value,
 				}
 			}
 		}
@@ -1193,10 +1193,10 @@ func getUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTime
 	userRoiDetail := UserRoiDetail{}
 	for _, transfer := range totalTransfers {
 		if transfer.FromAddress == userAddress {
-			userRoiDetail.TotalSpending += int64(transfer.Value / float64(seaTokenUnit))
-			userRoiDetail.TotalProfit -= int64(transfer.Value / float64(seaTokenUnit))
+			userRoiDetail.TotalSpending += transfer.Value / float64(seaTokenUnit)
+			userRoiDetail.TotalProfit -= transfer.Value / float64(seaTokenUnit)
 		} else if transfer.ToAddress == userAddress {
-			userRoiDetail.TotalProfit += int64(transfer.Value / float64(seaTokenUnit))
+			userRoiDetail.TotalProfit += transfer.Value / float64(seaTokenUnit)
 		}
 	}
 
