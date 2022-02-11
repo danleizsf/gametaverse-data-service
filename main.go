@@ -77,9 +77,11 @@ type UserRoiDetail struct {
 }
 
 type UserType struct {
-	UserAddress string `json:"userAddress"`
-	Type        string `json:"type"`
+	UserAddress string     `json:"userAddress"`
+	Type        string     `json:"type"`
+	Transfers   []Transfer `json:"transfers"`
 }
+
 type AllUserRoiDetails struct {
 	OverallProfitableRate float64         `json:"overallProfitableRate"`
 	UserRoiDetails        []UserRoiDetail `json:"userRoiDetails"`
@@ -1290,15 +1292,18 @@ func getUserType(userAddress string) UserType {
 	}
 	//perUserTransfers := getActiveUsersFromTransfers(transfers)
 	payerType := getPerPayerType(payerTransfers)[userAddress]
+	transfers := payerTransfers[userAddress]
 	if payerType == Renter {
 		return UserType{
 			UserAddress: userAddress,
 			Type:        "renter",
+			Transfers:   transfers,
 		}
 	} else {
 		return UserType{
 			UserAddress: userAddress,
 			Type:        "purchaser",
+			Transfers:   transfers,
 		}
 	}
 }
