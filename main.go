@@ -1225,27 +1225,6 @@ func getPerPayerTransfers(transfers []Transfer) map[string][]Transfer {
 	return perUserTransfers
 }
 
-func getPerPayerType(perPayerTransfers map[string][]Transfer) map[string]payerType {
-	perPayerType := map[string]payerType{}
-	for payerAddress, transfers := range perPayerTransfers {
-		totalRentingValue := float64(0)
-		totalInvestingValue := float64(0)
-		for _, transfer := range transfers {
-			if transfer.ContractAddress == starSharksPurchaseContractAddresses || transfer.ContractAddress == starSharksAuctionContractAddresses {
-				totalInvestingValue += transfer.Value / float64(dayInSec)
-			} else if transfer.ContractAddress == starSharksRentContractAddresses {
-				totalRentingValue += transfer.Value / float64(dayInSec)
-			}
-		}
-		if totalInvestingValue > totalRentingValue {
-			perPayerType[payerAddress] = Purchaser
-		} else {
-			perPayerType[payerAddress] = Renter
-		}
-	}
-	return perPayerType
-}
-
 func getUserType(userAddress string) UserType {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
@@ -1291,7 +1270,7 @@ func getUserType(userAddress string) UserType {
 		}
 	}
 	//perUserTransfers := getActiveUsersFromTransfers(transfers)
-	payerType := getPerPayerType(payerTransfers)[userAddress]
+	payerType := GetPerPayerType(payerTransfers)[userAddress]
 	transfers := payerTransfers[userAddress]
 	if payerType == Renter {
 		return UserType{
