@@ -23,17 +23,17 @@ import (
 func process(ctx context.Context, input Input) (interface{}, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
-		return getGameDaus(generateTimeObjs(input)), nil
+		return GetGameDaus(generateTimeObjs(input)), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
-		response := getGameDailyTransactionVolumes(generateTimeObjs(input))
+		response := GetGameDailyTransactionVolumes(generateTimeObjs(input))
 		return response, nil
 	} else if input.Method == "getUserData" {
 		return getUserData(input.Params[0].Address)
 	} else if input.Method == "getUserRetentionRate" {
-		response := getUserRetentionRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		response := GetUserRetentionRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserRepurchaseRate" {
-		response := getUserRepurchaseRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		response := GetUserRepurchaseRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserSpendingDistribution" {
 		response := getUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
@@ -108,159 +108,6 @@ func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) Us
 func exitErrorf(msg string, args ...interface{}) {
 	log.Printf(msg + "\n")
 	os.Exit(1)
-}
-
-func getGameDaus(targetTimes []time.Time) []Dau {
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String("us-west-1"),
-	})
-
-	svc := s3.New(sess)
-
-	daus := make(map[int64]Dau)
-
-	bucketName := "gametaverse-bucket"
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
-	if err != nil {
-		exitErrorf("Unable to list object, %v", err)
-	}
-
-	for _, item := range resp.Contents {
-		log.Printf("file name: %s\n", *item.Key)
-		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-		timeObj := time.Unix(timestamp, 0)
-		if !isEligibleToProcess(timeObj, targetTimes) {
-			continue
-		}
-		log.Printf("filtered time: %v", timeObj)
-
-		requestInput :=
-			&s3.GetObjectInput{
-				Bucket: aws.String(bucketName),
-				Key:    aws.String(*item.Key),
-			}
-		result, err := svc.GetObject(requestInput)
-		if err != nil {
-			exitErrorf("Unable to get object, %v", err)
-		}
-		body, err := ioutil.ReadAll(result.Body)
-		if err != nil {
-			exitErrorf("Unable to get body, %v", err)
-		}
-		bodyString := string(body)
-		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := ConvertCsvStringToTransferStructs(bodyString)
-		log.Printf("transfer num: %d", len(transfers))
-		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-		perPayerTransfers := getPerPayerTransfers(transfers)
-		//perUserTransfers := getActiveUsersFromTransfers(transfers)
-		totalPerPayerType := GetPerPayerType(perPayerTransfers)
-		totalRenterCount, totalPurchaserCount := 0, 0
-		for _, payerType := range totalPerPayerType {
-			if payerType == Renter {
-				totalRenterCount += 1
-			} else if payerType == Purchaser {
-				totalPurchaserCount += 1
-			}
-		}
-
-		newUsers := getNewUsers(timeObj, time.Unix(timestamp+int64(dayInSec), 0), *svc)
-		perNewPayerTransfers := map[string][]Transfer{}
-		for payerAddress, transfers := range perPayerTransfers {
-			if _, ok := newUsers[payerAddress]; ok {
-				perNewPayerTransfers[payerAddress] = transfers
-			}
-		}
-		perNewPayerType := GetPerPayerType(perNewPayerTransfers)
-		newRenterCount, newPurchaserCount := 0, 0
-		for _, payerType := range perNewPayerType {
-			if payerType == Renter {
-				newRenterCount += 1
-			} else if payerType == Purchaser {
-				newPurchaserCount += 1
-			}
-		}
-		daus[timestamp] = Dau{
-			DateTimestamp: timestamp,
-			TotalActiveUsers: PayerCount{
-				RenterCount:    int64(totalRenterCount),
-				PurchaserCount: int64(totalPurchaserCount),
-			},
-			NewActiveUsers: PayerCount{
-				RenterCount:    int64(newRenterCount),
-				PurchaserCount: int64(newPurchaserCount),
-			},
-		}
-	}
-	result := make([]Dau, len(daus))
-	idx := 0
-	for _, dau := range daus {
-		result[idx] = dau
-		idx += 1
-	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].DateTimestamp < result[j].DateTimestamp
-	})
-	return result
-}
-
-func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransactionVolume {
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String("us-west-1"),
-	})
-
-	svc := s3.New(sess)
-
-	dailyTransactionVolume := make(map[int64]UserTransactionVolume)
-
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
-	if err != nil {
-		exitErrorf("Unable to list object, %v", err)
-	}
-
-	for _, item := range resp.Contents {
-		log.Printf("file name: %s\n", *item.Key)
-		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-		timeObj := time.Unix(timestamp, 0)
-		if !isEligibleToProcess(timeObj, targetTimeObjs) {
-			continue
-		}
-		requestInput :=
-			&s3.GetObjectInput{
-				Bucket: aws.String(dailyTransferBucketName),
-				Key:    aws.String(*item.Key),
-			}
-		result, err := svc.GetObject(requestInput)
-		if err != nil {
-			exitErrorf("Unable to get object, %v", err)
-		}
-		body, err := ioutil.ReadAll(result.Body)
-		if err != nil {
-			exitErrorf("Unable to get body, %v", err)
-		}
-		bodyString := string(body)
-		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := ConvertCsvStringToTransferStructs(bodyString)
-		log.Printf("transfer num: %d", len(transfers))
-		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-		dailyTransactionVolume[int64(dateTimestamp)] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
-	}
-
-	result := make([]DailyTransactionVolume, len(dailyTransactionVolume))
-	idx := 0
-	for dateTimestamp, transactionVolume := range dailyTransactionVolume {
-		result[idx] = DailyTransactionVolume{
-			DateTimestamp:          dateTimestamp,
-			TotalTransactionVolume: transactionVolume,
-		}
-		idx += 1
-	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].DateTimestamp < result[j].DateTimestamp
-	})
-	return result
 }
 
 func getUserData(address string) (string, error) {
@@ -560,60 +407,6 @@ func generateRoiDistribution(perUserRoiInDays map[string]int64) []ValueFrequency
 	return result
 }
 
-func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String("us-west-1"),
-	})
-
-	svc := s3.New(sess)
-	fromDateTimestamp := fromTimeObj.Unix()
-	toDateTimestamp := toTimeObj.Unix()
-
-	requestInput :=
-		&s3.GetObjectInput{
-			Bucket: aws.String(dailyTransferBucketName),
-			Key:    aws.String(fmt.Sprintf("%d-in-game-token-transfers-with-timestamp.csv", fromDateTimestamp)),
-		}
-
-	result, err := svc.GetObject(requestInput)
-	if err != nil {
-		exitErrorf("Unable to get object, %v", err)
-	}
-	body, err := ioutil.ReadAll(result.Body)
-	if err != nil {
-		exitErrorf("Unable to read body, %v", err)
-	}
-	bodyString := string(body)
-	fromDateTransfers := ConvertCsvStringToTransferStructs(bodyString)
-
-	requestInput =
-		&s3.GetObjectInput{
-			Bucket: aws.String(dailyTransferBucketName),
-			Key:    aws.String(fmt.Sprintf("%d-in-game-token-transfers-with-timestamp.csv", toDateTimestamp)),
-		}
-
-	result, err = svc.GetObject(requestInput)
-	if err != nil {
-		exitErrorf("Unable to get object, %v", err)
-	}
-	body, err = ioutil.ReadAll(result.Body)
-	if err != nil {
-		exitErrorf("Unable to read body, %v", err)
-	}
-	bodyString = string(body)
-	toDateTransfers := ConvertCsvStringToTransferStructs(bodyString)
-
-	fromDateActiveUsers := getActiveUsersFromTransfers(fromDateTransfers)
-	toDateActiveUsers := getActiveUsersFromTransfers(toDateTransfers)
-	retentionedUsers := map[string]bool{}
-	for fromDateUser := range fromDateActiveUsers {
-		if _, ok := toDateActiveUsers[fromDateUser]; ok {
-			retentionedUsers[fromDateUser] = true
-		}
-	}
-	return float64(len(retentionedUsers)) / float64(len(fromDateActiveUsers))
-}
-
 func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]int64 {
 	requestInput :=
 		&s3.GetObjectInput{
@@ -673,7 +466,7 @@ func getPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Tim
 	return priceHistory
 }
 
-func getUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
+func GetUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
