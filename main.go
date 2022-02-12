@@ -20,135 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-type Input struct {
-	Method string  `json:"method"`
-	Params []Param `json:"params"`
-}
-
-type Param struct {
-	Address       string `json:"address"`
-	Timestamp     int64  `json:"timestamp"`
-	FromTimestamp int64  `json:"fromTimestamp"`
-	ToTimestamp   int64  `json:"toTimestamp"`
-}
-
-var dailyTransferBucketName = "gametaverse-bucket"
-var userBucketName = "gametaverse-user-bucket"
-var priceBucketName = "gametaverse-price-bucket"
-var seaTokenUnit = 1000000000000000000
-var starSharksGameWalletAddresses = map[string]bool{
-	"0x0000000000000000000000000000000000000000": true,
-	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
-}
-var starSharksRentContractAddresses = "0xe9e092e46a75d192d9d7d3942f11f116fd2f7ca9"
-var starSharksPurchaseContractAddresses = "0x1f7acc330fe462a9468aa47ecdb543787577e1e7"
-var starSharksAuctionContractAddresses = "0xd78be0b93a3c9d1a9323bca03184accf1a57e548"
-var starSharksWithdrawContractAddresses = "0x94019518f82762bb94280211d19d4ac025d98583"
-
-var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
-
-var dayInSec = 86400
-
-type Dau struct {
-	DateTimestamp    int64      `json:"dateTimestamp"`
-	TotalActiveUsers PayerCount `json:"totalActiveUsers"`
-	NewActiveUsers   PayerCount `json:"newActiveUsers"`
-}
-
-type PayerCount struct {
-	RenterCount    int64 `json:"renterCount"`
-	PurchaserCount int64 `json:"purchaserCount"`
-}
-type DailyTransactionVolume struct {
-	DateTimestamp          int64                 `json:"dateTimestamp"`
-	TotalTransactionVolume UserTransactionVolume `json:"totalTransactionVolume"`
-}
-type UserTransactionVolume struct {
-	RenterTransactionVolume     int64 `json:"renterTransactionVolume"`
-	PurchaserTransactionVolume  int64 `json:"purchaserTransactionVolume"`
-	WithdrawerTransactionVolume int64 `json:"withdrawerTransactionVolume"`
-}
-
-type UserRoiDetail struct {
-	UserAddress       string  `json:"userAddress"`
-	JoinDateTimestamp int64   `json:"joinDateTimestamp"`
-	TotalSpending     float64 `json:"totalSpending"`
-	TotalProfit       float64 `json:"totalProfit"`
-}
-
-type UserType struct {
-	UserAddress string     `json:"userAddress"`
-	Type        string     `json:"type"`
-	Transfers   []Transfer `json:"transfers"`
-}
-
-type AllUserRoiDetails struct {
-	OverallProfitableRate float64         `json:"overallProfitableRate"`
-	UserRoiDetails        []UserRoiDetail `json:"userRoiDetails"`
-}
-
-type ValueFrequencyPercentage struct {
-	Value               int64   `json:"value"`
-	FrequencyPercentage float64 `json:"frequencyPercentage"`
-}
-
-type UserActivity struct {
-	UserAddress      string `json:"userAddress"`
-	TotalDatesCount  int64  `json:"totalDatesCount"`
-	ActiveDatesCount int64  `json:"activeDatesCount"`
-}
-
-type PriceHistory struct {
-	ContractAddress string  `json:"contract_address"`
-	Prices          []Price `json:"Prices"`
-}
-
-type Price struct {
-	Date  string  `json:"date"`
-	Price float64 `json:"price"`
-}
-
-type Transaction struct {
-	TransactionHash      string
-	Nonce                string
-	BlockHash            string
-	BlockNumber          int
-	TransactionIndex     int
-	FromAddress          string
-	ToAddress            string
-	Value                int
-	Gas                  int
-	GasPrice             int
-	Input                string
-	BlockTimestamp       int64
-	MaxFeePerGas         int
-	MaxPriorityFeePerGas int
-}
-
-type Transfer struct {
-	TokenAddress    string
-	FromAddress     string
-	ToAddress       string
-	Value           float64
-	TransactionHash string
-	LogIndex        int
-	BlockNumber     int
-	Timestamp       int
-	ContractAddress string
-}
-
-type UserMetaInfo struct {
-	Timestamp       int64  `json:"timestamp"`
-	TransactionHash string `json:"transaction_hash"`
-}
-
-type payerType int64
-
-const (
-	Renter    payerType = 0
-	Purchaser payerType = 1
-)
-
 func process(ctx context.Context, input Input) (interface{}, error) {
 	log.Printf("intput: %v", input)
 	if input.Method == "getDaus" {
@@ -191,107 +62,8 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 }
 
 func main() {
-	// Make the handler available for Remove Procedure Call by AWS Lambda
 	lambda.Start(process)
 }
-
-//func converCsvStringToTransactionStructs(csvString string) []Transaction {
-//	lines := strings.Split(csvString, "\n")
-//	transactions := make([]Transaction, 0)
-//	count := 0
-//	for lineNum, lineString := range lines {
-//		if lineNum == 0 {
-//			continue
-//		}
-//		fields := strings.Split(lineString, ",")
-//		if len(fields) < 15 {
-//			continue
-//		}
-//		count += 1
-//		blockNumber, _ := strconv.Atoi(fields[3])
-//		transactionIndex, _ := strconv.Atoi(fields[4])
-//		value, _ := strconv.Atoi(fields[7])
-//		gas, _ := strconv.Atoi(fields[8])
-//		gasPrice, _ := strconv.Atoi(fields[9])
-//		blockTimestamp, _ := strconv.Atoi(fields[11])
-//		maxFeePerGas, _ := strconv.Atoi(fields[12])
-//		maxPriorityFeePerGas, _ := strconv.Atoi(fields[13])
-//		transactions = append(transactions, Transaction{
-//			TransactionHash:      fields[0],
-//			Nonce:                fields[1],
-//			BlockHash:            fields[2],
-//			BlockNumber:          blockNumber,
-//			TransactionIndex:     transactionIndex,
-//			FromAddress:          fields[5],
-//			ToAddress:            fields[6],
-//			Value:                value,
-//			Gas:                  gas,
-//			GasPrice:             gasPrice,
-//			Input:                fields[10],
-//			BlockTimestamp:       int64(blockTimestamp),
-//			MaxFeePerGas:         maxFeePerGas,
-//			MaxPriorityFeePerGas: maxPriorityFeePerGas,
-//			TransactionType:      fields[14],
-//		})
-//	}
-//	return transactions
-//}
-
-func convertCsvStringToTransferStructs(csvString string) []Transfer {
-	lines := strings.Split(csvString, "\n")
-	transfers := make([]Transfer, 0)
-	count := 0
-	log.Printf("enterred converCsvStringToTransferStructs, content len: %d", len(lines))
-	for lineNum, lineString := range lines {
-		if lineNum == 0 {
-			continue
-		}
-		fields := strings.Split(lineString, ",")
-		if len(fields) < 8 {
-			continue
-		}
-		token_address := fields[0]
-		if token_address != "0x26193c7fa4354ae49ec53ea2cebc513dc39a10aa" {
-			continue
-		}
-		count += 1
-		timestamp, _ := strconv.Atoi(fields[7])
-		blockNumber, _ := strconv.Atoi(fields[6])
-		value, _ := strconv.ParseFloat(fields[3], 64)
-		logIndex, _ := strconv.Atoi(fields[5])
-		transfers = append(transfers, Transfer{
-			TokenAddress:    fields[0],
-			FromAddress:     fields[1],
-			ToAddress:       fields[2],
-			Value:           value,
-			TransactionHash: fields[4],
-			LogIndex:        logIndex,
-			BlockNumber:     blockNumber,
-			Timestamp:       timestamp,
-			ContractAddress: fields[8],
-		})
-	}
-	return transfers
-}
-
-//func getDauFromTransactions(transactions []Transaction, timestamp int64) int {
-//	date := time.Unix(timestamp, 0).UTC()
-//	log.Printf("timestamp: %d, date: %s", timestamp, date)
-//	uniqueAddresses := make(map[string]bool)
-//	count := 0
-//	for _, transaction := range transactions {
-//		transactionDate := time.Unix(transaction.BlockTimestamp, 0).UTC()
-//		if count < 8 {
-//			log.Printf("transaction: %v, transactionDate: %s, date: %s", transaction, transactionDate, date)
-//		}
-//		count += 1
-//		if transactionDate.Year() == date.Year() && transactionDate.Month() == date.Month() && transactionDate.Day() == date.Day() {
-//			uniqueAddresses[transaction.FromAddress] = true
-//			uniqueAddresses[transaction.ToAddress] = true
-//		}
-//	}
-//	return len(uniqueAddresses)
-//}
 
 func getActiveUsersFromTransfers(transfers []Transfer) map[string]bool {
 	uniqueAddresses := make(map[string]bool)
@@ -377,7 +149,7 @@ func getGameDaus(targetTimes []time.Time) []Dau {
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
@@ -469,7 +241,7 @@ func getGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransacti
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
@@ -522,7 +294,7 @@ func getUserData(address string) (string, error) {
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
@@ -571,7 +343,7 @@ func getUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) []V
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
@@ -682,7 +454,7 @@ func getUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		eligibleTransfers = append(eligibleTransfers, transfers...)
 	}
 
@@ -812,7 +584,7 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		exitErrorf("Unable to read body, %v", err)
 	}
 	bodyString := string(body)
-	fromDateTransfers := convertCsvStringToTransferStructs(bodyString)
+	fromDateTransfers := ConvertCsvStringToTransferStructs(bodyString)
 
 	requestInput =
 		&s3.GetObjectInput{
@@ -829,7 +601,7 @@ func getUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		exitErrorf("Unable to read body, %v", err)
 	}
 	bodyString = string(body)
-	toDateTransfers := convertCsvStringToTransferStructs(bodyString)
+	toDateTransfers := ConvertCsvStringToTransferStructs(bodyString)
 
 	fromDateActiveUsers := getActiveUsersFromTransfers(fromDateTransfers)
 	toDateActiveUsers := getActiveUsersFromTransfers(toDateTransfers)
@@ -937,7 +709,7 @@ func getUserRepurchaseRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
@@ -1002,7 +774,7 @@ func getUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time) []UserActivi
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
@@ -1088,7 +860,7 @@ func getNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
@@ -1193,7 +965,7 @@ func getUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTime
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 		totalTransfers = append(totalTransfers, transfers...)
@@ -1256,7 +1028,7 @@ func getUserType(userAddress string) UserType {
 		}
 		bodyString := string(body)
 		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := convertCsvStringToTransferStructs(bodyString)
+		transfers := ConvertCsvStringToTransferStructs(bodyString)
 		log.Printf("transfer num: %d", len(transfers))
 		totalTransfers = append(totalTransfers, transfers...)
 		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
