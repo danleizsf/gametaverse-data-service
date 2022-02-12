@@ -1,9 +1,9 @@
 {
 	"jsonrpc":"2.0",
-	"method":"getRepurchaseRate",
+	"method":"getUserRepurchaseRate",
 	"params":[{
         "gameId": "StarSharks",
-        "fromTimestamp": 1642636800,
-        "toTimestamp": 1643241600
+        "fromTimestamp": 1639612800,
+        "toTimestamp": 1643587200
     }]
 }

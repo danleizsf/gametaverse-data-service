@@ -5,16 +5,105 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
+
+func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []Transfer {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"),
+	})
+
+	svc := s3.New(sess)
+
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	if err != nil {
+		exitErrorf("Unable to list object, %v", err)
+	}
+
+	concurrencyCount := 20
+	tempTotalTransfers := make([][]Transfer, concurrencyCount)
+	s3FileList := make([]*string, 0)
+	s3FileChuncks := make([][]*string, concurrencyCount)
+	for _, item := range resp.Contents {
+		log.Printf("file name: %s\n", *item.Key)
+		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+		timeObj := time.Unix(timestamp, 0)
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+			continue
+		}
+		s3FileList = append(s3FileList, item.Key)
+	}
+
+	log.Printf("s3FileList: %v", s3FileList)
+	chunckSize := int(math.Ceil(float64(len(s3FileList)) / float64(concurrencyCount)))
+	for chunckIdx := 0; chunckIdx < concurrencyCount; chunckIdx++ {
+		chunck := make([]*string, 0)
+		for j := 0; j < chunckSize; j++ {
+			fileIdx := chunckIdx*chunckSize + j
+			if fileIdx >= len(s3FileList) {
+				break
+			}
+			chunck = append(chunck, s3FileList[fileIdx])
+		}
+		log.Printf("chuckIdx: %d, chunck: %v", chunckIdx, chunck)
+		s3FileChuncks[chunckIdx] = chunck
+	}
+	log.Printf("s3FileChuncks: %v", s3FileChuncks)
+
+	var wg sync.WaitGroup
+	wg.Add(len(s3FileChuncks))
+	for i, fileNameChunck := range s3FileChuncks {
+		go func(i int, chunck []*string) {
+			defer wg.Done()
+			//chunckSess, _ := session.NewSession(&aws.Config{
+			//	Region: aws.String("us-west-1"),
+			//})
+
+			//chunckSvc := s3.New(chunckSess)
+			log.Printf("start chunck %d", i)
+			transferChunck := make([]Transfer, 0)
+			for _, fileName := range chunck {
+				requestInput := &s3.GetObjectInput{
+					Bucket: aws.String(dailyTransferBucketName),
+					Key:    aws.String(*fileName),
+				}
+				result, err := svc.GetObject(requestInput)
+				if err != nil {
+					exitErrorf("Unable to get object, %v", err)
+				}
+				body, err := ioutil.ReadAll(result.Body)
+				if err != nil {
+					exitErrorf("Unable to get body, %v", err)
+				}
+				bodyString := string(body)
+				//transactions := converCsvStringToTransactionStructs(bodyString)
+				transfers := ConvertCsvStringToTransferStructs(bodyString)
+				//log.Printf("transfer num: %d", len(transfers))
+				//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+				transferChunck = append(transferChunck, transfers...)
+			}
+			log.Printf("end chunck %d", i)
+			tempTotalTransfers[i] = transferChunck
+		}(i, fileNameChunck)
+	}
+	wg.Wait()
+	log.Printf("hello")
+	totalTransfers := make([]Transfer, 0)
+	for _, transferChunk := range tempTotalTransfers {
+		totalTransfers = append(totalTransfers, transferChunk...)
+	}
+	return totalTransfers
+}
 
 func GetPerPayerType(perPayerTransfers map[string][]Transfer) map[string]payerType {
 	perPayerType := map[string]payerType{}
@@ -71,6 +160,7 @@ func ConvertCsvStringToTransferStructs(csvString string) []Transfer {
 			ContractAddress: fields[8],
 		})
 	}
+	log.Printf("left converCsvStringToTransferStructs, content len: %d", len(lines))
 	return transfers
 }
 
