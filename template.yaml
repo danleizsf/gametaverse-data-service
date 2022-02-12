@@ -9,7 +9,7 @@ Description: >
 Globals:
   Function:
     Timeout: 60
-    MemorySize: 512
+    MemorySize: 1024
 
 Resources:
   GametaverseDataServiceFunction:

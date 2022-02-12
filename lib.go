@@ -65,31 +65,29 @@ func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []Transfer {
 	for i, fileNameChunck := range s3FileChuncks {
 		go func(i int, chunck []*string) {
 			defer wg.Done()
-			//chunckSess, _ := session.NewSession(&aws.Config{
-			//	Region: aws.String("us-west-1"),
-			//})
-
-			//chunckSvc := s3.New(chunckSess)
-			log.Printf("start chunck %d", i)
+			chunckSvc := s3.New(sess)
+			log.Printf("start chunck %d, size %d", i, len(chunck))
 			transferChunck := make([]Transfer, 0)
 			for _, fileName := range chunck {
+
+				if fileName == nil {
+					exitErrorf("to delete")
+				}
+				time.Sleep(1 * time.Second)
 				requestInput := &s3.GetObjectInput{
 					Bucket: aws.String(dailyTransferBucketName),
 					Key:    aws.String(*fileName),
 				}
-				result, err := svc.GetObject(requestInput)
+				result, err := chunckSvc.GetObject(requestInput)
 				if err != nil {
 					exitErrorf("Unable to get object, %v", err)
 				}
 				body, err := ioutil.ReadAll(result.Body)
-				if err != nil {
+				if err != nil || body == nil {
 					exitErrorf("Unable to get body, %v", err)
 				}
 				bodyString := string(body)
-				//transactions := converCsvStringToTransactionStructs(bodyString)
 				transfers := ConvertCsvStringToTransferStructs(bodyString)
-				//log.Printf("transfer num: %d", len(transfers))
-				//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 				transferChunck = append(transferChunck, transfers...)
 			}
 			log.Printf("end chunck %d", i)
@@ -130,7 +128,7 @@ func ConvertCsvStringToTransferStructs(csvString string) []Transfer {
 	lines := strings.Split(csvString, "\n")
 	transfers := make([]Transfer, 0)
 	count := 0
-	log.Printf("enterred converCsvStringToTransferStructs, content len: %d", len(lines))
+	//log.Printf("enterred converCsvStringToTransferStructs, content len: %d", len(lines))
 	for lineNum, lineString := range lines {
 		if lineNum == 0 {
 			continue
@@ -160,7 +158,7 @@ func ConvertCsvStringToTransferStructs(csvString string) []Transfer {
 			ContractAddress: fields[8],
 		})
 	}
-	log.Printf("left converCsvStringToTransferStructs, content len: %d", len(lines))
+	//log.Printf("left converCsvStringToTransferStructs, content len: %d", len(lines))
 	return transfers
 }
 
