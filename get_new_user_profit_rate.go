@@ -75,9 +75,9 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 					UserAddress:        transfer.FromAddress,
 					JoinDateTimestamp:  joinedTimestamp,
 					TotalSpendingUsd:   valueUsd,
-					TotalProfitUsd:     valueUsd,
+					TotalProfitUsd:     -valueUsd,
 					TotalSpendingToken: valueToken,
-					TotalProfitToken:   valueToken,
+					TotalProfitToken:   -valueToken,
 				}
 			}
 		}
