@@ -60,7 +60,7 @@ type UserTransactionVolume struct {
 
 type UserRoiDetail struct {
 	UserAddress        string  `json:"userAddress"`
-	JoinDateTimestamp  int64   `json:"joinDateTimestamp"`
+	JoinDateTimestamp  int64   `json:"joinDateTimestamp,omitempty"`
 	TotalSpendingUsd   float64 `json:"totalSpendingUsd"`
 	TotalProfitUsd     float64 `json:"totalProfitUsd"`
 	TotalSpendingToken float64 `json:"totalSpendingToken"`
@@ -75,7 +75,7 @@ type UserType struct {
 
 type AllUserRoiDetails struct {
 	OverallProfitableRate float64         `json:"overallProfitableRate"`
-	UserRoiDetails        []UserRoiDetail `json:"userRoiDetails"`
+	UserRoiDetails        []UserRoiDetail `json:"userRoiDetails,omitempty"`
 }
 
 type ValueFrequencyPercentage struct {
