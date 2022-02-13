@@ -118,7 +118,7 @@ func GetPerPayerType(perPayerTransfers map[string][]Transfer) map[string]payerTy
 		if totalInvestingValue > totalRentingValue {
 			perPayerType[payerAddress] = Purchaser
 		} else {
-			perPayerType[payerAddress] = Renter
+			perPayerType[payerAddress] = Rentee
 		}
 	}
 	return perPayerType

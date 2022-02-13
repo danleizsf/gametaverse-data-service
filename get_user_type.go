@@ -56,7 +56,7 @@ func GetUserType(userAddress string) UserType {
 	//perUserTransfers := getActiveUsersFromTransfers(transfers)
 	payerType := GetPerPayerType(payerTransfers)[userAddress]
 	transfers := payerTransfers[userAddress]
-	if payerType == Renter {
+	if payerType == Rentee {
 		return UserType{
 			UserAddress: userAddress,
 			Type:        "renter",

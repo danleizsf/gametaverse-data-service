@@ -35,13 +35,17 @@ var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
 var dayInSec = 86400
 
 type Dau struct {
-	DateTimestamp    int64      `json:"dateTimestamp"`
-	TotalActiveUsers PayerCount `json:"totalActiveUsers"`
-	NewActiveUsers   PayerCount `json:"newActiveUsers"`
+	DateTimestamp    int64           `json:"dateTimestamp"`
+	TotalActiveUsers ActiveUserCount `json:"totalActiveUsers"`
+	NewActiveUsers   ActiveUserCount `json:"newActiveUsers"`
 }
 
+type ActiveUserCount struct {
+	PayerCount     PayerCount `json:"payerCount"`
+	TotalUserCount int64      `json:"totalUserCount"`
+}
 type PayerCount struct {
-	RenterCount    int64 `json:"renterCount"`
+	RenteeCount    int64 `json:"renteeCount"`
 	PurchaserCount int64 `json:"purchaserCount"`
 }
 type DailyTransactionVolume struct {
@@ -132,6 +136,6 @@ type UserMetaInfo struct {
 type payerType int64
 
 const (
-	Renter    payerType = 0
+	Rentee    payerType = 0
 	Purchaser payerType = 1
 )

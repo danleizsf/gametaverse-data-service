@@ -61,7 +61,7 @@ func GetGameDaus(targetTimes []time.Time) []Dau {
 		totalPerPayerType := GetPerPayerType(perPayerTransfers)
 		totalRenterCount, totalPurchaserCount := 0, 0
 		for _, payerType := range totalPerPayerType {
-			if payerType == Renter {
+			if payerType == Rentee {
 				totalRenterCount += 1
 			} else if payerType == Purchaser {
 				totalPurchaserCount += 1
@@ -78,7 +78,7 @@ func GetGameDaus(targetTimes []time.Time) []Dau {
 		perNewPayerType := GetPerPayerType(perNewPayerTransfers)
 		newRenterCount, newPurchaserCount := 0, 0
 		for _, payerType := range perNewPayerType {
-			if payerType == Renter {
+			if payerType == Rentee {
 				newRenterCount += 1
 			} else if payerType == Purchaser {
 				newPurchaserCount += 1
@@ -86,13 +86,19 @@ func GetGameDaus(targetTimes []time.Time) []Dau {
 		}
 		daus[timestamp] = Dau{
 			DateTimestamp: timestamp,
-			TotalActiveUsers: PayerCount{
-				RenterCount:    int64(totalRenterCount),
-				PurchaserCount: int64(totalPurchaserCount),
+			TotalActiveUsers: ActiveUserCount{
+				TotalUserCount: int64(len(getActiveUsersFromTransfers(transfers))),
+				PayerCount: PayerCount{
+					RenteeCount:    int64(totalRenterCount),
+					PurchaserCount: int64(totalPurchaserCount),
+				},
 			},
-			NewActiveUsers: PayerCount{
-				RenterCount:    int64(newRenterCount),
-				PurchaserCount: int64(newPurchaserCount),
+			NewActiveUsers: ActiveUserCount{
+				TotalUserCount: int64(len(newUsers)),
+				PayerCount: PayerCount{
+					RenteeCount:    int64(newRenterCount),
+					PurchaserCount: int64(newPurchaserCount),
+				},
 			},
 		}
 	}
