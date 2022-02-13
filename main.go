@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	repo "gametaverse-data-service/repositories/functions"
 	"log"
 	"time"
 
@@ -48,6 +49,9 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 	} else if input.Method == "getUserType" {
 		response := GetUserType(input.Params[0].Address)
 		return response, nil
+	} else if input.Method == "test" {
+		return repo.GetBlockTransfer(14852202), nil
+		//return generateJsonResponse(response)
 	}
 	return "", nil
 }
