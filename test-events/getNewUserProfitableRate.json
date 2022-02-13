@@ -3,6 +3,6 @@
 	"method":"getNewUserProfitableRate",
 	"params":[{
         "gameId": "StarSharks",
-        "fromTimestamp": 1643673600
+        "fromTimestamp": 1639612800
     }]
 }
