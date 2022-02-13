@@ -2,12 +2,25 @@ package main
 
 import (
 	"context"
-	repo "gametaverse-data-service/repositories/functions"
 	"log"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
+
+var dynamoDBClient *dynamodb.DynamoDB
+
+func init() {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"),
+	})
+
+	// Create DynamoDB client
+	dynamoDBClient = dynamodb.New(sess)
+}
 
 func process(ctx context.Context, input Input) (interface{}, error) {
 	log.Printf("intput: %v", input)
@@ -53,8 +66,8 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := GetUserType()
 		return response, nil
 	} else if input.Method == "test" {
-		return repo.GetBlockTransfer(14852202), nil
-		//return generateJsonResponse(response)
+		tableNames, err := dynamoDBClient.ListTables(nil)
+		return tableNames.TableNames, err
 	}
 	return "", nil
 }

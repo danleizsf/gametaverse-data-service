@@ -28,9 +28,8 @@ func GetBlockTransfer(blockNumber int) string {
 	// tables, _ := svc.ListTables(&dynamodb.ListTablesInput{})
 	// return fmt.Sprintf("%+v", tables.TableNames)
 	dynamodbClient := CreateLocalClient()
-	// expression.Name("BlockNumber").Equal(expression.Value(14852202))
 	output, _ := dynamodbClient.Query(context.Background(), &dynamodb.QueryInput{
-		TableName:              aws.String("gametaverse-starsharks-token-transfers"),
+		TableName:              aws.String("gametaverse-starsharks-transfer"),
 		KeyConditionExpression: aws.String("BlockNumber = :blocknumber"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":blocknumber": &types.AttributeValueMemberN{Value: string(blockNumber)},
@@ -79,6 +78,30 @@ func CreateLocalClient() *dynamodb.Client {
 	return dynamodb.NewFromConfig(cfg)
 }
 
-func main() {
-	fmt.Print(GetBlockTransfer(14852202))
+func CreateDynamoDBClient() *dynamodb.Client {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == dynamodb.ServiceID && region == "us-west-1" {
+			return aws.Endpoint{
+				PartitionID:   "aws",
+				URL:           "http://localhost:8000",
+				SigningRegion: "us-west-1",
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
+			Value: aws.Credentials{
+				AccessKeyID: "dummy", SecretAccessKey: "dummy", SessionToken: "dummy",
+				Source: "Hard-coded credentials; values are irrelevant for local DynamoDB",
+			},
+		}),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return dynamodb.NewFromConfig(cfg)
 }
