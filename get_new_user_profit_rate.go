@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUserRoiDetails {
+func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDebug bool) AllUserRoiDetails {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -113,8 +113,11 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 
 	//log.Printf("priceHistory: %v", priceHistory)
 	//return AllUserRoiDetails{}
-	return AllUserRoiDetails{
-		UserRoiDetails:        userRoiDetails,
+	response := AllUserRoiDetails{
 		OverallProfitableRate: float64(profitableUserCount) / float64(len(perNewUserRoiDetail)),
 	}
+	if forDebug {
+		response.UserRoiDetails = userRoiDetails
+	}
+	return response
 }
