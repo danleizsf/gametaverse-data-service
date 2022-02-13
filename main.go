@@ -36,7 +36,7 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		return response, nil
 		//return generateJsonResponse(response)
 	} else if input.Method == "getUserActiveDates" {
-		response := GetUserActiveDates(starSharksStartingDate, time.Now())
+		response := GetUserActiveDates(starSharksStartingDate, time.Now(), input.Params[0].Limit)
 		return response, nil
 		//return generateJsonResponse(response)
 	} else if input.Method == "getNewUserProfitableRate" {

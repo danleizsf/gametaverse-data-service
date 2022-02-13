@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time) []UserActivity {
+func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time, limit int64) []UserActivity {
 
 	totalTransfers := GetTransfers(fromTimeObj, toTimeObj)
 	//for _, item := range resp.Contents {
@@ -81,5 +81,5 @@ func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time) []UserActivi
 	sort.Slice(perUserActivities, func(i, j int) bool {
 		return perUserActivities[i].TotalDatesCount > perUserActivities[j].TotalDatesCount
 	})
-	return perUserActivities
+	return perUserActivities[0:limit]
 }

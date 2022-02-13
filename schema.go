@@ -14,6 +14,7 @@ type Param struct {
 	Timestamp     int64  `json:"timestamp"`
 	FromTimestamp int64  `json:"fromTimestamp"`
 	ToTimestamp   int64  `json:"toTimestamp"`
+	Limit         int64  `json:"limit"`
 }
 
 var dailyTransferBucketName = "gametaverse-bucket"
