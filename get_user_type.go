@@ -4,8 +4,7 @@ import (
 	"time"
 )
 
-func GetUserType() UserTypeCount {
-	fromTimeObj := starSharksStartingDate
+func GetUserType(fromTimeObj time.Time) UserTypeCount {
 	toTimeObj := time.Now()
 	totalTransfers := GetTransfers(fromTimeObj, toTimeObj)
 	rentees := map[string]bool{}
