@@ -2,6 +2,7 @@
 	"jsonrpc":"2.0",
 	"method":"getUserActiveDates",
 	"params":[{
-        "gameId": "StarSharks"
+        "gameId": "StarSharks",
+		"limit": 100
     }]
 }

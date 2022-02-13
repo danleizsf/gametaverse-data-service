@@ -1,0 +1,8 @@
+{
+	"jsonrpc":"2.0",
+	"method":"getNewUserProfitableRate",
+	"params":[{
+        "gameId": "StarSharks",
+        "fromTimestamp": 1643673600
+    }]
+}
