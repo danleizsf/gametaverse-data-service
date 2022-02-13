@@ -28,11 +28,11 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := GetUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserProfitDistribution" {
-		userAddresses := map[string]bool{}
+		userAddressMap := map[string]bool{}
 		for _, param := range input.Params {
-			userAddresses[param.Address] = true
+			userAddressMap[param.Address] = true
 		}
-		response := GetUserProfitDistribution(userAddresses)
+		response := GetUserProfitDistribution(userAddressMap)
 		return response, nil
 		//return generateJsonResponse(response)
 	} else if input.Method == "getUserRoi" {
@@ -50,7 +50,7 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := GetNewUserProfitableRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0), true)
 		return response, nil
 	} else if input.Method == "getUserType" {
-		response := GetUserType(input.Params[0].Address)
+		response := GetUserType()
 		return response, nil
 	} else if input.Method == "test" {
 		return repo.GetBlockTransfer(14852202), nil
