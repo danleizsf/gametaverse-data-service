@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	repo "gametaverse-data-service/repositories/functions"
 	"io/ioutil"
 	"log"
 	"math"
@@ -149,7 +150,9 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 	} else if input.Method == "getUserActiveDates" {
 		response := getUserActiveDates(starSharksStartingDate, time.Now())
 		return response, nil
-		//return generateJsonResponse(response)
+		//return generateJsonRespon"se(response)
+	} else if input.Method == "test" {
+		return repo.GetBlockTransfer(14852202), nil
 	}
 	return "", nil
 }
