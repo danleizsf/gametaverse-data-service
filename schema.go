@@ -74,9 +74,9 @@ type UserType struct {
 }
 
 type UserTypeCount struct {
-	RenteeCount    int64 `json:"renteeCount`
-	PurchaserCount int64 `json:"purchaserCount`
-	HybridCount    int64 `json:"hybridCount`
+	RenteeCount    int64 `json:"renteeCount"`
+	PurchaserCount int64 `json:"purchaserCount"`
+	HybridCount    int64 `json:"hybridCount"`
 }
 
 type AllUserRoiDetails struct {
