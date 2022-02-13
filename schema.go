@@ -54,10 +54,12 @@ type UserTransactionVolume struct {
 }
 
 type UserRoiDetail struct {
-	UserAddress       string  `json:"userAddress"`
-	JoinDateTimestamp int64   `json:"joinDateTimestamp"`
-	TotalSpending     float64 `json:"totalSpending"`
-	TotalProfit       float64 `json:"totalProfit"`
+	UserAddress        string  `json:"userAddress"`
+	JoinDateTimestamp  int64   `json:"joinDateTimestamp"`
+	TotalSpendingUsd   float64 `json:"totalSpendingUsd"`
+	TotalProfitUsd     float64 `json:"totalProfitUsd"`
+	TotalSpendingToken float64 `json:"totalSpendingToken"`
+	TotalProfitToken   float64 `json:"totalProfitToken"`
 }
 
 type UserType struct {

@@ -58,10 +58,10 @@ func GetUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTime
 	userRoiDetail := UserRoiDetail{}
 	for _, transfer := range totalTransfers {
 		if transfer.FromAddress == userAddress {
-			userRoiDetail.TotalSpending += transfer.Value / float64(seaTokenUnit)
-			userRoiDetail.TotalProfit -= transfer.Value / float64(seaTokenUnit)
+			userRoiDetail.TotalSpendingToken += transfer.Value / float64(seaTokenUnit)
+			userRoiDetail.TotalProfitToken -= transfer.Value / float64(seaTokenUnit)
 		} else if transfer.ToAddress == userAddress {
-			userRoiDetail.TotalProfit += transfer.Value / float64(seaTokenUnit)
+			userRoiDetail.TotalProfitToken += transfer.Value / float64(seaTokenUnit)
 		}
 	}
 

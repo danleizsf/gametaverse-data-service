@@ -63,29 +63,39 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 		//log.Printf("user %s transfer %v", "0xfff5de86577b3f778ac6cc236384ed6db1825bff", transfer)
 		if joinedTimestamp, ok := newUsers[transfer.FromAddress]; ok {
 			dateTimestamp := (joinedTimestamp / int64(dayInSec)) * int64(dayInSec)
-			value := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueToken := transfer.Value / float64(seaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
-				userRoiDetails.TotalProfit -= value
-				userRoiDetails.TotalSpending += value
+				userRoiDetails.TotalProfitUsd -= valueUsd
+				userRoiDetails.TotalSpendingUsd += valueUsd
+				userRoiDetails.TotalProfitToken -= valueToken
+				userRoiDetails.TotalSpendingToken += valueToken
 			} else {
 				perNewUserRoiDetail[transfer.FromAddress] = &UserRoiDetail{
-					UserAddress:       transfer.FromAddress,
-					JoinDateTimestamp: joinedTimestamp,
-					TotalSpending:     value,
-					TotalProfit:       value,
+					UserAddress:        transfer.FromAddress,
+					JoinDateTimestamp:  joinedTimestamp,
+					TotalSpendingUsd:   valueUsd,
+					TotalProfitUsd:     valueUsd,
+					TotalSpendingToken: valueToken,
+					TotalProfitToken:   valueToken,
 				}
 			}
 		}
 		if joinedTimestamp, ok := newUsers[transfer.ToAddress]; ok {
-			value := transfer.Value / float64(seaTokenUnit)
+			dateTimestamp := (joinedTimestamp / int64(dayInSec)) * int64(dayInSec)
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueToken := transfer.Value / float64(seaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
-				userRoiDetails.TotalProfit += value
+				userRoiDetails.TotalProfitUsd += valueUsd
+				userRoiDetails.TotalProfitToken += valueToken
 			} else {
 				perNewUserRoiDetail[transfer.ToAddress] = &UserRoiDetail{
-					UserAddress:       transfer.ToAddress,
-					JoinDateTimestamp: joinedTimestamp,
-					TotalSpending:     0,
-					TotalProfit:       value,
+					UserAddress:        transfer.ToAddress,
+					JoinDateTimestamp:  joinedTimestamp,
+					TotalSpendingUsd:   0,
+					TotalProfitUsd:     valueUsd,
+					TotalSpendingToken: 0,
+					TotalProfitToken:   valueToken,
 				}
 			}
 		}
@@ -96,7 +106,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 	for _, userRoiDetail := range perNewUserRoiDetail {
 		userRoiDetails[idx] = *userRoiDetail
 		idx += 1
-		if userRoiDetail.TotalProfit > 0 {
+		if userRoiDetail.TotalProfitUsd > 0 {
 			profitableUserCount += 1
 		}
 	}
