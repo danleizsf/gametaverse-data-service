@@ -3,6 +3,6 @@
 	"method":"getUserType",
 	"params":[{
         "gameId": "StarSharks",
-        "address": "0x9c079dbccabf40a6386f688b42e4867145268e85"
+        "fromTimestamp": 1643673600
     }]
 }
