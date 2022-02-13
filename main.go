@@ -28,8 +28,11 @@ func process(ctx context.Context, input Input) (interface{}, error) {
 		response := GetUserSpendingDistribution(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return response, nil
 	} else if input.Method == "getUserProfitDistribution" {
-		log.Printf("input address %s", input.Params[0].Address)
-		response := GetUserProfitDistribution(input.Params[0].Address, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		userAddresses := map[string]bool{}
+		for _, param := range input.Params {
+			userAddresses[param.Address] = true
+		}
+		response := GetUserProfitDistribution(userAddresses)
 		return response, nil
 		//return generateJsonResponse(response)
 	} else if input.Method == "getUserRoi" {

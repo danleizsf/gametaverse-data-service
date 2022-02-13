@@ -62,8 +62,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 
 		//log.Printf("user %s transfer %v", "0xfff5de86577b3f778ac6cc236384ed6db1825bff", transfer)
 		if joinedTimestamp, ok := newUsers[transfer.FromAddress]; ok {
-			dateTimestamp := (joinedTimestamp / int64(dayInSec)) * int64(dayInSec)
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[int64(transfer.Timestamp)]
 			valueToken := transfer.Value / float64(seaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
 				userRoiDetails.TotalProfitUsd -= valueUsd
@@ -82,8 +81,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 			}
 		}
 		if joinedTimestamp, ok := newUsers[transfer.ToAddress]; ok {
-			dateTimestamp := (joinedTimestamp / int64(dayInSec)) * int64(dayInSec)
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[int64(transfer.Timestamp)]
 			valueToken := transfer.Value / float64(seaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
 				userRoiDetails.TotalProfitUsd += valueUsd

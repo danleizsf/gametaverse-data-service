@@ -1,10 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
-	"log"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,59 +8,69 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetUserProfitDistribution(userAddress string, fromTimeObj time.Time, toTimeObj time.Time) UserRoiDetail {
+func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
 
-	totalTransfers := make([]Transfer, 0)
+	fromTimeObj := starSharksStartingDate
+	toTimeObj := time.Now()
+	totalTransfers := GetTransfers(fromTimeObj, toTimeObj)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
-	if err != nil {
-		exitErrorf("Unable to list object, %v", err)
+	priceHistory := getPriceHistory("sea", fromTimeObj, toTimeObj, *svc)
+	priceHisoryMap := map[int64]float64{}
+	layout := "2006-01-02"
+	for _, price := range priceHistory.Prices {
+		timeObj, _ := time.Parse(layout, price.Date)
+		priceHisoryMap[timeObj.Unix()] = price.Price
 	}
-
-	for _, item := range resp.Contents {
-		log.Printf("file name: %s\n", *item.Key)
-		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-		timeObj := time.Unix(timestamp, 0)
-		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
-			continue
-		}
-
-		requestInput :=
-			&s3.GetObjectInput{
-				Bucket: aws.String(dailyTransferBucketName),
-				Key:    aws.String(*item.Key),
-			}
-		result, err := svc.GetObject(requestInput)
-		if err != nil {
-			exitErrorf("Unable to get object, %v", err)
-		}
-		body, err := ioutil.ReadAll(result.Body)
-		if err != nil {
-			exitErrorf("Unable to get body, %v", err)
-		}
-		bodyString := string(body)
-		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := ConvertCsvStringToTransferStructs(bodyString)
-		log.Printf("transfer num: %d", len(transfers))
-		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-		totalTransfers = append(totalTransfers, transfers...)
-	}
-
-	userRoiDetail := UserRoiDetail{}
+	perNewUserRoiDetail := map[string]*UserRoiDetail{}
 	for _, transfer := range totalTransfers {
-		if transfer.FromAddress == userAddress {
-			userRoiDetail.TotalSpendingToken += transfer.Value / float64(seaTokenUnit)
-			userRoiDetail.TotalProfitToken -= transfer.Value / float64(seaTokenUnit)
-		} else if transfer.ToAddress == userAddress {
-			userRoiDetail.TotalProfitToken += transfer.Value / float64(seaTokenUnit)
+		if _, ok := userAddresses[transfer.FromAddress]; ok {
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[int64(transfer.Timestamp)]
+			valueToken := transfer.Value / float64(seaTokenUnit)
+			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
+				userRoiDetails.TotalProfitUsd -= valueUsd
+				userRoiDetails.TotalSpendingUsd += valueUsd
+				userRoiDetails.TotalProfitToken -= valueToken
+				userRoiDetails.TotalSpendingToken += valueToken
+			} else {
+				perNewUserRoiDetail[transfer.FromAddress] = &UserRoiDetail{
+					UserAddress: transfer.FromAddress,
+					//JoinDateTimestamp:  joinedTimestamp,
+					TotalSpendingUsd:   valueUsd,
+					TotalProfitUsd:     -valueUsd,
+					TotalSpendingToken: valueToken,
+					TotalProfitToken:   -valueToken,
+				}
+			}
+		}
+		if _, ok := userAddresses[transfer.ToAddress]; ok {
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[int64(transfer.Timestamp)]
+			valueToken := transfer.Value / float64(seaTokenUnit)
+			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
+				userRoiDetails.TotalProfitUsd += valueUsd
+				userRoiDetails.TotalProfitToken += valueToken
+			} else {
+				perNewUserRoiDetail[transfer.ToAddress] = &UserRoiDetail{
+					UserAddress: transfer.ToAddress,
+					//JoinDateTimestamp:  joinedTimestamp,
+					TotalSpendingUsd:   0,
+					TotalProfitUsd:     valueUsd,
+					TotalSpendingToken: 0,
+					TotalProfitToken:   valueToken,
+				}
+			}
 		}
 	}
 
-	userRoiDetail.UserAddress = userAddress
-	return userRoiDetail
+	userRoiDetails := make([]UserRoiDetail, len(perNewUserRoiDetail))
+	idx := 0
+	for _, userRoiDetail := range perNewUserRoiDetail {
+		userRoiDetails[idx] = *userRoiDetail
+		idx += 1
+	}
+	return userRoiDetails
 }
