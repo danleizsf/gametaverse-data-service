@@ -1,10 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
-	"log"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,42 +15,37 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time) AllUse
 
 	svc := s3.New(sess)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
-	if err != nil {
-		exitErrorf("Unable to list object, %v", err)
-	}
-
 	newUsers := getNewUsers(fromTimeObj, toTimeObj, *svc)
 
-	totalTransfers := make([]Transfer, 0)
-	for _, item := range resp.Contents {
-		log.Printf("file name: %s\n", *item.Key)
-		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-		timeObj := time.Unix(timestamp, 0)
-		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
-			continue
-		}
+	totalTransfers := GetTransfers(fromTimeObj, toTimeObj)
+	//for _, item := range resp.Contents {
+	//	log.Printf("file name: %s\n", *item.Key)
+	//	timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
+	//	timeObj := time.Unix(timestamp, 0)
+	//	if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+	//		continue
+	//	}
 
-		requestInput :=
-			&s3.GetObjectInput{
-				Bucket: aws.String(dailyTransferBucketName),
-				Key:    aws.String(*item.Key),
-			}
-		result, err := svc.GetObject(requestInput)
-		if err != nil {
-			exitErrorf("Unable to get object, %v", err)
-		}
-		body, err := ioutil.ReadAll(result.Body)
-		if err != nil {
-			exitErrorf("Unable to get body, %v", err)
-		}
-		bodyString := string(body)
-		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := ConvertCsvStringToTransferStructs(bodyString)
-		log.Printf("transfer num: %d", len(transfers))
-		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-		totalTransfers = append(totalTransfers, transfers...)
-	}
+	//	requestInput :=
+	//		&s3.GetObjectInput{
+	//			Bucket: aws.String(dailyTransferBucketName),
+	//			Key:    aws.String(*item.Key),
+	//		}
+	//	result, err := svc.GetObject(requestInput)
+	//	if err != nil {
+	//		exitErrorf("Unable to get object, %v", err)
+	//	}
+	//	body, err := ioutil.ReadAll(result.Body)
+	//	if err != nil {
+	//		exitErrorf("Unable to get body, %v", err)
+	//	}
+	//	bodyString := string(body)
+	//	//transactions := converCsvStringToTransactionStructs(bodyString)
+	//	transfers := ConvertCsvStringToTransferStructs(bodyString)
+	//	log.Printf("transfer num: %d", len(transfers))
+	//	//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+	//	totalTransfers = append(totalTransfers, transfers...)
+	//}
 	perNewUserRoiDetail := map[string]*UserRoiDetail{}
 
 	priceHistory := getPriceHistory("sea", fromTimeObj, toTimeObj, *svc)
