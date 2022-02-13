@@ -31,7 +31,8 @@ func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
 	perNewUserRoiDetail := map[string]*UserRoiDetail{}
 	for _, transfer := range totalTransfers {
 		if _, ok := userAddresses[transfer.FromAddress]; ok {
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[int64(transfer.Timestamp)]
+			dateTimestamp := (int64(transfer.Timestamp) / int64(dayInSec)) * int64(dayInSec)
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
 			valueToken := transfer.Value / float64(seaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
 				userRoiDetails.TotalProfitUsd -= valueUsd
@@ -50,7 +51,8 @@ func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
 			}
 		}
 		if _, ok := userAddresses[transfer.ToAddress]; ok {
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[int64(transfer.Timestamp)]
+			dateTimestamp := (int64(transfer.Timestamp) / int64(dayInSec)) * int64(dayInSec)
+			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
 			valueToken := transfer.Value / float64(seaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
 				userRoiDetails.TotalProfitUsd += valueUsd
