@@ -1,0 +1,8 @@
+{
+	"jsonrpc":"2.0",
+	"method":"getUserProfitDistribution",
+	"params":[{
+        "gameId": "StarSharks",
+        "address": "0x54ef64c2354398e9f2ef307ce555bdaadf4ab0b6"
+    }]
+}
