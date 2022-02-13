@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,6 +27,7 @@ func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
 		timeObj, _ := time.Parse(layout, price.Date)
 		priceHisoryMap[timeObj.Unix()] = price.Price
 	}
+	log.Printf("priceHistoryMap %v", priceHisoryMap)
 	perNewUserRoiDetail := map[string]*UserRoiDetail{}
 	for _, transfer := range totalTransfers {
 		if _, ok := userAddresses[transfer.FromAddress]; ok {
