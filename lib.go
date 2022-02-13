@@ -30,7 +30,7 @@ func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []Transfer {
 		exitErrorf("Unable to list object, %v", err)
 	}
 
-	concurrencyCount := 20
+	concurrencyCount := 40
 	tempTotalTransfers := make([][]Transfer, concurrencyCount)
 	s3FileList := make([]*string, 0)
 	s3FileChuncks := make([][]*string, concurrencyCount)
