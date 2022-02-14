@@ -4,14 +4,15 @@ import (
 	"gametaverse-data-service/schema"
 )
 
-func ConverDausToMetrics(daus []schema.Dau) QueryResponse {
+func GetDauMetrics(daus []schema.Dau) QueryResponse {
 
 	return []QueryResponseMetric{
-		ConvertTotalActiveUserCountMetrics(daus),
+		GetTotalActiveUserCountMetrics(daus),
+		GetNewActiveUserCountMetrics(daus),
 	}
 }
 
-func ConvertTotalActiveUserCountMetrics(daus []schema.Dau) QueryResponseMetric {
+func GetTotalActiveUserCountMetrics(daus []schema.Dau) QueryResponseMetric {
 	datapoints := make([]Datapoint, len(daus))
 	for i, dau := range daus {
 		count := dau.TotalActiveUsers.TotalUserCount
@@ -24,7 +25,7 @@ func ConvertTotalActiveUserCountMetrics(daus []schema.Dau) QueryResponseMetric {
 	}
 }
 
-func ConvertNewActiveUserCountMetrics(daus []schema.Dau) QueryResponseMetric {
+func GetNewActiveUserCountMetrics(daus []schema.Dau) QueryResponseMetric {
 	datapoints := make([]Datapoint, len(daus))
 	for i, dau := range daus {
 		count := dau.NewActiveUsers.TotalUserCount
