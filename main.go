@@ -35,9 +35,15 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		response := grafana.Search()
 		return GenerateResponse(response)
 	} else if request.Path == "/grafana/query" {
+		grafanaQueryRequest := GrafanaQueryRequest{}
+		json.Unmarshal([]byte(request.Body), &grafanaQueryRequest)
 		log.Printf("grafana/query body: %s", request.Body)
-		response := grafana.Query()
-		return GenerateResponse(response)
+		log.Printf("grafana/query request: %v", grafanaQueryRequest)
+		if grafanaQueryRequest.Data.Targets[0].Target == "daus" {
+			response := grafana.ConverDausToMetrics()
+			return GenerateResponse(response)
+		}
+		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
 		response := GetGameDaus(generateTimeObjs(input))
 		return GenerateResponse(response)

@@ -10,6 +10,25 @@ type Input struct {
 	Path   string  `json:"path"`
 }
 
+type GrafanaQueryRequest struct {
+	Data GrafanaQueryData `json:"data"`
+}
+
+type GrafanaQueryData struct {
+	Targets []GrafanaQueryTarget `json:"targets"`
+	//RangeRaw RangeRaw             `json:"rangeRaw"`
+}
+
+type GrafanaQueryTarget struct {
+	Target string `json:"target"`
+	Type   string `json:"type"`
+}
+
+type RangeRaw struct {
+	From string `json:"from"` // "now-90d"
+	To   string `json:"to"`   // "now"
+}
+
 type Param struct {
 	Address       string `json:"address"`
 	Timestamp     int64  `json:"timestamp"`
