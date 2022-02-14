@@ -83,7 +83,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return GenerateResponse(response)
 		//return generateJsonResponse(response)
 	} else if input.Method == "getUserActiveDates" {
-		response := GetUserActiveDates(starSharksStartingDate, time.Now(), input.Params[0].Limit)
+		response := GetUserActiveDates(schema.StarSharksStartingDate, time.Now(), input.Params[0].Limit)
 		return GenerateResponse(response)
 		//return generateJsonResponse(response)
 	} else if input.Method == "getNewUserProfitableRate" {
