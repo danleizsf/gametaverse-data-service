@@ -417,6 +417,10 @@ func getPerPayerTransfers(transfers []Transfer) map[string][]Transfer {
 func GenerateResponse(respStruct interface{}) (events.APIGatewayProxyResponse, error) {
 	response, err := json.Marshal(respStruct)
 	return events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
 		Body: string(response),
 	}, err
 }
