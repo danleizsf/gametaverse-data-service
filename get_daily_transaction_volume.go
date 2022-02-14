@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetGameDailyTransactionVolumes(targetTimeObjs []time.Time) []schema.DailyTransactionVolume {
+func GetGameDailyTransactionVolumes(fromTimeObj time.Time, toTimeObj time.Time) []schema.DailyTransactionVolume {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -32,7 +32,7 @@ func GetGameDailyTransactionVolumes(targetTimeObjs []time.Time) []schema.DailyTr
 		log.Printf("file name: %s\n", *item.Key)
 		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
 		timeObj := time.Unix(timestamp, 0)
-		if !isEligibleToProcess(timeObj, targetTimeObjs) {
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
 			continue
 		}
 		requestInput :=

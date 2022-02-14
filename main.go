@@ -40,15 +40,19 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		json.Unmarshal([]byte(request.Body), &grafanaQueryRequest)
 		log.Printf("grafana/query body: %s", request.Body)
 		log.Printf("grafana/query request: %v", grafanaQueryRequest)
+		layout := "2006-01-02T15:04:05.000Z"
+		fromTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.From)
+		toTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.To)
+		fromTimeDateObj := time.Unix((fromTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
+		toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 		if grafanaQueryRequest.Targets[0].Target == "daus" {
-			layout := "2006-01-02T15:04:05.000Z"
-			fromTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.From)
-			toTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.To)
-			fromTimeDateObj := time.Unix((fromTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
-			toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 			log.Printf("grafana/query request from %v, to %v", fromTimeDateObj, toTimeDateObj)
 			daus := GetGameDaus(fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetDauMetrics(daus)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "daily_transaction_volume" {
+			dailyTransactionVolumes := GetGameDailyTransactionVolumes(fromTimeDateObj, toTimeDateObj)
+			response := grafana.GetDailyTransactionVolumeMetrics(dailyTransactionVolumes)
 			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
@@ -56,7 +60,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		response := GetGameDaus(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return GenerateResponse(response)
 	} else if input.Method == "getDailyTransactionVolumes" {
-		response := GetGameDailyTransactionVolumes(generateTimeObjs(input))
+		response := GetGameDailyTransactionVolumes(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return GenerateResponse(response)
 		//} else if input.Method == "getUserData" {
 		//	response := getUserData(input.Params[0].Address)
