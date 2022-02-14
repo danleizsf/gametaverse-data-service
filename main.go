@@ -54,6 +54,10 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			dailyTransactionVolumes := GetGameDailyTransactionVolumes(fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetDailyTransactionVolumeMetrics(dailyTransactionVolumes)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_rate" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, toTimeDateObj, false)
+			response := grafana.GetNewUserProfitableRateMetrics(newUserProfitableRate.OverallProfitableRate)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
