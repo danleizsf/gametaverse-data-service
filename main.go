@@ -50,7 +50,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
-		response := GetGameDaus(generateTimeObjs(input))
+		response := GetGameDaus(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
 		return GenerateResponse(response)
 	} else if input.Method == "getDailyTransactionVolumes" {
 		response := GetGameDailyTransactionVolumes(generateTimeObjs(input))

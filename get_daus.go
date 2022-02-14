@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetGameDaus(targetTimes []time.Time) []Dau {
+func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []Dau {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -32,7 +32,7 @@ func GetGameDaus(targetTimes []time.Time) []Dau {
 		log.Printf("file name: %s\n", *item.Key)
 		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
 		timeObj := time.Unix(timestamp, 0)
-		if !isEligibleToProcess(timeObj, targetTimes) {
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
 			continue
 		}
 		log.Printf("filtered time: %v", timeObj)
