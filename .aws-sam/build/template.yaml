@@ -28,6 +28,7 @@ Resources:
       Environment:
         Variables:
           PARAM1: VALUE
+      Role: DynamoDB-FullAccess-in-023951827147
     Metadata:
       SamResourceId: GametaverseDataServiceFunction
 Outputs:
