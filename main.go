@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"gametaverse-data-service/grafana"
 	"log"
 	"time"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,8 +25,13 @@ func init() {
 	dynamoDBClient = dynamodb.New(sess)
 }
 
-func process(ctx context.Context, input Input) (interface{}, error) {
-	log.Printf("intput: %v", input)
+func process(ctx context.Context, request events.APIGatewayProxyRequest) (interface{}, error) {
+	input := Input{}
+	json.Unmarshal([]byte(request.Body), &input)
+	log.Printf("request: %v", request)
+	if request.Path == "/grafana/search" {
+		return grafana.Search(), nil
+	}
 	if input.Method == "getDaus" {
 		return GetGameDaus(generateTimeObjs(input)), nil
 	} else if input.Method == "getDailyTransactionVolumes" {
