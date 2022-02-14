@@ -1,20 +1,22 @@
 package grafana
 
-func Query() DauMetric {
-	return DauMetric{
-		Target: "daus",
-		Daus: []Dau{
-			{
-				DateTimestamp:         1640995200,
-				TotalActiveUsersCount: 1069,
-			},
-			{
-				DateTimestamp:         1641081600,
-				TotalActiveUsersCount: 1104,
-			},
-			{
-				DateTimestamp:         1641254400,
-				TotalActiveUsersCount: 1114,
+func Query() QueryResponse {
+	return []QueryResponseMetric{
+		{
+			Target: "daus",
+			Datapoints: []Datapoint{
+				[]float64{
+					1069,
+					1640995200,
+				},
+				[]float64{
+					1104,
+					1641081600,
+				},
+				[]float64{
+					1114,
+					1641254400,
+				},
 			},
 		},
 	}
