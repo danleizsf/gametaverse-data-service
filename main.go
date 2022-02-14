@@ -82,7 +82,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		tableNames, _ := dynamoDBClient.ListTables(nil)
 		return GenerateResponse(tableNames.TableNames)
 	}
-	return events.APIGatewayProxyResponse{}, nil
+	return GenerateResponse("")
 }
 
 func main() {
