@@ -40,7 +40,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		log.Printf("grafana/query body: %s", request.Body)
 		log.Printf("grafana/query request: %v", grafanaQueryRequest)
 		if grafanaQueryRequest.Targets[0].Target == "daus" {
-			layout := "2006-01-02T01:01:01.000Z"
+			layout := "2006-01-02T15:04:05.000Z"
 			fromTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.From)
 			toTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.To)
 
