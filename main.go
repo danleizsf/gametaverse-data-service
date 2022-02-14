@@ -34,8 +34,10 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if request.Path == "/grafana/search" {
 		response := grafana.Search()
 		return GenerateResponse(response)
-	}
-	if input.Method == "getDaus" {
+	} else if request.Path == "/grafana/query" {
+		log.Printf("grafana/query body: %s", request.Body)
+		return GenerateResponse("wip")
+	} else if input.Method == "getDaus" {
 		response := GetGameDaus(generateTimeObjs(input))
 		return GenerateResponse(response)
 	} else if input.Method == "getDailyTransactionVolumes" {
