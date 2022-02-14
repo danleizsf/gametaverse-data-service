@@ -39,7 +39,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		json.Unmarshal([]byte(request.Body), &grafanaQueryRequest)
 		log.Printf("grafana/query body: %s", request.Body)
 		log.Printf("grafana/query request: %v", grafanaQueryRequest)
-		if grafanaQueryRequest.Data.Targets[0].Target == "daus" {
+		if grafanaQueryRequest.Targets[0].Target == "daus" {
 			response := grafana.ConverDausToMetrics()
 			return GenerateResponse(response)
 		}
