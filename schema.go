@@ -11,10 +11,6 @@ type Input struct {
 }
 
 type GrafanaQueryRequest struct {
-	Data GrafanaQueryData `json:"data"`
-}
-
-type GrafanaQueryData struct {
 	Targets []GrafanaQueryTarget `json:"targets"`
 	//RangeRaw RangeRaw             `json:"rangeRaw"`
 }
