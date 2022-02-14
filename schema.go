@@ -12,7 +12,7 @@ type Input struct {
 
 type GrafanaQueryRequest struct {
 	Targets []GrafanaQueryTarget `json:"targets"`
-	//RangeRaw RangeRaw             `json:"rangeRaw"`
+	Range   Range                `json:"range"`
 }
 
 type GrafanaQueryTarget struct {
@@ -20,9 +20,9 @@ type GrafanaQueryTarget struct {
 	Type   string `json:"type"`
 }
 
-type RangeRaw struct {
-	From string `json:"from"` // "now-90d"
-	To   string `json:"to"`   // "now"
+type Range struct {
+	From string `json:"from"`
+	To   string `json:"to"`
 }
 
 type Param struct {
