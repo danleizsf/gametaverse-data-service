@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -411,4 +412,11 @@ func getPerPayerTransfers(transfers []Transfer) map[string][]Transfer {
 		}
 	}
 	return perUserTransfers
+}
+
+func GenerateResponse(respStruct interface{}) (events.APIGatewayProxyResponse, error) {
+	response, err := json.Marshal(respStruct)
+	return events.APIGatewayProxyResponse{
+		Body: string(response),
+	}, err
 }
