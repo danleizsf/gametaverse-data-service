@@ -48,7 +48,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 			log.Printf("grafana/query request from %v, to %v", fromTimeDateObj, toTimeDateObj)
 			daus := GetGameDaus(fromTimeDateObj, toTimeDateObj)
-			response := grafana.ConverDausToMetrics(daus)
+			response := grafana.GetDauMetrics(daus)
 			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
