@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math"
@@ -174,16 +173,16 @@ func getActiveUsersFromTransfers(transfers []Transfer) map[string]bool {
 	return uniqueAddresses
 }
 
-func getUserTransactionVolume(address string, transfers []Transfer) float64 {
-	transactionVolume := float64(0)
-	for _, transfer := range transfers {
-		if transfer.FromAddress == address || transfer.ToAddress == address {
-			transactionVolume += transfer.Value
-			log.Printf("address: %s, transactionHash: %s, value: %v", address, transfer.TransactionHash, transfer.Value)
-		}
-	}
-	return transactionVolume / 1000000000000000000
-}
+//func getUserTransactionVolume(address string, transfers []Transfer) float64 {
+//	transactionVolume := float64(0)
+//	for _, transfer := range transfers {
+//		if transfer.FromAddress == address || transfer.ToAddress == address {
+//			transactionVolume += transfer.Value
+//			log.Printf("address: %s, transactionHash: %s, value: %v", address, transfer.TransactionHash, transfer.Value)
+//		}
+//	}
+//	return transactionVolume / 1000000000000000000
+//}
 
 func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) UserTransactionVolume {
 	renterTransactionVolume, purchaserTransactionVolume, withdrawerTransactionVolume := int64(0), int64(0), int64(0)
@@ -208,48 +207,48 @@ func exitErrorf(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func getUserData(address string) (string, error) {
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String("us-west-1"),
-	})
-
-	svc := s3.New(sess)
-
-	dailyTransactionVolume := make(map[string]float64)
-
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
-	if err != nil {
-		exitErrorf("Unable to list object, %v", err)
-	}
-
-	for _, item := range resp.Contents {
-		log.Printf("file name: %s\n", *item.Key)
-		requestInput :=
-			&s3.GetObjectInput{
-				Bucket: aws.String(dailyTransferBucketName),
-				Key:    aws.String(*item.Key),
-			}
-		result, err := svc.GetObject(requestInput)
-		if err != nil {
-			exitErrorf("Unable to get object, %v", err)
-		}
-		body, err := ioutil.ReadAll(result.Body)
-		if err != nil {
-			exitErrorf("Unable to get body, %v", err)
-		}
-		bodyString := string(body)
-		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := ConvertCsvStringToTransferStructs(bodyString)
-		log.Printf("transfer num: %d", len(transfers))
-		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
-		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
-		dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
-		dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
-		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
-		dailyTransactionVolume[dateFormattedString] = getUserTransactionVolume(address, transfers)
-	}
-	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
-}
+//func getUserData(address string) (string, error) {
+//	sess, _ := session.NewSession(&aws.Config{
+//		Region: aws.String("us-west-1"),
+//	})
+//
+//	svc := s3.New(sess)
+//
+//	dailyTransactionVolume := make(map[string]float64)
+//
+//	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+//	if err != nil {
+//		exitErrorf("Unable to list object, %v", err)
+//	}
+//
+//	for _, item := range resp.Contents {
+//		log.Printf("file name: %s\n", *item.Key)
+//		requestInput :=
+//			&s3.GetObjectInput{
+//				Bucket: aws.String(dailyTransferBucketName),
+//				Key:    aws.String(*item.Key),
+//			}
+//		result, err := svc.GetObject(requestInput)
+//		if err != nil {
+//			exitErrorf("Unable to get object, %v", err)
+//		}
+//		body, err := ioutil.ReadAll(result.Body)
+//		if err != nil {
+//			exitErrorf("Unable to get body, %v", err)
+//		}
+//		bodyString := string(body)
+//		//transactions := converCsvStringToTransactionStructs(bodyString)
+//		transfers := ConvertCsvStringToTransferStructs(bodyString)
+//		log.Printf("transfer num: %d", len(transfers))
+//		dateTimestamp, _ := strconv.Atoi(strings.Split(*item.Key, "-")[0])
+//		//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
+//		dateObj := time.Unix(int64(dateTimestamp), 0).UTC()
+//		dateFormattedString := fmt.Sprintf("%d-%d-%d", dateObj.Year(), dateObj.Month(), dateObj.Day())
+//		//daus[dateFormattedString] = getDauFromTransactions(transactions, int64(dateTimestamp))
+//		dailyTransactionVolume[dateFormattedString] = getUserTransactionVolume(address, transfers)
+//	}
+//	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
+//}
 
 func getPerUserSpending(transfers []Transfer) map[string]int64 {
 	perUserSpending := make(map[string]int64)

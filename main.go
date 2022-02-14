@@ -30,6 +30,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	json.Unmarshal([]byte(request.Body), &input)
 	log.Printf("path: %s, body: %s, httpmethod: %s", request.Path, request.Body, request.HTTPMethod)
 	log.Printf("request: %v", request)
+	log.Printf("Input: %v", input)
 	if request.Path == "/grafana/search" {
 		response := grafana.Search()
 		return GenerateResponse(response)
