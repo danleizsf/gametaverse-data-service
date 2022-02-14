@@ -1,5 +1,5 @@
 {
     "path": "data",
     "httpMethod": "getDaus",
-    "body": "{\"params\":[{\"timestamp\":1642636800},{\"timestamp\":1642723200},{\"timestamp\":1642809600},{\"timestamp\":1642896000}]}"
+    "body": "{\"method\":\"getDaus\",\"params\":[{\"timestamp\":1644537600}]}"
 }
