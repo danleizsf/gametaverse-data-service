@@ -5,5 +5,6 @@ func Search() []string {
 		"daus",
 		"daily_transaction_volume",
 		"new_user_profitable_rate",
+		"user_repurchase_rate",
 	}
 }
