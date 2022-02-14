@@ -1,4 +1,4 @@
-package main
+package schema
 
 import (
 	"time"
@@ -33,22 +33,22 @@ type Param struct {
 	Limit         int64  `json:"limit"`
 }
 
-var dailyTransferBucketName = "gametaverse-bucket"
-var userBucketName = "gametaverse-user-bucket"
-var priceBucketName = "gametaverse-price-bucket"
-var seaTokenUnit = 1000000000000000000
-var starSharksGameWalletAddresses = map[string]bool{
+var DailyTransferBucketName = "gametaverse-bucket"
+var UserBucketName = "gametaverse-user-bucket"
+var PriceBucketName = "gametaverse-price-bucket"
+var SeaTokenUnit = 1000000000000000000
+var StarSharksGameWalletAddresses = map[string]bool{
 	"0x0000000000000000000000000000000000000000": true,
 	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
 }
-var starSharksRentContractAddresses = "0xe9e092e46a75d192d9d7d3942f11f116fd2f7ca9"
-var starSharksPurchaseContractAddresses = "0x1f7acc330fe462a9468aa47ecdb543787577e1e7"
-var starSharksAuctionContractAddresses = "0xd78be0b93a3c9d1a9323bca03184accf1a57e548"
-var starSharksWithdrawContractAddresses = "0x94019518f82762bb94280211d19d4ac025d98583"
+var StarSharksRentContractAddresses = "0xe9e092e46a75d192d9d7d3942f11f116fd2f7ca9"
+var StarSharksPurchaseContractAddresses = "0x1f7acc330fe462a9468aa47ecdb543787577e1e7"
+var StarSharksAuctionContractAddresses = "0xd78be0b93a3c9d1a9323bca03184accf1a57e548"
+var StarSharksWithdrawContractAddresses = "0x94019518f82762bb94280211d19d4ac025d98583"
 
-var starSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
+var StarSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
 
-var dayInSec = 86400
+var DayInSec = 86400
 
 type Dau struct {
 	DateTimestamp    int64           `json:"dateTimestamp"`
@@ -155,9 +155,9 @@ type UserMetaInfo struct {
 	TransactionHash string `json:"transaction_hash"`
 }
 
-type payerType int64
+type PayerType int64
 
 const (
-	Rentee    payerType = 0
-	Purchaser payerType = 1
+	Rentee    PayerType = 0
+	Purchaser PayerType = 1
 )

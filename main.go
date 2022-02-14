@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"gametaverse-data-service/grafana"
+	"gametaverse-data-service/schema"
 	"log"
 	"time"
 
@@ -26,7 +27,7 @@ func init() {
 }
 
 func process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	input := Input{}
+	input := schema.Input{}
 	json.Unmarshal([]byte(request.Body), &input)
 	log.Printf("path: %s, body: %s, httpmethod: %s", request.Path, request.Body, request.HTTPMethod)
 	log.Printf("request: %v", request)
@@ -35,7 +36,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		response := grafana.Search()
 		return GenerateResponse(response)
 	} else if request.Path == "/grafana/query" {
-		grafanaQueryRequest := GrafanaQueryRequest{}
+		grafanaQueryRequest := schema.GrafanaQueryRequest{}
 		json.Unmarshal([]byte(request.Body), &grafanaQueryRequest)
 		log.Printf("grafana/query body: %s", request.Body)
 		log.Printf("grafana/query request: %v", grafanaQueryRequest)
@@ -43,11 +44,11 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			layout := "2006-01-02T15:04:05.000Z"
 			fromTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.From)
 			toTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.To)
-			fromTimeDateObj := time.Unix((fromTimeObj.Unix()/int64(dayInSec))*int64(dayInSec), 0)
-			toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(dayInSec))*int64(dayInSec), 0)
+			fromTimeDateObj := time.Unix((fromTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
+			toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 			log.Printf("grafana/query request from %v, to %v", fromTimeDateObj, toTimeDateObj)
-			//daus := GetGameDaus(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-			response := grafana.ConverDausToMetrics()
+			daus := GetGameDaus(fromTimeDateObj, toTimeDateObj)
+			response := grafana.ConverDausToMetrics(daus)
 			return GenerateResponse(response)
 		}
 		return GenerateResponse("")

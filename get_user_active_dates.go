@@ -1,11 +1,12 @@
 package main
 
 import (
+	"gametaverse-data-service/schema"
 	"sort"
 	"time"
 )
 
-func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time, limit int64) []UserActivity {
+func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time, limit int64) []schema.UserActivity {
 
 	totalTransfers := GetTransfers(fromTimeObj, toTimeObj)
 	//for _, item := range resp.Contents {
@@ -36,20 +37,20 @@ func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time, limit int64)
 	//	//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 	//	totalTransfers = append(totalTransfers, transfers...)
 	//}
-	perUserTransfers := map[string][]Transfer{}
+	perUserTransfers := map[string][]schema.Transfer{}
 	for _, transfer := range totalTransfers {
 		if _, ok := perUserTransfers[transfer.FromAddress]; ok {
 			perUserTransfers[transfer.FromAddress] = append(perUserTransfers[transfer.FromAddress], transfer)
 		} else {
-			perUserTransfers[transfer.FromAddress] = make([]Transfer, 0)
+			perUserTransfers[transfer.FromAddress] = make([]schema.Transfer, 0)
 		}
 		if _, ok := perUserTransfers[transfer.ToAddress]; ok {
 			perUserTransfers[transfer.ToAddress] = append(perUserTransfers[transfer.ToAddress], transfer)
 		} else {
-			perUserTransfers[transfer.ToAddress] = make([]Transfer, 0)
+			perUserTransfers[transfer.ToAddress] = make([]schema.Transfer, 0)
 		}
 	}
-	perUserActivities := make([]UserActivity, 0) //len(perUserTransfers))
+	perUserActivities := make([]schema.UserActivity, 0) //len(perUserTransfers))
 	idx := 0
 	for userAddress, transfers := range perUserTransfers {
 		if len(transfers) == 0 {
@@ -58,13 +59,13 @@ func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time, limit int64)
 		sort.Slice(transfers, func(i, j int) bool {
 			return transfers[i].Timestamp < transfers[j].Timestamp
 		})
-		totalDatesCount := transfers[len(transfers)-1].Timestamp/dayInSec - transfers[0].Timestamp/dayInSec + 1
+		totalDatesCount := transfers[len(transfers)-1].Timestamp/schema.DayInSec - transfers[0].Timestamp/schema.DayInSec + 1
 		activeDatesCount := 1
-		currentDate := transfers[0].Timestamp / dayInSec
+		currentDate := transfers[0].Timestamp / schema.DayInSec
 		for _, transfer := range transfers {
-			if transfer.Timestamp/dayInSec != currentDate {
+			if transfer.Timestamp/schema.DayInSec != currentDate {
 				activeDatesCount += 1
-				currentDate = transfer.Timestamp / dayInSec
+				currentDate = transfer.Timestamp / schema.DayInSec
 			}
 		}
 
@@ -75,7 +76,7 @@ func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time, limit int64)
 		//	}
 		//	perUserActivities[idx] = UserActivity{UserAddress: userAddress, TotalDatesCount: int64(totalDatesCount), ActiveDatesCount: int64(activeDatesCount)}
 		//}
-		perUserActivities = append(perUserActivities, UserActivity{UserAddress: userAddress, TotalDatesCount: int64(totalDatesCount), ActiveDatesCount: int64(activeDatesCount)})
+		perUserActivities = append(perUserActivities, schema.UserActivity{UserAddress: userAddress, TotalDatesCount: int64(totalDatesCount), ActiveDatesCount: int64(activeDatesCount)})
 		idx += 1
 	}
 	sort.Slice(perUserActivities, func(i, j int) bool {

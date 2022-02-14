@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gametaverse-data-service/schema"
 	"io/ioutil"
 	"time"
 
@@ -21,7 +22,7 @@ func GetUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 
 	requestInput :=
 		&s3.GetObjectInput{
-			Bucket: aws.String(dailyTransferBucketName),
+			Bucket: aws.String(schema.DailyTransferBucketName),
 			Key:    aws.String(fmt.Sprintf("%d-in-game-token-transfers-with-timestamp.csv", fromDateTimestamp)),
 		}
 
@@ -38,7 +39,7 @@ func GetUserRetentionRate(fromTimeObj time.Time, toTimeObj time.Time) float64 {
 
 	requestInput =
 		&s3.GetObjectInput{
-			Bucket: aws.String(dailyTransferBucketName),
+			Bucket: aws.String(schema.DailyTransferBucketName),
 			Key:    aws.String(fmt.Sprintf("%d-in-game-token-transfers-with-timestamp.csv", toDateTimestamp)),
 		}
 

@@ -1,6 +1,8 @@
 package grafana
 
-func ConverDausToMetrics() QueryResponse {
+import "gametaverse-data-service/main"
+
+func ConverDausToMetrics(daus []main.Dau) QueryResponse {
 	return []QueryResponseMetric{
 		{
 			Target: "total_daus",

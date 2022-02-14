@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"gametaverse-data-service/schema"
 	"io/ioutil"
 	"log"
 	"math"
@@ -18,20 +19,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []Transfer {
+func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []schema.Transfer {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(schema.DailyTransferBucketName)})
 	if err != nil {
 		exitErrorf("Unable to list object, %v", err)
 	}
 
 	concurrencyCount := 20
-	tempTotalTransfers := make([][]Transfer, concurrencyCount)
+	tempTotalTransfers := make([][]schema.Transfer, concurrencyCount)
 	s3FileList := make([]*string, 0)
 	s3FileChuncks := make([][]*string, concurrencyCount)
 	for _, item := range resp.Contents {
@@ -67,7 +68,7 @@ func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []Transfer {
 			defer wg.Done()
 			chunckSvc := s3.New(sess)
 			log.Printf("start chunck %d, size %d", i, len(chunck))
-			transferChunck := make([]Transfer, 0)
+			transferChunck := make([]schema.Transfer, 0)
 			for _, fileName := range chunck {
 
 				if fileName == nil {
@@ -75,7 +76,7 @@ func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []Transfer {
 				}
 				time.Sleep(1 * time.Second)
 				requestInput := &s3.GetObjectInput{
-					Bucket: aws.String(dailyTransferBucketName),
+					Bucket: aws.String(schema.DailyTransferBucketName),
 					Key:    aws.String(*fileName),
 				}
 				result, err := chunckSvc.GetObject(requestInput)
@@ -96,37 +97,37 @@ func GetTransfers(fromTimeObj time.Time, toTimeObj time.Time) []Transfer {
 	}
 	wg.Wait()
 	log.Printf("hello")
-	totalTransfers := make([]Transfer, 0)
+	totalTransfers := make([]schema.Transfer, 0)
 	for _, transferChunk := range tempTotalTransfers {
 		totalTransfers = append(totalTransfers, transferChunk...)
 	}
 	return totalTransfers
 }
 
-func GetPerPayerType(perPayerTransfers map[string][]Transfer) map[string]payerType {
-	perPayerType := map[string]payerType{}
+func GetPerPayerType(perPayerTransfers map[string][]schema.Transfer) map[string]schema.PayerType {
+	perPayerType := map[string]schema.PayerType{}
 	for payerAddress, transfers := range perPayerTransfers {
 		totalRentingValue := float64(0)
 		totalInvestingValue := float64(0)
 		for _, transfer := range transfers {
-			if transfer.ContractAddress == starSharksPurchaseContractAddresses || transfer.ContractAddress == starSharksAuctionContractAddresses {
-				totalInvestingValue += transfer.Value / float64(dayInSec)
-			} else if transfer.ContractAddress == starSharksRentContractAddresses {
-				totalRentingValue += transfer.Value / float64(dayInSec)
+			if transfer.ContractAddress == schema.StarSharksPurchaseContractAddresses || transfer.ContractAddress == schema.StarSharksAuctionContractAddresses {
+				totalInvestingValue += transfer.Value / float64(schema.DayInSec)
+			} else if transfer.ContractAddress == schema.StarSharksRentContractAddresses {
+				totalRentingValue += transfer.Value / float64(schema.DayInSec)
 			}
 		}
 		if totalInvestingValue > totalRentingValue {
-			perPayerType[payerAddress] = Purchaser
+			perPayerType[payerAddress] = schema.Purchaser
 		} else {
-			perPayerType[payerAddress] = Rentee
+			perPayerType[payerAddress] = schema.Rentee
 		}
 	}
 	return perPayerType
 }
 
-func ConvertCsvStringToTransferStructs(csvString string) []Transfer {
+func ConvertCsvStringToTransferStructs(csvString string) []schema.Transfer {
 	lines := strings.Split(csvString, "\n")
-	transfers := make([]Transfer, 0)
+	transfers := make([]schema.Transfer, 0)
 	count := 0
 	//log.Printf("enterred converCsvStringToTransferStructs, content len: %d", len(lines))
 	for lineNum, lineString := range lines {
@@ -146,7 +147,7 @@ func ConvertCsvStringToTransferStructs(csvString string) []Transfer {
 		blockNumber, _ := strconv.Atoi(fields[6])
 		value, _ := strconv.ParseFloat(fields[3], 64)
 		logIndex, _ := strconv.Atoi(fields[5])
-		transfers = append(transfers, Transfer{
+		transfers = append(transfers, schema.Transfer{
 			TokenAddress:    fields[0],
 			FromAddress:     fields[1],
 			ToAddress:       fields[2],
@@ -162,7 +163,7 @@ func ConvertCsvStringToTransferStructs(csvString string) []Transfer {
 	return transfers
 }
 
-func getActiveUsersFromTransfers(transfers []Transfer) map[string]bool {
+func getActiveUsersFromTransfers(transfers []schema.Transfer) map[string]bool {
 	uniqueAddresses := make(map[string]bool)
 	count := 0
 	for _, transfer := range transfers {
@@ -184,18 +185,18 @@ func getActiveUsersFromTransfers(transfers []Transfer) map[string]bool {
 //	return transactionVolume / 1000000000000000000
 //}
 
-func getTransactionVolumeFromTransfers(transfers []Transfer, timestamp int64) UserTransactionVolume {
+func getTransactionVolumeFromTransfers(transfers []schema.Transfer, timestamp int64) schema.UserTransactionVolume {
 	renterTransactionVolume, purchaserTransactionVolume, withdrawerTransactionVolume := int64(0), int64(0), int64(0)
 	for _, transfer := range transfers {
-		if transfer.ContractAddress == starSharksRentContractAddresses {
-			renterTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
-		} else if transfer.ContractAddress == starSharksPurchaseContractAddresses || transfer.ContractAddress == starSharksAuctionContractAddresses {
-			purchaserTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
-		} else if transfer.ContractAddress == starSharksWithdrawContractAddresses {
-			withdrawerTransactionVolume += int64(transfer.Value / float64(seaTokenUnit))
+		if transfer.ContractAddress == schema.StarSharksRentContractAddresses {
+			renterTransactionVolume += int64(transfer.Value / float64(schema.SeaTokenUnit))
+		} else if transfer.ContractAddress == schema.StarSharksPurchaseContractAddresses || transfer.ContractAddress == schema.StarSharksAuctionContractAddresses {
+			purchaserTransactionVolume += int64(transfer.Value / float64(schema.SeaTokenUnit))
+		} else if transfer.ContractAddress == schema.StarSharksWithdrawContractAddresses {
+			withdrawerTransactionVolume += int64(transfer.Value / float64(schema.SeaTokenUnit))
 		}
 	}
-	return UserTransactionVolume{
+	return schema.UserTransactionVolume{
 		RenterTransactionVolume:     renterTransactionVolume,
 		PurchaserTransactionVolume:  purchaserTransactionVolume,
 		WithdrawerTransactionVolume: withdrawerTransactionVolume,
@@ -250,10 +251,10 @@ func exitErrorf(msg string, args ...interface{}) {
 //	return fmt.Sprintf("{starsharks: {dailyTransactionVolume: %v SEA Token}}", dailyTransactionVolume), nil
 //}
 
-func getPerUserSpending(transfers []Transfer) map[string]int64 {
+func getPerUserSpending(transfers []schema.Transfer) map[string]int64 {
 	perUserSpending := make(map[string]int64)
 	for _, transfer := range transfers {
-		if _, ok := starSharksGameWalletAddresses[transfer.FromAddress]; ok {
+		if _, ok := schema.StarSharksGameWalletAddresses[transfer.FromAddress]; ok {
 			continue
 		}
 		if spending, ok := perUserSpending[transfer.FromAddress]; ok {
@@ -265,7 +266,7 @@ func getPerUserSpending(transfers []Transfer) map[string]int64 {
 	return perUserSpending
 }
 
-func generateValueDistribution(perUserValue map[string]int64) []ValueFrequencyPercentage {
+func generateValueDistribution(perUserValue map[string]int64) []schema.ValueFrequencyPercentage {
 	valueDistribution := make(map[int64]int64)
 	totalFrequency := int64(0)
 	for _, value := range perUserValue {
@@ -276,10 +277,10 @@ func generateValueDistribution(perUserValue map[string]int64) []ValueFrequencyPe
 	for value, frequency := range valueDistribution {
 		valuePercentageDistribution[value] = float64(frequency) / float64(totalFrequency)
 	}
-	result := make([]ValueFrequencyPercentage, len(valuePercentageDistribution))
+	result := make([]schema.ValueFrequencyPercentage, len(valuePercentageDistribution))
 	idx := 0
 	for value, percentage := range valuePercentageDistribution {
-		result[idx] = ValueFrequencyPercentage{
+		result[idx] = schema.ValueFrequencyPercentage{
 			Value:               value,
 			FrequencyPercentage: percentage,
 		}
@@ -303,7 +304,7 @@ func isEligibleToProcess(timeObj time.Time, targetTimeObjs []time.Time) bool {
 	return eligibleToProcess
 }
 
-func generateTimeObjs(input Input) []time.Time {
+func generateTimeObjs(input schema.Input) []time.Time {
 	times := make([]time.Time, 0)
 	for _, param := range input.Params {
 		if param.Timestamp != 0 {
@@ -313,7 +314,7 @@ func generateTimeObjs(input Input) []time.Time {
 	return times
 }
 
-func generateRoiDistribution(perUserRoiInDays map[string]int64) []ValueFrequencyPercentage {
+func generateRoiDistribution(perUserRoiInDays map[string]int64) []schema.ValueFrequencyPercentage {
 	RoiDayDistribution := make(map[int64]int64)
 	totalCount := float64(0)
 	for _, days := range perUserRoiInDays {
@@ -327,10 +328,10 @@ func generateRoiDistribution(perUserRoiInDays map[string]int64) []ValueFrequency
 	for days, count := range RoiDayDistribution {
 		daysPercentageDistribution[days] = float64(count) / totalCount
 	}
-	result := make([]ValueFrequencyPercentage, len(daysPercentageDistribution))
+	result := make([]schema.ValueFrequencyPercentage, len(daysPercentageDistribution))
 	idx := 0
 	for value, frequencyPercentage := range daysPercentageDistribution {
-		result[idx] = ValueFrequencyPercentage{
+		result[idx] = schema.ValueFrequencyPercentage{
 			Value:               value,
 			FrequencyPercentage: frequencyPercentage,
 		}
@@ -345,7 +346,7 @@ func generateRoiDistribution(perUserRoiInDays map[string]int64) []ValueFrequency
 func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]int64 {
 	requestInput :=
 		&s3.GetObjectInput{
-			Bucket: aws.String(userBucketName),
+			Bucket: aws.String(schema.UserBucketName),
 			Key:    aws.String("per-user-join-time.json"),
 		}
 	result, err := svc.GetObject(requestInput)
@@ -376,10 +377,10 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 	return newUsers
 }
 
-func getPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) PriceHistory {
+func getPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) schema.PriceHistory {
 	requestInput :=
 		&s3.GetObjectInput{
-			Bucket: aws.String(priceBucketName),
+			Bucket: aws.String(schema.PriceBucketName),
 			Key:    aws.String("sea-token-price-history.json"),
 		}
 	result, err := svc.GetObject(requestInput)
@@ -391,7 +392,7 @@ func getPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Tim
 		exitErrorf("Unable to read body, %v", err)
 	}
 
-	priceHistory := PriceHistory{}
+	priceHistory := schema.PriceHistory{}
 	err = json.Unmarshal(body, &priceHistory)
 	if err != nil {
 		//log.Printf("body: %s", fmt.Sprintf("%s", body))
@@ -401,13 +402,13 @@ func getPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Tim
 	return priceHistory
 }
 
-func getPerPayerTransfers(transfers []Transfer) map[string][]Transfer {
-	perUserTransfers := map[string][]Transfer{}
+func getPerPayerTransfers(transfers []schema.Transfer) map[string][]schema.Transfer {
+	perUserTransfers := map[string][]schema.Transfer{}
 	for _, transfer := range transfers {
 		if _, ok := perUserTransfers[transfer.FromAddress]; ok {
 			perUserTransfers[transfer.FromAddress] = append(perUserTransfers[transfer.FromAddress], transfer)
 		} else {
-			perUserTransfers[transfer.FromAddress] = make([]Transfer, 0)
+			perUserTransfers[transfer.FromAddress] = make([]schema.Transfer, 0)
 		}
 	}
 	return perUserTransfers

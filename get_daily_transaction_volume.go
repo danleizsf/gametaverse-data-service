@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gametaverse-data-service/schema"
 	"io/ioutil"
 	"log"
 	"sort"
@@ -13,16 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransactionVolume {
+func GetGameDailyTransactionVolumes(targetTimeObjs []time.Time) []schema.DailyTransactionVolume {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
 
-	dailyTransactionVolume := make(map[int64]UserTransactionVolume)
+	dailyTransactionVolume := make(map[int64]schema.UserTransactionVolume)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(schema.DailyTransferBucketName)})
 	if err != nil {
 		exitErrorf("Unable to list object, %v", err)
 	}
@@ -36,7 +37,7 @@ func GetGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransacti
 		}
 		requestInput :=
 			&s3.GetObjectInput{
-				Bucket: aws.String(dailyTransferBucketName),
+				Bucket: aws.String(schema.DailyTransferBucketName),
 				Key:    aws.String(*item.Key),
 			}
 		result, err := svc.GetObject(requestInput)
@@ -56,10 +57,10 @@ func GetGameDailyTransactionVolumes(targetTimeObjs []time.Time) []DailyTransacti
 		dailyTransactionVolume[int64(dateTimestamp)] = getTransactionVolumeFromTransfers(transfers, int64(dateTimestamp))
 	}
 
-	result := make([]DailyTransactionVolume, len(dailyTransactionVolume))
+	result := make([]schema.DailyTransactionVolume, len(dailyTransactionVolume))
 	idx := 0
 	for dateTimestamp, transactionVolume := range dailyTransactionVolume {
-		result[idx] = DailyTransactionVolume{
+		result[idx] = schema.DailyTransactionVolume{
 			DateTimestamp:          dateTimestamp,
 			TotalTransactionVolume: transactionVolume,
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gametaverse-data-service/schema"
 	"io/ioutil"
 	"log"
 	"strconv"
@@ -12,16 +13,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
+func GetUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) []schema.ValueFrequencyPercentage {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
 
-	totalTransfers := make([]Transfer, 0)
+	totalTransfers := make([]schema.Transfer, 0)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(schema.DailyTransferBucketName)})
 	if err != nil {
 		exitErrorf("Unable to list object, %v", err)
 	}
@@ -36,7 +37,7 @@ func GetUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) []V
 
 		requestInput :=
 			&s3.GetObjectInput{
-				Bucket: aws.String(dailyTransferBucketName),
+				Bucket: aws.String(schema.DailyTransferBucketName),
 				Key:    aws.String(*item.Key),
 			}
 		result, err := svc.GetObject(requestInput)

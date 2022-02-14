@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gametaverse-data-service/schema"
 	"log"
 	"time"
 
@@ -9,14 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
+func GetUserProfitDistribution(userAddresses map[string]bool) []schema.UserRoiDetail {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
 
-	fromTimeObj := starSharksStartingDate
+	fromTimeObj := schema.StarSharksStartingDate
 	toTimeObj := time.Now()
 	totalTransfers := GetTransfers(fromTimeObj, toTimeObj)
 
@@ -28,19 +29,19 @@ func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
 		priceHisoryMap[timeObj.Unix()] = price.Price
 	}
 	log.Printf("priceHistoryMap %v", priceHisoryMap)
-	perNewUserRoiDetail := map[string]*UserRoiDetail{}
+	perNewUserRoiDetail := map[string]*schema.UserRoiDetail{}
 	for _, transfer := range totalTransfers {
 		if _, ok := userAddresses[transfer.FromAddress]; ok {
-			dateTimestamp := (int64(transfer.Timestamp) / int64(dayInSec)) * int64(dayInSec)
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
-			valueToken := transfer.Value / float64(seaTokenUnit)
+			dateTimestamp := (int64(transfer.Timestamp) / int64(schema.DayInSec)) * int64(schema.DayInSec)
+			valueUsd := (transfer.Value / float64(schema.SeaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueToken := transfer.Value / float64(schema.SeaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
 				userRoiDetails.TotalProfitUsd -= valueUsd
 				userRoiDetails.TotalSpendingUsd += valueUsd
 				userRoiDetails.TotalProfitToken -= valueToken
 				userRoiDetails.TotalSpendingToken += valueToken
 			} else {
-				perNewUserRoiDetail[transfer.FromAddress] = &UserRoiDetail{
+				perNewUserRoiDetail[transfer.FromAddress] = &schema.UserRoiDetail{
 					UserAddress: transfer.FromAddress,
 					//JoinDateTimestamp:  joinedTimestamp,
 					TotalSpendingUsd:   valueUsd,
@@ -51,14 +52,14 @@ func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
 			}
 		}
 		if _, ok := userAddresses[transfer.ToAddress]; ok {
-			dateTimestamp := (int64(transfer.Timestamp) / int64(dayInSec)) * int64(dayInSec)
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
-			valueToken := transfer.Value / float64(seaTokenUnit)
+			dateTimestamp := (int64(transfer.Timestamp) / int64(schema.DayInSec)) * int64(schema.DayInSec)
+			valueUsd := (transfer.Value / float64(schema.SeaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueToken := transfer.Value / float64(schema.SeaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
 				userRoiDetails.TotalProfitUsd += valueUsd
 				userRoiDetails.TotalProfitToken += valueToken
 			} else {
-				perNewUserRoiDetail[transfer.ToAddress] = &UserRoiDetail{
+				perNewUserRoiDetail[transfer.ToAddress] = &schema.UserRoiDetail{
 					UserAddress: transfer.ToAddress,
 					//JoinDateTimestamp:  joinedTimestamp,
 					TotalSpendingUsd:   0,
@@ -70,7 +71,7 @@ func GetUserProfitDistribution(userAddresses map[string]bool) []UserRoiDetail {
 		}
 	}
 
-	userRoiDetails := make([]UserRoiDetail, len(perNewUserRoiDetail))
+	userRoiDetails := make([]schema.UserRoiDetail, len(perNewUserRoiDetail))
 	idx := 0
 	for _, userRoiDetail := range perNewUserRoiDetail {
 		userRoiDetails[idx] = *userRoiDetail

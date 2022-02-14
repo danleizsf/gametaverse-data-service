@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gametaverse-data-service/schema"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -8,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDebug bool) AllUserRoiDetails {
+func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDebug bool) schema.AllUserRoiDetails {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -46,7 +47,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 	//	//dateString := time.Unix(int64(dateTimestamp), 0).UTC().Format("2006-January-01")
 	//	totalTransfers = append(totalTransfers, transfers...)
 	//}
-	perNewUserRoiDetail := map[string]*UserRoiDetail{}
+	perNewUserRoiDetail := map[string]*schema.UserRoiDetail{}
 
 	priceHistory := getPriceHistory("sea", fromTimeObj, toTimeObj, *svc)
 	priceHisoryMap := map[int64]float64{}
@@ -62,16 +63,16 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 
 		//log.Printf("user %s transfer %v", "0xfff5de86577b3f778ac6cc236384ed6db1825bff", transfer)
 		if joinedTimestamp, ok := newUsers[transfer.FromAddress]; ok {
-			dateTimestamp := (int64(transfer.Timestamp) / int64(dayInSec)) * int64(dayInSec)
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
-			valueToken := transfer.Value / float64(seaTokenUnit)
+			dateTimestamp := (int64(transfer.Timestamp) / int64(schema.DayInSec)) * int64(schema.DayInSec)
+			valueUsd := (transfer.Value / float64(schema.SeaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueToken := transfer.Value / float64(schema.SeaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.FromAddress]; ok {
 				userRoiDetails.TotalProfitUsd -= valueUsd
 				userRoiDetails.TotalSpendingUsd += valueUsd
 				userRoiDetails.TotalProfitToken -= valueToken
 				userRoiDetails.TotalSpendingToken += valueToken
 			} else {
-				perNewUserRoiDetail[transfer.FromAddress] = &UserRoiDetail{
+				perNewUserRoiDetail[transfer.FromAddress] = &schema.UserRoiDetail{
 					UserAddress:        transfer.FromAddress,
 					JoinDateTimestamp:  joinedTimestamp,
 					TotalSpendingUsd:   valueUsd,
@@ -82,14 +83,14 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 			}
 		}
 		if joinedTimestamp, ok := newUsers[transfer.ToAddress]; ok {
-			dateTimestamp := (int64(transfer.Timestamp) / int64(dayInSec)) * int64(dayInSec)
-			valueUsd := (transfer.Value / float64(seaTokenUnit)) * priceHisoryMap[dateTimestamp]
-			valueToken := transfer.Value / float64(seaTokenUnit)
+			dateTimestamp := (int64(transfer.Timestamp) / int64(schema.DayInSec)) * int64(schema.DayInSec)
+			valueUsd := (transfer.Value / float64(schema.SeaTokenUnit)) * priceHisoryMap[dateTimestamp]
+			valueToken := transfer.Value / float64(schema.SeaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
 				userRoiDetails.TotalProfitUsd += valueUsd
 				userRoiDetails.TotalProfitToken += valueToken
 			} else {
-				perNewUserRoiDetail[transfer.ToAddress] = &UserRoiDetail{
+				perNewUserRoiDetail[transfer.ToAddress] = &schema.UserRoiDetail{
 					UserAddress:        transfer.ToAddress,
 					JoinDateTimestamp:  joinedTimestamp,
 					TotalSpendingUsd:   0,
@@ -100,7 +101,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 			}
 		}
 	}
-	userRoiDetails := make([]UserRoiDetail, len(perNewUserRoiDetail))
+	userRoiDetails := make([]schema.UserRoiDetail, len(perNewUserRoiDetail))
 	profitableUserCount := 0
 	idx := 0
 	for _, userRoiDetail := range perNewUserRoiDetail {
@@ -113,7 +114,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 
 	//log.Printf("priceHistory: %v", priceHistory)
 	//return AllUserRoiDetails{}
-	response := AllUserRoiDetails{
+	response := schema.AllUserRoiDetails{
 		OverallProfitableRate: float64(profitableUserCount) / float64(len(perNewUserRoiDetail)),
 	}
 	if forDebug {

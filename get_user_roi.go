@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gametaverse-data-service/schema"
 	"io/ioutil"
 	"log"
 	"math"
@@ -14,17 +15,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPercentage {
+func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.ValueFrequencyPercentage {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
 
-	eligibleTransfers := make([]Transfer, 0)
+	eligibleTransfers := make([]schema.Transfer, 0)
 	targetUsers := getNewUsers(fromTimeObjs, toTimeObj, *svc)
 
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(dailyTransferBucketName)})
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(schema.DailyTransferBucketName)})
 	if err != nil {
 		exitErrorf("Unable to list object, %v", err)
 	}
@@ -39,7 +40,7 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 
 		requestInput :=
 			&s3.GetObjectInput{
-				Bucket: aws.String(dailyTransferBucketName),
+				Bucket: aws.String(schema.DailyTransferBucketName),
 				Key:    aws.String(*item.Key),
 			}
 		result, err := svc.GetObject(requestInput)
@@ -56,14 +57,14 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 		eligibleTransfers = append(eligibleTransfers, transfers...)
 	}
 
-	targetUserTransfers := map[string][]Transfer{}
+	targetUserTransfers := map[string][]schema.Transfer{}
 
 	for _, transfer := range eligibleTransfers {
 		if _, ok := targetUsers[transfer.FromAddress]; ok {
 			if _, ok := targetUserTransfers[transfer.FromAddress]; ok {
 				targetUserTransfers[transfer.FromAddress] = append(targetUserTransfers[transfer.FromAddress], transfer)
 			} else {
-				targetUserTransfers[transfer.FromAddress] = make([]Transfer, 0)
+				targetUserTransfers[transfer.FromAddress] = make([]schema.Transfer, 0)
 				targetUserTransfers[transfer.FromAddress] = append(targetUserTransfers[transfer.FromAddress], transfer)
 			}
 		}
@@ -71,7 +72,7 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 			if _, ok := targetUserTransfers[transfer.ToAddress]; ok {
 				targetUserTransfers[transfer.ToAddress] = append(targetUserTransfers[transfer.ToAddress], transfer)
 			} else {
-				targetUserTransfers[transfer.ToAddress] = make([]Transfer, 0)
+				targetUserTransfers[transfer.ToAddress] = make([]schema.Transfer, 0)
 				targetUserTransfers[transfer.ToAddress] = append(targetUserTransfers[transfer.ToAddress], transfer)
 			}
 		}
@@ -83,7 +84,7 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []ValueFrequencyPer
 		})
 	}
 
-	eligibleTargetUserTransfers := map[string][]Transfer{}
+	eligibleTargetUserTransfers := map[string][]schema.Transfer{}
 	for userAddress, transfers := range targetUserTransfers {
 		if len(transfers) == 0 {
 			continue
