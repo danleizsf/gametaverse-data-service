@@ -7,6 +7,7 @@ import (
 type Input struct {
 	Method string  `json:"method"`
 	Params []Param `json:"params"`
+	Path   string  `json:"path"`
 }
 
 type Param struct {
