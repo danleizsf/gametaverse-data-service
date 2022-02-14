@@ -29,6 +29,7 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (interf
 	input := Input{}
 	json.Unmarshal([]byte(request.Body), &input)
 	log.Printf("path: %s, body: %s", request.Path, request.Body)
+	log.Printf("request: %v", request)
 	if request.Path == "/grafana/search/grafana/search" {
 		return grafana.Search(), nil
 	}
