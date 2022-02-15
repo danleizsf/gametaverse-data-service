@@ -16,5 +16,9 @@ func GetUserActiveDatesDistributionMetrics(userActivities []schema.UserActivity)
 			Target:     "actualActiveDaysDistribution",
 			Datapoints: actualActiveDaysDistributionDatapoints,
 		},
+		{
+			Target:     "TotalActiveDaysDistribution",
+			Datapoints: totalActiveDaysDistributionDatapoints,
+		},
 	}
 }
