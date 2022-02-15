@@ -372,6 +372,9 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 		if userJoinTimestampObj.Before(fromTimeObj) || userJoinTimestampObj.After(toTimeObj) {
 			continue
 		}
+		if _, ok := schema.StarSharksGameWalletAddresses[address]; ok {
+			continue
+		}
 		newUsers[address] = int64(timestamp)
 	}
 	return newUsers
