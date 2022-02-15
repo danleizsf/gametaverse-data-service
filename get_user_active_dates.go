@@ -2,6 +2,7 @@ package main
 
 import (
 	"gametaverse-data-service/schema"
+	"math"
 	"sort"
 	"time"
 )
@@ -82,5 +83,5 @@ func GetUserActiveDates(fromTimeObj time.Time, toTimeObj time.Time, limit int64)
 	sort.Slice(perUserActivities, func(i, j int) bool {
 		return perUserActivities[i].TotalDatesCount > perUserActivities[j].TotalDatesCount
 	})
-	return perUserActivities[0:limit]
+	return perUserActivities[0:int64(math.Min(float64(limit), float64(len(perUserActivities))))]
 }
