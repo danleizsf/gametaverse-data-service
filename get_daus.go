@@ -31,7 +31,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 		exitErrorf("Unable to list object, %v", err)
 	}
 
-	concurrencyCount := 20
+	concurrencyCount := 4
 	tempTotalDaus := make([][]schema.Dau, concurrencyCount)
 	s3FileList := make([]*string, 0)
 	s3FileChuncks := make([][]*string, concurrencyCount)
