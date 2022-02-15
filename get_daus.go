@@ -23,7 +23,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 
 	svc := s3.New(sess)
 
-	daus := make(map[int64]schema.Dau)
+	//daus := make(map[int64]schema.Dau)
 
 	bucketName := "gametaverse-bucket"
 	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucketName)})
@@ -32,7 +32,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 	}
 
 	concurrencyCount := 20
-	tempTotalTransfers := make([][]schema.Transfer, concurrencyCount)
+	tempTotalDaus := make([][]schema.Dau, concurrencyCount)
 	s3FileList := make([]*string, 0)
 	s3FileChuncks := make([][]*string, concurrencyCount)
 	for _, item := range resp.Contents {
@@ -68,7 +68,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 			defer wg.Done()
 			chunckSvc := s3.New(sess)
 			log.Printf("start chunck %d, size %d", i, len(chunck))
-			transferChunck := make([]schema.Transfer, 0)
+			dauChunck := make([]schema.Dau, 0)
 			for _, fileName := range chunck {
 
 				timestamp, _ := strconv.ParseInt(strings.Split(*fileName, "-")[0], 10, 64)
@@ -121,7 +121,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 						newPurchaserCount += 1
 					}
 				}
-				daus[timestamp] = schema.Dau{
+				dauChunck = append(dauChunck, schema.Dau{
 					DateTimestamp: timestamp,
 					TotalActiveUsers: schema.ActiveUserCount{
 						TotalUserCount: int64(len(getActiveUsersFromTransfers(transfers))),
@@ -137,10 +137,10 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 							PurchaserCount: int64(newPurchaserCount),
 						},
 					},
-				}
+				})
 			}
 			log.Printf("end chunck %d", i)
-			tempTotalTransfers[i] = transferChunck
+			tempTotalDaus[i] = dauChunck
 		}(i, fileNameChunck)
 	}
 	wg.Wait()
@@ -219,14 +219,23 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 	//		},
 	//	}
 	//}
-	result := make([]schema.Dau, len(daus))
-	idx := 0
-	for _, dau := range daus {
-		result[idx] = dau
-		idx += 1
+	//result := make([]schema.Dau, len(daus))
+	//idx := 0
+	//for _, dau := range daus {
+	//	result[idx] = dau
+	//	idx += 1
+	//}
+	//sort.Slice(result, func(i, j int) bool {
+	//	return result[i].DateTimestamp < result[j].DateTimestamp
+	//})
+	//return result
+
+	totalDaus := make([]schema.Dau, 0)
+	for _, dauChunck := range tempTotalDaus {
+		totalDaus = append(totalDaus, dauChunck...)
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].DateTimestamp < result[j].DateTimestamp
+	sort.Slice(totalDaus, func(i, j int) bool {
+		return totalDaus[i].DateTimestamp < totalDaus[j].DateTimestamp
 	})
-	return result
+	return totalDaus
 }
