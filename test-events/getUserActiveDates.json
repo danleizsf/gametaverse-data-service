@@ -1,8 +1,5 @@
 {
 	"jsonrpc":"2.0",
-	"method":"getUserActiveDates",
-	"params":[{
-        "gameId": "StarSharks",
-		"limit": 100
-    }]
+	"path": "/data",
+	"body": "{\"method\":\"getUserActiveDates\",\"params\":[{\"limit\": 10}]}"
 }
