@@ -292,56 +292,56 @@ func generateValueDistribution(perUserValue map[string]int64) []schema.ValueFreq
 	return result
 }
 
-func isEligibleToProcess(timeObj time.Time, targetTimeObjs []time.Time) bool {
-	eligibleToProcess := false
-	for _, targetTimeObj := range targetTimeObjs {
-		log.Printf("targetTime: %v, time: %v", targetTimeObj, timeObj)
-		if targetTimeObj.Year() == timeObj.Year() && targetTimeObj.Month() == timeObj.Month() && targetTimeObj.Day() == timeObj.Day() {
-			eligibleToProcess = true
-			break
-		}
-	}
-	return eligibleToProcess
-}
-
-func generateTimeObjs(input schema.Input) []time.Time {
-	times := make([]time.Time, 0)
-	for _, param := range input.Params {
-		if param.Timestamp != 0 {
-			times = append(times, time.Unix(param.Timestamp, 0))
-		}
-	}
-	return times
-}
-
-func generateRoiDistribution(perUserRoiInDays map[string]int64) []schema.ValueFrequencyPercentage {
-	RoiDayDistribution := make(map[int64]int64)
-	totalCount := float64(0)
-	for _, days := range perUserRoiInDays {
-		if days < 1 {
-			continue
-		}
-		RoiDayDistribution[days] += 1
-		totalCount += 1
-	}
-	daysPercentageDistribution := make(map[int64]float64)
-	for days, count := range RoiDayDistribution {
-		daysPercentageDistribution[days] = float64(count) / totalCount
-	}
-	result := make([]schema.ValueFrequencyPercentage, len(daysPercentageDistribution))
-	idx := 0
-	for value, frequencyPercentage := range daysPercentageDistribution {
-		result[idx] = schema.ValueFrequencyPercentage{
-			Value:               value,
-			FrequencyPercentage: frequencyPercentage,
-		}
-		idx += 1
-	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Value < result[j].Value
-	})
-	return result
-}
+//func isEligibleToProcess(timeObj time.Time, targetTimeObjs []time.Time) bool {
+//	eligibleToProcess := false
+//	for _, targetTimeObj := range targetTimeObjs {
+//		log.Printf("targetTime: %v, time: %v", targetTimeObj, timeObj)
+//		if targetTimeObj.Year() == timeObj.Year() && targetTimeObj.Month() == timeObj.Month() && targetTimeObj.Day() == timeObj.Day() {
+//			eligibleToProcess = true
+//			break
+//		}
+//	}
+//	return eligibleToProcess
+//}
+//
+//func generateTimeObjs(input schema.Input) []time.Time {
+//	times := make([]time.Time, 0)
+//	for _, param := range input.Params {
+//		if param.Timestamp != 0 {
+//			times = append(times, time.Unix(param.Timestamp, 0))
+//		}
+//	}
+//	return times
+//}
+//
+//func generateRoiDistribution(perUserRoiInDays map[string]int64) []schema.ValueFrequencyPercentage {
+//	RoiDayDistribution := make(map[int64]int64)
+//	totalCount := float64(0)
+//	for _, days := range perUserRoiInDays {
+//		if days < 1 {
+//			continue
+//		}
+//		RoiDayDistribution[days] += 1
+//		totalCount += 1
+//	}
+//	daysPercentageDistribution := make(map[int64]float64)
+//	for days, count := range RoiDayDistribution {
+//		daysPercentageDistribution[days] = float64(count) / totalCount
+//	}
+//	result := make([]schema.ValueFrequencyPercentage, len(daysPercentageDistribution))
+//	idx := 0
+//	for value, frequencyPercentage := range daysPercentageDistribution {
+//		result[idx] = schema.ValueFrequencyPercentage{
+//			Value:               value,
+//			FrequencyPercentage: frequencyPercentage,
+//		}
+//		idx += 1
+//	}
+//	sort.Slice(result, func(i, j int) bool {
+//		return result[i].Value < result[j].Value
+//	})
+//	return result
+//}
 
 func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]int64 {
 	requestInput :=
