@@ -11,5 +11,6 @@ func Search() []string {
 		"new_user_spending_usd_distribution",
 		"new_user_profit_usd_distribution",
 		"new_user_type",
+		"new_user_profitable_days",
 	}
 }

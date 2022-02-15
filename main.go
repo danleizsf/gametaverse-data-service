@@ -82,6 +82,10 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			newUserTypes := GetUserType(fromTimeDateObj, time.Now())
 			response := grafana.GetNewUserTypeMetrics(newUserTypes)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_days" {
+			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			response := grafana.GetNewUserProfitableDaysDistributionMetrics(userRois)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {

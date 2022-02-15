@@ -2,12 +2,8 @@ package main
 
 import (
 	"gametaverse-data-service/schema"
-	"io/ioutil"
-	"log"
 	"math"
 	"sort"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,51 +11,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.ValueFrequencyPercentage {
+func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.UserRoiDetail {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
 
 	svc := s3.New(sess)
 
-	eligibleTransfers := make([]schema.Transfer, 0)
+	totalTransfers := GetTransfers(fromTimeObjs, toTimeObj)
 	targetUsers := getNewUsers(fromTimeObjs, toTimeObj, *svc)
-
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(schema.DailyTransferBucketName)})
-	if err != nil {
-		exitErrorf("Unable to list object, %v", err)
-	}
-
-	for _, item := range resp.Contents {
-		log.Printf("file name: %s\n", *item.Key)
-		timestamp, _ := strconv.ParseInt(strings.Split(*item.Key, "-")[0], 10, 64)
-		timeObj := time.Unix(timestamp, 0)
-		if timeObj.Before(fromTimeObjs) {
-			continue
-		}
-
-		requestInput :=
-			&s3.GetObjectInput{
-				Bucket: aws.String(schema.DailyTransferBucketName),
-				Key:    aws.String(*item.Key),
-			}
-		result, err := svc.GetObject(requestInput)
-		if err != nil {
-			exitErrorf("Unable to get object, %v", err)
-		}
-		body, err := ioutil.ReadAll(result.Body)
-		if err != nil {
-			exitErrorf("Unable to get body, %v", err)
-		}
-		bodyString := string(body)
-		//transactions := converCsvStringToTransactionStructs(bodyString)
-		transfers := ConvertCsvStringToTransferStructs(bodyString)
-		eligibleTransfers = append(eligibleTransfers, transfers...)
-	}
 
 	targetUserTransfers := map[string][]schema.Transfer{}
 
-	for _, transfer := range eligibleTransfers {
+	for _, transfer := range totalTransfers {
 		if _, ok := targetUsers[transfer.FromAddress]; ok {
 			if _, ok := targetUserTransfers[transfer.FromAddress]; ok {
 				targetUserTransfers[transfer.FromAddress] = append(targetUserTransfers[transfer.FromAddress], transfer)
@@ -84,21 +48,9 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.ValueFrequ
 		})
 	}
 
-	eligibleTargetUserTransfers := map[string][]schema.Transfer{}
+	userRois := make([]schema.UserRoiDetail, 0)
 	for userAddress, transfers := range targetUserTransfers {
-		if len(transfers) == 0 {
-			continue
-		}
-		timeObj := time.Unix(int64(transfers[0].Timestamp), 0)
-		if timeObj.Before(fromTimeObjs) || timeObj.After(toTimeObj) {
-			continue
-		}
-		eligibleTargetUserTransfers[userAddress] = transfers
-	}
-
-	eligibleTargetUserRoi := map[string]int64{}
-	for userAddress, transfers := range eligibleTargetUserTransfers {
-		value := -1
+		value := 0
 		transferIdx := -1
 		for _, transfer := range transfers {
 			if transfer.FromAddress == userAddress {
@@ -106,7 +58,7 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.ValueFrequ
 				//	log.Printf("spend %d, total %d", int(transfer.Value/1000000000000000000), value)
 				//}
 				value -= int(transfer.Value / 1000000000000000000)
-			} else {
+			} else if transfer.ToAddress == userAddress {
 				//if userAddress == "0xf9d207589d17f5512d367aafba7e81042a89ba3e" {
 				//	log.Printf("earn %d, total %d", int(transfer.Value/1000000000000000000), value)
 				//}
@@ -124,8 +76,11 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.ValueFrequ
 
 		initialTransferTimeObj := time.Unix(int64(transfers[0].Timestamp), 0)
 		profitTransferTimeObj := time.Unix(int64(transfers[transferIdx].Timestamp), 0)
-		eligibleTargetUserRoi[userAddress] = int64(math.Ceil(profitTransferTimeObj.Sub(initialTransferTimeObj).Hours() / 24))
+		profitableDays := int64(math.Ceil(profitTransferTimeObj.Sub(initialTransferTimeObj).Hours() / 24))
+		userRois = append(userRois, schema.UserRoiDetail{
+			ProfitableDays: profitableDays,
+		})
 	}
 
-	return generateRoiDistribution(eligibleTargetUserRoi)
+	return userRois
 }

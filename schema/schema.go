@@ -81,6 +81,7 @@ type UserRoiDetail struct {
 	TotalProfitUsd     float64 `json:"totalProfitUsd"`
 	TotalSpendingToken float64 `json:"totalSpendingToken"`
 	TotalProfitToken   float64 `json:"totalProfitToken"`
+	ProfitableDays     int64   `json:"profitableDays,omitempty"`
 }
 
 type UserType struct {
