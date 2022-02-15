@@ -78,6 +78,10 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewUserProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type" {
+			newUserTypes := GetUserType(fromTimeDateObj, time.Now())
+			response := grafana.GetNewUserTypeMetrics(newUserTypes)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
@@ -121,7 +125,9 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		response := GetNewUserProfitableRate(time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0), true)
 		return GenerateResponse(response)
 	} else if input.Method == "getUserType" {
-		response := GetUserType()
+		fromTimeObj := schema.StarSharksStartingDate
+		toTimeObj := time.Now()
+		response := GetUserType(fromTimeObj, toTimeObj)
 		return GenerateResponse(response)
 	} else if input.Method == "test" {
 		tableNames, _ := dynamoDBClient.ListTables(nil)

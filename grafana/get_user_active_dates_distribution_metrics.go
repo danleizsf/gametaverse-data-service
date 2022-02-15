@@ -24,7 +24,7 @@ func GetUserTotalActiveDatesDistributionMetrics(userActivities []schema.UserActi
 	}
 	return []QueryResponseMetric{
 		{
-			Target:     "TotalActiveDaysDistribution",
+			Target:     "totalActiveDaysDistribution",
 			Datapoints: totalActiveDaysDistributionDatapoints,
 		},
 	}

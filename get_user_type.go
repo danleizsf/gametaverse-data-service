@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-func GetUserType() schema.UserTypeCount {
-	fromTimeObj := schema.StarSharksStartingDate
-	toTimeObj := time.Now()
+func GetUserType(fromTimeObj time.Time, toTimeObj time.Time) schema.UserTypeCount {
 	totalTransfers := GetTransfers(fromTimeObj, toTimeObj)
 	rentees := map[string]bool{}
 	purchasers := map[string]bool{}
