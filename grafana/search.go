@@ -7,5 +7,6 @@ func Search() []string {
 		"new_user_profitable_rate",
 		"user_repurchase_rate",
 		"user_active_dates_distribution",
+		"new_user_spending_usd_distribution",
 	}
 }
