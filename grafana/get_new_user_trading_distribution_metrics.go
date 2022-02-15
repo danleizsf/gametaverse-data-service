@@ -5,9 +5,13 @@ import (
 )
 
 func GetNewUserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
-	newUserSpendingUsdDistributionDatapoints := make([]Datapoint, len(allUserRoiDetails.UserRoiDetails))
-	for i, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
-		newUserSpendingUsdDistributionDatapoints[i] = []float64{float64(userRoiDetail.TotalSpendingUsd), 10}
+	newUserSpendingUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
+		// To delete
+		if userRoiDetail.TotalSpendingUsd > 2000 {
+			continue
+		}
+		newUserSpendingUsdDistributionDatapoints = append(newUserSpendingUsdDistributionDatapoints, []float64{float64(userRoiDetail.TotalSpendingUsd), 10})
 	}
 	return []QueryResponseMetric{
 		{
@@ -18,9 +22,13 @@ func GetNewUserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRo
 }
 
 func GetNewUserProfitUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
-	newUserProfitUsdDistributionDatapoints := make([]Datapoint, len(allUserRoiDetails.UserRoiDetails))
-	for i, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
-		newUserProfitUsdDistributionDatapoints[i] = []float64{float64(userRoiDetail.TotalProfitUsd), 0}
+	newUserProfitUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
+		// To delete
+		if userRoiDetail.TotalProfitUsd > 1000 || userRoiDetail.TotalProfitUsd < -1000 {
+			continue
+		}
+		newUserProfitUsdDistributionDatapoints = append(newUserProfitUsdDistributionDatapoints, []float64{float64(userRoiDetail.TotalProfitUsd), 0})
 	}
 	return []QueryResponseMetric{
 		{
