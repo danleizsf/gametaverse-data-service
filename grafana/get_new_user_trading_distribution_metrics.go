@@ -16,3 +16,16 @@ func GetNewUserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRo
 		},
 	}
 }
+
+func GetNewUserProfitUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
+	newUserProfitUsdDistributionDatapoints := make([]Datapoint, len(allUserRoiDetails.UserRoiDetails))
+	for i, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
+		newUserProfitUsdDistributionDatapoints[i] = []float64{float64(userRoiDetail.TotalProfitUsd), 0}
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newUserProfitUsdDistribution",
+			Datapoints: newUserProfitUsdDistributionDatapoints,
+		},
+	}
+}

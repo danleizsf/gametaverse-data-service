@@ -70,6 +70,10 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewUserSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profit_usd_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewUserProfitUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
