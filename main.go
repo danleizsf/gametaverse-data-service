@@ -62,6 +62,10 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			userRepurchaseRate := GetUserRepurchaseRate(fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "user_active_dates_distribution" {
+			userActiveDates := GetUserActiveDates(fromTimeDateObj, toTimeDateObj, 10000000)
+			response := grafana.GetUserActiveDatesDistributionMetrics(userActiveDates)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
