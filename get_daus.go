@@ -76,7 +76,6 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 				if fileName == nil {
 					exitErrorf("to delete")
 				}
-				time.Sleep(1 * time.Second)
 				requestInput := &s3.GetObjectInput{
 					Bucket: aws.String(schema.DailyTransferBucketName),
 					Key:    aws.String(*fileName),
