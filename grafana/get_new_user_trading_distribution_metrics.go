@@ -8,7 +8,7 @@ func GetNewUserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRo
 	newUserSpendingUsdDistributionDatapoints := make([]Datapoint, 0)
 	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
 		// To delete
-		if userRoiDetail.TotalSpendingUsd > 2000 {
+		if userRoiDetail.TotalSpendingUsd > 500 {
 			continue
 		}
 		newUserSpendingUsdDistributionDatapoints = append(newUserSpendingUsdDistributionDatapoints, []float64{float64(userRoiDetail.TotalSpendingUsd), 10})
