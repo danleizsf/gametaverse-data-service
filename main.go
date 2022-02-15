@@ -62,9 +62,13 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			userRepurchaseRate := GetUserRepurchaseRate(fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
-		} else if grafanaQueryRequest.Targets[0].Target == "user_active_dates_distribution" {
+		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution" {
 			userActiveDates := GetUserActiveDates(fromTimeDateObj, toTimeDateObj, 10000000)
-			response := grafana.GetUserActiveDatesDistributionMetrics(userActiveDates)
+			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution" {
+			userActiveDates := GetUserActiveDates(fromTimeDateObj, toTimeDateObj, 10000000)
+			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_spending_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
