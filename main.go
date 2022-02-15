@@ -134,7 +134,13 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		response := GetUserType(fromTimeObj, toTimeObj)
 		return GenerateResponse(response)
 	} else if input.Method == "test" {
-		tableNames, _ := dynamoDBClient.ListTables(nil)
+		tableNames, err := dynamoDBClient.ListTables(nil)
+		log.Printf("test handler called, tableNames %v", tableNames)
+		if err != nil {
+			//log.Printf("body: %s", fmt.Sprintf("%s", body))
+			exitErrorf("Unable to list Tables, %v", err)
+		}
+
 		return GenerateResponse(tableNames.TableNames)
 	}
 	return GenerateResponse("")
