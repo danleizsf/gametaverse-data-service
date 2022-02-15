@@ -7,7 +7,7 @@ import (
 func GetNewUserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
 	newUserSpendingUsdDistributionDatapoints := make([]Datapoint, len(allUserRoiDetails.UserRoiDetails))
 	for i, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
-		newUserSpendingUsdDistributionDatapoints[i] = []float64{float64(userRoiDetail.TotalSpendingUsd), 0}
+		newUserSpendingUsdDistributionDatapoints[i] = []float64{float64(userRoiDetail.TotalSpendingUsd), 10}
 	}
 	return []QueryResponseMetric{
 		{
