@@ -379,6 +379,51 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 	return newUsers
 }
 
+func getAllTimeNewUsers(svc s3.S3) map[string]int64 {
+	requestInput :=
+		&s3.GetObjectInput{
+			Bucket: aws.String(schema.UserBucketName),
+			Key:    aws.String("per-user-join-time.json"),
+		}
+	result, err := svc.GetObject(requestInput)
+	if err != nil {
+		exitErrorf("Unable to get object, %v", err)
+	}
+	body, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		exitErrorf("Unable to read body, %v", err)
+	}
+
+	m := map[string]map[string]string{}
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		//log.Printf("body: %s", fmt.Sprintf("%s", body))
+		exitErrorf("Unable to unmarshall user meta info, %v", err)
+	}
+
+	newUsers := map[string]int64{}
+	for address, userMetaInfo := range m {
+		timestamp, _ := strconv.Atoi(userMetaInfo["timestamp"])
+		if _, ok := schema.StarSharksGameWalletAddresses[address]; ok {
+			continue
+		}
+		newUsers[address] = int64(timestamp)
+	}
+	return newUsers
+}
+
+func extractNewUsersForTimeRange(allTimeNewUsers map[string]int64, fromTimeObj time.Time, toTimeObj time.Time) map[string]int64 {
+	newUsers := map[string]int64{}
+	for address, joinTimestamp := range allTimeNewUsers {
+		userJoinTimestampObj := time.Unix(int64(joinTimestamp), 0)
+		if userJoinTimestampObj.Before(fromTimeObj) || userJoinTimestampObj.After(toTimeObj) {
+			continue
+		}
+		newUsers[address] = int64(joinTimestamp)
+	}
+	return newUsers
+}
+
 func getPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) schema.PriceHistory {
 	requestInput :=
 		&s3.GetObjectInput{

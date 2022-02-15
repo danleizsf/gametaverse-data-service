@@ -61,6 +61,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 	}
 	log.Printf("s3FileChuncks: %v", s3FileChuncks)
 
+	allTimeNewUsers := getAllTimeNewUsers(*svc)
 	var wg sync.WaitGroup
 	wg.Add(len(s3FileChuncks))
 	for i, fileNameChunck := range s3FileChuncks {
@@ -104,7 +105,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 					}
 				}
 
-				newUsers := getNewUsers(timeObj, time.Unix(timestamp+int64(schema.DayInSec), 0), *svc)
+				newUsers := extractNewUsersForTimeRange(allTimeNewUsers, timeObj, time.Unix(timestamp+int64(schema.DayInSec), 0))
 				perNewPayerTransfers := map[string][]schema.Transfer{}
 				for payerAddress, transfers := range perPayerTransfers {
 					if _, ok := newUsers[payerAddress]; ok {
