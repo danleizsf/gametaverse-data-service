@@ -73,7 +73,7 @@ func GetNewHybriderProfitableDaysDistributionMetrics(userRois []schema.UserRoiDe
 	newHybriderProfitableDaysDistributionDatapoints := make([]Datapoint, hybriderCount)
 	idx := 0
 	for _, userRoi := range userRois {
-		if userRoi.UserType == schema.Purchaser {
+		if userRoi.UserType == schema.Hybrider {
 			newHybriderProfitableDaysDistributionDatapoints[idx] = []float64{float64(userRoi.ProfitableDays), 0}
 			idx += 1
 		}
