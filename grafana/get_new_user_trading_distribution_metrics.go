@@ -21,6 +21,66 @@ func GetNewUserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRo
 	}
 }
 
+func GetNewRenteeSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
+	newRenteeSpendingUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
+		// To delete
+		if userRoiDetail.TotalSpendingUsd > 500 || userRoiDetail.TotalSpendingUsd == 0 {
+			continue
+		}
+		if userRoiDetail.UserType != schema.Rentee {
+			continue
+		}
+		newRenteeSpendingUsdDistributionDatapoints = append(newRenteeSpendingUsdDistributionDatapoints, []float64{float64(userRoiDetail.TotalSpendingUsd), 10})
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newRenteeSpendingUsdDistribution",
+			Datapoints: newRenteeSpendingUsdDistributionDatapoints,
+		},
+	}
+}
+
+func GetNewPurchaserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
+	newPurchaserSpendingUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
+		// To delete
+		if userRoiDetail.TotalSpendingUsd > 500 || userRoiDetail.TotalSpendingUsd == 0 {
+			continue
+		}
+		if userRoiDetail.UserType != schema.Purchaser {
+			continue
+		}
+		newPurchaserSpendingUsdDistributionDatapoints = append(newPurchaserSpendingUsdDistributionDatapoints, []float64{float64(userRoiDetail.TotalSpendingUsd), 10})
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newPurchaserSpendingUsdDistribution",
+			Datapoints: newPurchaserSpendingUsdDistributionDatapoints,
+		},
+	}
+}
+
+func GetNewHybriderSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
+	newHybriderSpendingUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
+		// To delete
+		if userRoiDetail.TotalSpendingUsd > 500 || userRoiDetail.TotalSpendingUsd == 0 {
+			continue
+		}
+		if userRoiDetail.UserType != schema.Hybrider {
+			continue
+		}
+		newHybriderSpendingUsdDistributionDatapoints = append(newHybriderSpendingUsdDistributionDatapoints, []float64{float64(userRoiDetail.TotalSpendingUsd), 10})
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newHybriderSpendingUsdDistribution",
+			Datapoints: newHybriderSpendingUsdDistributionDatapoints,
+		},
+	}
+}
+
 func GetNewUserProfitUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiDetails) QueryResponse {
 	newUserProfitUsdDistributionDatapoints := make([]Datapoint, 0)
 	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {

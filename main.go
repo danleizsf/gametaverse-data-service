@@ -74,6 +74,18 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewUserSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_usd_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewRenteeSpendingUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_usd_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewPurchaserSpendingUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_usd_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewHybriderSpendingUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profit_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewUserProfitUsdDistributionMetrics(newUserProfitableRate)
