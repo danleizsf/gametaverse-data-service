@@ -73,12 +73,14 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.UserRoiDet
 		if value < 0 {
 			continue
 		}
+		payerType := GetPayerType(transfers)
 
 		initialTransferTimeObj := time.Unix(int64(transfers[0].Timestamp), 0)
 		profitTransferTimeObj := time.Unix(int64(transfers[transferIdx].Timestamp), 0)
 		profitableDays := int64(math.Ceil(profitTransferTimeObj.Sub(initialTransferTimeObj).Hours() / 24))
 		userRois = append(userRois, schema.UserRoiDetail{
 			ProfitableDays: profitableDays,
+			UserType:       payerType,
 		})
 	}
 
