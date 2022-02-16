@@ -16,3 +16,26 @@ func GetNewUserProfitableDaysDistributionMetrics(userRois []schema.UserRoiDetail
 		},
 	}
 }
+
+func GetNewRenteeProfitableDaysDistributionMetrics(userRois []schema.UserRoiDetail) QueryResponse {
+	renteeCount := 0
+	for _, userRoi := range userRois {
+		if userRoi.UserType == schema.Rentee {
+			renteeCount += 1
+		}
+	}
+	newRenteeProfitableDaysDistributionDatapoints := make([]Datapoint, renteeCount)
+	idx := 0
+	for _, userRoi := range userRois {
+		if userRoi.UserType == schema.Rentee {
+			newRenteeProfitableDaysDistributionDatapoints[idx] = []float64{float64(userRoi.ProfitableDays), 0}
+			idx += 1
+		}
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newRenteeProfitableDaysDistribution",
+			Datapoints: newRenteeProfitableDaysDistributionDatapoints,
+		},
+	}
+}

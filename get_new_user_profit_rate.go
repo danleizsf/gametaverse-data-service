@@ -56,6 +56,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 		timeObj, _ := time.Parse(layout, price.Date)
 		priceHisoryMap[timeObj.Unix()] = price.Price
 	}
+	payerTypes := GetPayerTypes(totalTransfers)
 	for _, transfer := range totalTransfers {
 		//if transfer.FromAddress != "0xfff5de86577b3f778ac6cc236384ed6db1825bff" && transfer.ToAddress != "0xfff5de86577b3f778ac6cc236384ed6db1825bff" {
 		//	continue
@@ -79,6 +80,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 					TotalProfitUsd:     -valueUsd,
 					TotalSpendingToken: valueToken,
 					TotalProfitToken:   -valueToken,
+					UserType:           payerTypes[transfer.FromAddress],
 				}
 			}
 		}
@@ -97,6 +99,7 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 					TotalProfitUsd:     valueUsd,
 					TotalSpendingToken: 0,
 					TotalProfitToken:   valueToken,
+					UserType:           payerTypes[transfer.ToAddress],
 				}
 			}
 		}

@@ -475,3 +475,57 @@ func GenerateResponse(respStruct interface{}) (events.APIGatewayProxyResponse, e
 		Body: string(response),
 	}, err
 }
+
+func GetPayerType(transfers []schema.Transfer) schema.PayerType {
+	if len(transfers) == 0 {
+		return schema.Rentee
+	}
+	payerType := schema.Rentee
+	if transfers[0].ContractAddress == schema.StarSharksRentContractAddresses {
+		payerType = schema.Rentee
+	} else if transfers[0].ContractAddress == schema.StarSharksPurchaseContractAddresses || transfers[0].ContractAddress == schema.StarSharksAuctionContractAddresses {
+		payerType = schema.Purchaser
+	}
+	for _, transfer := range transfers {
+		if payerType == schema.Hybrider {
+			continue
+		}
+		if transfer.ContractAddress == schema.StarSharksRentContractAddresses {
+			if payerType == schema.Purchaser {
+				payerType = schema.Hybrider
+			}
+		} else if transfer.ContractAddress == schema.StarSharksPurchaseContractAddresses || transfer.ContractAddress == schema.StarSharksAuctionContractAddresses {
+
+			if payerType == schema.Rentee {
+				payerType = schema.Hybrider
+			}
+		}
+	}
+	return payerType
+}
+
+func GetPayerTypes(totalTransfers []schema.Transfer) map[string]schema.PayerType {
+	userTypes := map[string]schema.PayerType{}
+
+	for _, transfer := range totalTransfers {
+		payerAddress := transfer.FromAddress
+		if userTypes[payerAddress] == schema.Hybrider {
+			continue
+		}
+		if transfer.ContractAddress == schema.StarSharksRentContractAddresses {
+			if userTypes[payerAddress] == schema.Purchaser {
+				userTypes[payerAddress] = schema.Hybrider
+			} else if userTypes[payerAddress] != schema.Rentee {
+				userTypes[payerAddress] = schema.Rentee
+			}
+		}
+		if transfer.ContractAddress == schema.StarSharksPurchaseContractAddresses || transfer.ContractAddress == schema.StarSharksAuctionContractAddresses {
+			if userTypes[payerAddress] == schema.Rentee {
+				userTypes[payerAddress] = schema.Hybrider
+			} else if userTypes[payerAddress] != schema.Purchaser {
+				userTypes[payerAddress] = schema.Purchaser
+			}
+		}
+	}
+	return userTypes
+}

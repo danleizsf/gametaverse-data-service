@@ -75,13 +75,14 @@ type UserTransactionVolume struct {
 }
 
 type UserRoiDetail struct {
-	UserAddress        string  `json:"userAddress"`
-	JoinDateTimestamp  int64   `json:"joinDateTimestamp,omitempty"`
-	TotalSpendingUsd   float64 `json:"totalSpendingUsd"`
-	TotalProfitUsd     float64 `json:"totalProfitUsd"`
-	TotalSpendingToken float64 `json:"totalSpendingToken"`
-	TotalProfitToken   float64 `json:"totalProfitToken"`
-	ProfitableDays     int64   `json:"profitableDays,omitempty"`
+	UserAddress        string    `json:"userAddress"`
+	JoinDateTimestamp  int64     `json:"joinDateTimestamp,omitempty"`
+	TotalSpendingUsd   float64   `json:"totalSpendingUsd"`
+	TotalProfitUsd     float64   `json:"totalProfitUsd"`
+	TotalSpendingToken float64   `json:"totalSpendingToken"`
+	TotalProfitToken   float64   `json:"totalProfitToken"`
+	ProfitableDays     int64     `json:"profitableDays,omitempty"`
+	UserType           PayerType `json:"userType"`
 }
 
 type UserType struct {
@@ -161,4 +162,5 @@ type PayerType int64
 const (
 	Rentee    PayerType = 0
 	Purchaser PayerType = 1
+	Hybrider  PayerType = 2
 )
