@@ -45,7 +45,7 @@ func GetNewPurchaserSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllU
 	newPurchaserSpendingUsdDistributionDatapoints := make([]Datapoint, 0)
 	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
 		// To delete
-		if userRoiDetail.TotalSpendingUsd > 500 || userRoiDetail.TotalSpendingUsd == 0 {
+		if userRoiDetail.TotalSpendingUsd > 1000 || userRoiDetail.TotalSpendingUsd == 0 {
 			continue
 		}
 		if userRoiDetail.UserType != schema.Purchaser {
@@ -65,7 +65,7 @@ func GetNewHybriderSpendingUsdDistributionMetrics(allUserRoiDetails schema.AllUs
 	newHybriderSpendingUsdDistributionDatapoints := make([]Datapoint, 0)
 	for _, userRoiDetail := range allUserRoiDetails.UserRoiDetails {
 		// To delete
-		if userRoiDetail.TotalSpendingUsd > 500 || userRoiDetail.TotalSpendingUsd == 0 {
+		if userRoiDetail.TotalSpendingUsd > 1000 || userRoiDetail.TotalSpendingUsd == 0 {
 			continue
 		}
 		if userRoiDetail.UserType != schema.Hybrider {
@@ -122,7 +122,7 @@ func GetNewPurchaserProfitUsdDistributionMetrics(allPurchaserRoiDetails schema.A
 	newPurchaserProfitUsdDistributionDatapoints := make([]Datapoint, 0)
 	for _, purchaserRoiDetail := range allPurchaserRoiDetails.UserRoiDetails {
 		// To delete
-		if purchaserRoiDetail.TotalProfitUsd > 1000 || purchaserRoiDetail.TotalProfitUsd < -1000 {
+		if purchaserRoiDetail.TotalProfitUsd > 2000 || purchaserRoiDetail.TotalProfitUsd < -1000 {
 			continue
 		}
 		if purchaserRoiDetail.UserType != schema.Purchaser {
@@ -142,7 +142,7 @@ func GetNewHybriderProfitUsdDistributionMetrics(allHybriderRoiDetails schema.All
 	newHybriderProfitUsdDistributionDatapoints := make([]Datapoint, 0)
 	for _, hybriderRoiDetail := range allHybriderRoiDetails.UserRoiDetails {
 		// To delete
-		if hybriderRoiDetail.TotalProfitUsd > 1000 || hybriderRoiDetail.TotalProfitUsd < -1000 {
+		if hybriderRoiDetail.TotalProfitUsd > 2000 || hybriderRoiDetail.TotalProfitUsd < -1000 {
 			continue
 		}
 		if hybriderRoiDetail.UserType != schema.Hybrider {
