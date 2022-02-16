@@ -15,18 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-var dynamoDBClient *dynamodb.DynamoDB
-
-func init() {
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String("us-west-1"),
-	})
-
-	// Create DynamoDB client
-	dynamoDBClient = dynamodb.New(sess)
+type handler struct {
+	dynamoDBClient *dynamodb.DynamoDB
 }
 
-func process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (h *handler) process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	input := schema.Input{}
 	json.Unmarshal([]byte(request.Body), &input)
 	log.Printf("path: %s, body: %s, httpmethod: %s", request.Path, request.Body, request.HTTPMethod)
@@ -170,7 +163,10 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		response := GetUserType(fromTimeObj, toTimeObj)
 		return GenerateResponse(response)
 	} else if input.Method == "test" {
-		tableNames, err := dynamoDBClient.ListTables(nil)
+		if h.dynamoDBClient == nil {
+			return GenerateResponse("dynamoDBClient is nil")
+		}
+		tableNames, err := h.dynamoDBClient.ListTables(nil)
 		log.Printf("test handler called, tableNames %v", tableNames)
 		if err != nil {
 			//log.Printf("body: %s", fmt.Sprintf("%s", body))
@@ -183,5 +179,17 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 }
 
 func main() {
-	lambda.Start(process)
+	sess, _ := session.NewSessionWithOptions(
+		session.Options{
+			SharedConfigState: session.SharedConfigEnable,
+			Config: aws.Config{
+				Region: aws.String("us-west-1"),
+			},
+		},
+	)
+	h := handler{
+		dynamoDBClient: dynamodb.New(sess),
+	}
+
+	lambda.Start(h.process)
 }
