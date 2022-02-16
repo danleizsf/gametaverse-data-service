@@ -160,7 +160,8 @@ type UserMetaInfo struct {
 type PayerType int64
 
 const (
-	Rentee    PayerType = 0
-	Purchaser PayerType = 1
-	Hybrider  PayerType = 2
+	Unknown   PayerType = 0
+	Rentee    PayerType = 1
+	Purchaser PayerType = 2
+	Hybrider  PayerType = 3
 )
