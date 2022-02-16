@@ -77,3 +77,23 @@ func GetNewPurchaserProfitUsdDistributionMetrics(allPurchaserRoiDetails schema.A
 		},
 	}
 }
+
+func GetNewHybriderProfitUsdDistributionMetrics(allHybriderRoiDetails schema.AllUserRoiDetails) QueryResponse {
+	newHybriderProfitUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, hybriderRoiDetail := range allHybriderRoiDetails.UserRoiDetails {
+		// To delete
+		if hybriderRoiDetail.TotalProfitUsd > 1000 || hybriderRoiDetail.TotalProfitUsd < -1000 {
+			continue
+		}
+		if hybriderRoiDetail.UserType != schema.Hybrider {
+			continue
+		}
+		newHybriderProfitUsdDistributionDatapoints = append(newHybriderProfitUsdDistributionDatapoints, []float64{float64(hybriderRoiDetail.TotalProfitUsd), 0})
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newHybriderProfitUsdDistribution",
+			Datapoints: newHybriderProfitUsdDistributionDatapoints,
+		},
+	}
+}
