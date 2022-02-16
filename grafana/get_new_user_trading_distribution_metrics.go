@@ -37,3 +37,43 @@ func GetNewUserProfitUsdDistributionMetrics(allUserRoiDetails schema.AllUserRoiD
 		},
 	}
 }
+
+func GetNewRenteeProfitUsdDistributionMetrics(allRenteeRoiDetails schema.AllUserRoiDetails) QueryResponse {
+	newRenteeProfitUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, renteeRoiDetail := range allRenteeRoiDetails.UserRoiDetails {
+		// To delete
+		if renteeRoiDetail.TotalProfitUsd > 1000 || renteeRoiDetail.TotalProfitUsd < -1000 {
+			continue
+		}
+		if renteeRoiDetail.UserType != schema.Rentee {
+			continue
+		}
+		newRenteeProfitUsdDistributionDatapoints = append(newRenteeProfitUsdDistributionDatapoints, []float64{float64(renteeRoiDetail.TotalProfitUsd), 0})
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newRenteeProfitUsdDistribution",
+			Datapoints: newRenteeProfitUsdDistributionDatapoints,
+		},
+	}
+}
+
+func GetNewPurchaserProfitUsdDistributionMetrics(allPurchaserRoiDetails schema.AllUserRoiDetails) QueryResponse {
+	newPurchaserProfitUsdDistributionDatapoints := make([]Datapoint, 0)
+	for _, purchaserRoiDetail := range allPurchaserRoiDetails.UserRoiDetails {
+		// To delete
+		if purchaserRoiDetail.TotalProfitUsd > 1000 || purchaserRoiDetail.TotalProfitUsd < -1000 {
+			continue
+		}
+		if purchaserRoiDetail.UserType != schema.Purchaser {
+			continue
+		}
+		newPurchaserProfitUsdDistributionDatapoints = append(newPurchaserProfitUsdDistributionDatapoints, []float64{float64(purchaserRoiDetail.TotalProfitUsd), 0})
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newPurchaserProfitUsdDistribution",
+			Datapoints: newPurchaserProfitUsdDistributionDatapoints,
+		},
+	}
+}

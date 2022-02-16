@@ -78,6 +78,14 @@ func process(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewUserProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_usd_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewRenteeProfitUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_usd_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewPurchaserProfitUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type" {
 			newUserTypes := GetUserType(fromTimeDateObj, time.Now())
 			response := grafana.GetNewUserTypeMetrics(newUserTypes)
