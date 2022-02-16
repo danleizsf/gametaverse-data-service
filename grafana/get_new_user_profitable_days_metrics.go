@@ -62,3 +62,26 @@ func GetNewPurchaserProfitableDaysDistributionMetrics(userRois []schema.UserRoiD
 		},
 	}
 }
+
+func GetNewHybriderProfitableDaysDistributionMetrics(userRois []schema.UserRoiDetail) QueryResponse {
+	hybriderCount := 0
+	for _, userRoi := range userRois {
+		if userRoi.UserType == schema.Hybrider {
+			hybriderCount += 1
+		}
+	}
+	newHybriderProfitableDaysDistributionDatapoints := make([]Datapoint, hybriderCount)
+	idx := 0
+	for _, userRoi := range userRois {
+		if userRoi.UserType == schema.Purchaser {
+			newHybriderProfitableDaysDistributionDatapoints[idx] = []float64{float64(userRoi.ProfitableDays), 0}
+			idx += 1
+		}
+	}
+	return []QueryResponseMetric{
+		{
+			Target:     "newHybriderProfitableDaysDistribution",
+			Datapoints: newHybriderProfitableDaysDistributionDatapoints,
+		},
+	}
+}
