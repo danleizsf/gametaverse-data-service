@@ -453,7 +453,7 @@ func getMysteriousBoxTransfers(fromTimeObj time.Time, toTimeObj time.Time, svc s
 	requestInput :=
 		&s3.GetObjectInput{
 			Bucket: aws.String(schema.PriceBucketName),
-			Key:    aws.String("starsharks-mysterious-box-tranfers.csv"),
+			Key:    aws.String("starsharks-mysterious-box-transfers.csv"),
 		}
 	result, err := svc.GetObject(requestInput)
 	if err != nil {
