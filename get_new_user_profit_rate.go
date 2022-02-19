@@ -109,11 +109,13 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 	for _, transfer := range starSharksMysteriousBoxTransfers {
 		dateTimestamp := (int64(transfer.Timestamp) / int64(schema.DayInSec)) * int64(schema.DayInSec)
 		address := transfer.ToAddress
-		valueUsd := (transfer.Value / float64(schema.SeaTokenUnit)) * priceHisoryMap[dateTimestamp]
 		valueToken := transfer.Value / float64(schema.SeaTokenUnit)
+		valueUsd := valueToken * priceHisoryMap[dateTimestamp]
 		if _, ok := perNewUserRoiDetail[address]; ok {
 			perNewUserRoiDetail[address].TotalProfitToken -= valueToken
 			perNewUserRoiDetail[address].TotalProfitUsd -= valueUsd
+			perNewUserRoiDetail[address].TotalSpendingToken += valueToken
+			perNewUserRoiDetail[address].TotalSpendingUsd += valueUsd
 		}
 	}
 	userRoiDetails := make([]schema.UserRoiDetail, len(perNewUserRoiDetail))
