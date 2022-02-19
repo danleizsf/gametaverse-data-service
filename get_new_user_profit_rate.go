@@ -104,6 +104,18 @@ func GetNewUserProfitableRate(fromTimeObj time.Time, toTimeObj time.Time, forDeb
 			}
 		}
 	}
+
+	starSharksMysteriousBoxTransfers := getMysteriousBoxTransfers(fromTimeObj, toTimeObj, *svc)
+	for _, transfer := range starSharksMysteriousBoxTransfers {
+		dateTimestamp := (int64(transfer.Timestamp) / int64(schema.DayInSec)) * int64(schema.DayInSec)
+		address := transfer.ToAddress
+		valueUsd := (transfer.Value / float64(schema.SeaTokenUnit)) * priceHisoryMap[dateTimestamp]
+		valueToken := transfer.Value / float64(schema.SeaTokenUnit)
+		if _, ok := perNewUserRoiDetail[address]; ok {
+			perNewUserRoiDetail[address].TotalProfitToken -= valueToken
+			perNewUserRoiDetail[address].TotalProfitUsd -= valueUsd
+		}
+	}
 	userRoiDetails := make([]schema.UserRoiDetail, len(perNewUserRoiDetail))
 	profitableUserCount := 0
 	idx := 0
