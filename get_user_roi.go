@@ -41,6 +41,10 @@ func GetUserRoi(fromTimeObjs time.Time, toTimeObj time.Time) []schema.UserRoiDet
 			}
 		}
 	}
+	starSharksMysteriousBoxTransfers := getMysteriousBoxTransfers(fromTimeObjs, toTimeObj, *svc)
+	for _, transfer := range starSharksMysteriousBoxTransfers {
+		targetUserTransfers[transfer.ToAddress] = append(targetUserTransfers[transfer.FromAddress], transfer)
+	}
 
 	for userAddress, transfers := range targetUserTransfers {
 		sort.Slice(targetUserTransfers[userAddress], func(i, j int) bool {

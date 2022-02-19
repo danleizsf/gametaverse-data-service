@@ -483,7 +483,7 @@ func getMysteriousBoxTransfers(fromTimeObj time.Time, toTimeObj time.Time, svc s
 		}
 
 		transfers = append(transfers, schema.Transfer{
-			ToAddress:       fields[0],
+			FromAddress:     fields[0],
 			Value:           float64(40 * schema.SeaTokenUnit),
 			TransactionHash: fields[1],
 			Timestamp:       int(timeObj.Unix()),
