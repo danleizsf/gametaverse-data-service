@@ -71,13 +71,25 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewRenteeSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_token_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewRenteeSpendingUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewPurchaserSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_token_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewPurchaserSpendingTokenDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewHybriderSpendingUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_token_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewHybriderSpendingTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profit_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
@@ -87,13 +99,25 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewRenteeProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_token_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewRenteeProfitTokenDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewPurchaserProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_token_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewPurchaserProfitTokenDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewHybriderProfitUsdDistributionMetrics(newUserProfitableRate)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_token_distribution" {
+			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
+			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type" {
 			newUserTypes := GetUserType(fromTimeDateObj, time.Now())

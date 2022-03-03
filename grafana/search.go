@@ -14,11 +14,17 @@ func Search() []string {
 		"new_rentee_spending_usd_distribution",
 		"new_purchaser_spending_usd_distribution",
 		"new_hybrider_spending_usd_distribution",
+		"new_rentee_spending_token_distribution",
+		"new_purchaser_spending_token_distribution",
+		"new_hybrider_spending_token_distribution",
 
 		"new_user_profit_usd_distribution",
 		"new_rentee_profit_usd_distribution",
 		"new_purchaser_profit_usd_distribution",
 		"new_hybrider_profit_usd_distribution",
+		"new_rentee_profit_token_distribution",
+		"new_purchaser_profit_token_distribution",
+		"new_hybrider_profit_token_distribution",
 
 		"new_user_type",
 
