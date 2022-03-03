@@ -18,15 +18,15 @@ func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
 					Type: "string",
 				},
 				{
-					Text: "Total gain",
+					Text: "Total gain (USD)",
 					Type: "number",
 				},
 				{
-					Text: "Total profit",
+					Text: "Total profit (USD)",
 					Type: "number",
 				},
 				{
-					Text: "Total spending",
+					Text: "Total spending (USD)",
 					Type: "number",
 				},
 			},
