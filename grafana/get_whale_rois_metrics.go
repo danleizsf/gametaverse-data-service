@@ -4,10 +4,28 @@ import (
 	"gametaverse-data-service/schema"
 )
 
-func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
+func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail, sortType schema.WhalesSortType) []TableMetrics {
 	whaleRoisDatapoints := make([]Row, 0)
 	for _, whaleRoi := range whaleRois {
-		whaleRoisDatapoints = append(whaleRoisDatapoints, Row{whaleRoi.UserAddress, whaleRoi.TotalGainUsd, whaleRoi.TotalProfitUsd, whaleRoi.TotalSpendingUsd})
+		if sortType == schema.SortByGain {
+			whaleRoisDatapoints = append(whaleRoisDatapoints, Row{
+				whaleRoi.UserAddress,
+				whaleRoi.TotalGainUsd,
+				whaleRoi.TotalGainToken,
+			})
+		} else if sortType == schema.SortByProfit {
+			whaleRoisDatapoints = append(whaleRoisDatapoints, Row{
+				whaleRoi.UserAddress,
+				whaleRoi.TotalProfitUsd,
+				whaleRoi.TotalProfitToken,
+			})
+		} else if sortType == schema.SortBySpending {
+			whaleRoisDatapoints = append(whaleRoisDatapoints, Row{
+				whaleRoi.UserAddress,
+				whaleRoi.TotalSpendingUsd,
+				whaleRoi.TotalSpendingToken,
+			})
+		}
 	}
 	return []TableMetrics{
 		{
@@ -18,15 +36,11 @@ func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
 					Type: "string",
 				},
 				{
-					Text: "Total gain (USD)",
+					Text: "USD",
 					Type: "number",
 				},
 				{
-					Text: "Total profit (USD)",
-					Type: "number",
-				},
-				{
-					Text: "Total spending (USD)",
+					Text: "SEA",
 					Type: "number",
 				},
 			},

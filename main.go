@@ -139,8 +139,16 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			userRois := GetUserRoi(fromTimeDateObj, time.Now())
 			response := grafana.GetNewHybriderProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
-		} else if grafanaQueryRequest.Targets[0].Target == "whale_rois" {
-			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now())
+		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_gain" {
+			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now(), schema.SortByGain)
+			response := grafana.GetWhaleRoisMetrics(whaleRois)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_profit" {
+			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now(), schema.SortByProfit)
+			response := grafana.GetWhaleRoisMetrics(whaleRois)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_spending" {
+			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now(), schema.SortBySpending)
 			response := grafana.GetWhaleRoisMetrics(whaleRois)
 			return GenerateResponse(response)
 		}
@@ -193,7 +201,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 	} else if input.Method == "getWhaleRois" {
 		fromTimeObj := schema.StarSharksStartingDate
 		toTimeObj := time.Now()
-		response := GetWhaleRois(fromTimeObj, toTimeObj)
+		response := GetWhaleRois(fromTimeObj, toTimeObj, schema.SortByGain)
 		return GenerateResponse(response)
 	} else if input.Method == "test" {
 		if h.dynamoDBClient == nil {

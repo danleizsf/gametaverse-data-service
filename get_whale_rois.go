@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time) []schema.UserRoiDetail {
+func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time, sortType schema.WhalesSortType) []schema.UserRoiDetail {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-1"),
 	})
@@ -77,6 +77,7 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time) []schema.UserRoiDe
 					TotalSpendingToken: valueToken,
 					TotalProfitToken:   -valueToken,
 					TotalGainUsd:       0,
+					TotalGainToken:     0,
 				}
 			}
 		}
@@ -95,6 +96,7 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time) []schema.UserRoiDe
 					TotalSpendingUsd:   0,
 					TotalProfitUsd:     valueUsd,
 					TotalGainUsd:       valueUsd,
+					TotalGainToken:     valueToken,
 					TotalSpendingToken: 0,
 					TotalProfitToken:   valueToken,
 				}
@@ -113,8 +115,18 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time) []schema.UserRoiDe
 		}
 	}
 
-	sort.Slice(userRoiDetails, func(i, j int) bool {
-		return userRoiDetails[i].TotalProfitUsd+userRoiDetails[i].TotalSpendingUsd > userRoiDetails[j].TotalProfitUsd+userRoiDetails[j].TotalSpendingUsd
-	})
+	if sortType == schema.SortByGain {
+		sort.Slice(userRoiDetails, func(i, j int) bool {
+			return userRoiDetails[i].TotalGainToken > userRoiDetails[j].TotalGainToken
+		})
+	} else if sortType == schema.SortByProfit {
+		sort.Slice(userRoiDetails, func(i, j int) bool {
+			return userRoiDetails[i].TotalProfitToken > userRoiDetails[j].TotalProfitToken
+		})
+	} else if sortType == schema.SortBySpending {
+		sort.Slice(userRoiDetails, func(i, j int) bool {
+			return userRoiDetails[i].TotalSpendingToken > userRoiDetails[j].TotalSpendingToken
+		})
+	}
 	return userRoiDetails[0:10]
 }

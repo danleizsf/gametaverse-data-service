@@ -94,6 +94,7 @@ type UserRoiDetail struct {
 	TotalSpendingUsd   float64   `json:"totalSpendingUsd"`
 	TotalProfitUsd     float64   `json:"totalProfitUsd"`
 	TotalGainUsd       float64   `json:"totalGainUsd,omitempty"`
+	TotalGainToken     float64   `json:"totalGainToken,omitempty"`
 	TotalSpendingToken float64   `json:"totalSpendingToken"`
 	TotalProfitToken   float64   `json:"totalProfitToken"`
 	ProfitableDays     int64     `json:"profitableDays,omitempty"`
@@ -179,4 +180,13 @@ const (
 	Rentee    PayerType = 1
 	Purchaser PayerType = 2
 	Hybrider  PayerType = 3
+)
+
+type WhalesSortType int64
+
+const (
+	SortByUnknown  WhalesSortType = 0
+	SortByGain     WhalesSortType = 1
+	SortByProfit   WhalesSortType = 2
+	SortBySpending WhalesSortType = 3
 )
