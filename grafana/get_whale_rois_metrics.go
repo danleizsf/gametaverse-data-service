@@ -7,7 +7,7 @@ import (
 func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
 	whaleRoisDatapoints := make([]Row, 0)
 	for _, whaleRoi := range whaleRois {
-		whaleRoisDatapoints = append(whaleRoisDatapoints, Row{whaleRoi.UserAddress, whaleRoi.TotalGainUsd, whaleRoi.TotalProfitUsd})
+		whaleRoisDatapoints = append(whaleRoisDatapoints, Row{whaleRoi.UserAddress, whaleRoi.TotalGainUsd, whaleRoi.TotalProfitUsd, whaleRoi.TotalSpendingUsd})
 	}
 	return []TableMetrics{
 		{
@@ -23,6 +23,10 @@ func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
 				},
 				{
 					Text: "Total profit",
+					Type: "number",
+				},
+				{
+					Text: "Total spending",
 					Type: "number",
 				},
 			},
