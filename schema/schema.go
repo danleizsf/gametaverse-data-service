@@ -81,6 +81,7 @@ type UserRoiDetail struct {
 	JoinDateTimestamp  int64     `json:"joinDateTimestamp,omitempty"`
 	TotalSpendingUsd   float64   `json:"totalSpendingUsd"`
 	TotalProfitUsd     float64   `json:"totalProfitUsd"`
+	TotalGainUsd       float64   `json:"totalGainUsd,omitempty"`
 	TotalSpendingToken float64   `json:"totalSpendingToken"`
 	TotalProfitToken   float64   `json:"totalProfitToken"`
 	ProfitableDays     int64     `json:"profitableDays,omitempty"`
