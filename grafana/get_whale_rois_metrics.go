@@ -14,7 +14,7 @@ func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
 			Type: "table",
 			Columns: []Column{
 				{
-					Text: "User address",
+					Text: "Whale address",
 					Type: "string",
 				},
 				{
