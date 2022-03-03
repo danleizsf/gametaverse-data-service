@@ -4,15 +4,21 @@ import (
 	"gametaverse-data-service/schema"
 )
 
-func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) QueryResponse {
-	whaleRoisDatapoints := make([]Datapoint, 0)
+func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
+	whaleRoisDatapoints := make([]Row, 0)
 	for _, whaleRoi := range whaleRois {
-		whaleRoisDatapoints = append(whaleRoisDatapoints, []float64{float64(whaleRoi.TotalGainUsd), 10})
+		whaleRoisDatapoints = append(whaleRoisDatapoints, Row{whaleRoi.UserAddress, whaleRoi.TotalGainUsd})
 	}
-	return []QueryResponseMetric{
+	return []TableMetrics{
 		{
-			Target:     "whaleRois",
-			Datapoints: whaleRoisDatapoints,
+			Type: "table",
+			Columns: []Column{
+				{
+					Text: "address",
+					Type: "string",
+				},
+			},
+			Rows: whaleRoisDatapoints,
 		},
 	}
 }
