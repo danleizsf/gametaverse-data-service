@@ -141,15 +141,15 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_gain" {
 			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now(), schema.SortByGain)
-			response := grafana.GetWhaleRoisMetrics(whaleRois)
+			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortByGain)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_profit" {
 			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now(), schema.SortByProfit)
-			response := grafana.GetWhaleRoisMetrics(whaleRois)
+			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortByProfit)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_spending" {
 			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now(), schema.SortBySpending)
-			response := grafana.GetWhaleRoisMetrics(whaleRois)
+			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortBySpending)
 			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
