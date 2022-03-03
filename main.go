@@ -73,7 +73,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_token_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
-			response := grafana.GetNewRenteeSpendingUsdDistributionMetrics(newUserProfitableRate)
+			response := grafana.GetNewRenteeSpendingTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_usd_distribution" {
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
