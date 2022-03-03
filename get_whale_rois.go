@@ -76,6 +76,7 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time) []schema.UserRoiDe
 					TotalProfitUsd:     -valueUsd,
 					TotalSpendingToken: valueToken,
 					TotalProfitToken:   -valueToken,
+					TotalGainUsd:       0,
 				}
 			}
 		}
@@ -85,6 +86,7 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time) []schema.UserRoiDe
 			valueToken := transfer.Value / float64(schema.SeaTokenUnit)
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
 				userRoiDetails.TotalProfitUsd += valueUsd
+				userRoiDetails.TotalGainUsd += valueUsd
 				userRoiDetails.TotalProfitToken += valueToken
 			} else {
 				perNewUserRoiDetail[transfer.ToAddress] = &schema.UserRoiDetail{
@@ -92,6 +94,7 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time) []schema.UserRoiDe
 					JoinDateTimestamp:  joinedTimestamp,
 					TotalSpendingUsd:   0,
 					TotalProfitUsd:     valueUsd,
+					TotalGainUsd:       valueUsd,
 					TotalSpendingToken: 0,
 					TotalProfitToken:   valueToken,
 				}
