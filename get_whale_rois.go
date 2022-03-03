@@ -95,10 +95,10 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time, sortType schema.Wh
 					UserAddress:        transfer.ToAddress,
 					JoinDateTimestamp:  joinedTimestamp,
 					TotalSpendingUsd:   0,
-					TotalProfitUsd:     valueUsd,
+					TotalSpendingToken: 0,
 					TotalGainUsd:       valueUsd,
 					TotalGainToken:     valueToken,
-					TotalSpendingToken: 0,
+					TotalProfitUsd:     valueUsd,
 					TotalProfitToken:   valueToken,
 				}
 			}
