@@ -14,8 +14,12 @@ func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail) []TableMetrics {
 			Type: "table",
 			Columns: []Column{
 				{
-					Text: "address",
+					Text: "User address",
 					Type: "string",
+				},
+				{
+					Text: "Total gain",
+					Type: "number",
 				},
 			},
 			Rows: whaleRoisDatapoints,
