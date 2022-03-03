@@ -115,6 +115,10 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			userRois := GetUserRoi(fromTimeDateObj, time.Now())
 			response := grafana.GetNewHybriderProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "whale_rois" {
+			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now())
+			response := grafana.GetWhaleRoisMetrics(whaleRois)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
