@@ -88,6 +88,7 @@ func GetWhaleRois(fromTimeObj time.Time, toTimeObj time.Time, sortType schema.Wh
 			if userRoiDetails, ok := perNewUserRoiDetail[transfer.ToAddress]; ok {
 				userRoiDetails.TotalProfitUsd += valueUsd
 				userRoiDetails.TotalGainUsd += valueUsd
+				userRoiDetails.TotalGainToken += valueToken
 				userRoiDetails.TotalProfitToken += valueToken
 			} else {
 				perNewUserRoiDetail[transfer.ToAddress] = &schema.UserRoiDetail{
