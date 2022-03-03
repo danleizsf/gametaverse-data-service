@@ -46,6 +46,18 @@ var StarSharksPurchaseContractAddresses = "0x1f7acc330fe462a9468aa47ecdb54378757
 var StarSharksAuctionContractAddresses = "0xd78be0b93a3c9d1a9323bca03184accf1a57e548"
 var StarSharksWithdrawContractAddresses = "0x94019518f82762bb94280211d19d4ac025d98583"
 
+var StarSharksContractAddresses = map[string]bool{
+	"0x0000000000000000000000000000000000000000": true,
+	"0x1f7acc330fe462a9468aa47ecdb543787577e1e7": true,
+	"0x6bfad6a81d5c7bcd99c071d52d328f9dbbabc4ad": true,
+	StarSharksAuctionContractAddresses:           true,
+	"0x03961ae0a61f64ac7a68734e97544512ed4233a6": true,
+	"0x0e3089db5f6a9f0a6550818d1dc274da9f73d4c8": true,
+	StarSharksRentContractAddresses:              true,
+	StarSharksPurchaseContractAddresses:          true,
+	StarSharksWithdrawContractAddresses:          true,
+}
+
 var StarSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
 var StarSharksJan10 = time.Unix(1641772800, 0)        // 1-10-2022
 var StarSharksJan20 = time.Unix(1642636800, 0)        // 1-10-2022

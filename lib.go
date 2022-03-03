@@ -366,6 +366,9 @@ func getNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[stri
 
 	newUsers := map[string]int64{}
 	for address, userMetaInfo := range m {
+		if schema.StarSharksContractAddresses[address] {
+			continue
+		}
 		timestamp, _ := strconv.Atoi(userMetaInfo["timestamp"])
 		userJoinTimestampObj := time.Unix(int64(timestamp), 0)
 		if userJoinTimestampObj.Before(fromTimeObj) || userJoinTimestampObj.After(toTimeObj) {
