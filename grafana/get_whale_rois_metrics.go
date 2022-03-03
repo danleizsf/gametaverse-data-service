@@ -40,7 +40,7 @@ func GetWhaleRoisMetrics(whaleRois []schema.UserRoiDetail, sortType schema.Whale
 					Type: "number",
 				},
 				{
-					Text: "SEA",
+					Text: "SEA (Token)",
 					Type: "number",
 				},
 			},
