@@ -8,8 +8,8 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 60
-    MemorySize: 3048
+    Timeout: 120
+    MemorySize: 300480
 
 Resources:
   GametaverseDataServiceFunction:

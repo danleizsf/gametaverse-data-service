@@ -162,6 +162,11 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		toTimeObj := time.Now()
 		response := GetUserType(fromTimeObj, toTimeObj)
 		return GenerateResponse(response)
+	} else if input.Method == "getWhaleRois" {
+		fromTimeObj := schema.StarSharksStartingDate
+		toTimeObj := time.Now()
+		response := GetWhaleRois(fromTimeObj, toTimeObj)
+		return GenerateResponse(response)
 	} else if input.Method == "test" {
 		if h.dynamoDBClient == nil {
 			return GenerateResponse("dynamoDBClient is nil")

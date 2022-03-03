@@ -1,0 +1,5 @@
+{
+    "path": "data",
+    "httpMethod": "POST",
+    "body": "{\"method\":\"getWhaleRois\",\"params\":[]}"
+}

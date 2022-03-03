@@ -47,6 +47,8 @@ var StarSharksAuctionContractAddresses = "0xd78be0b93a3c9d1a9323bca03184accf1a57
 var StarSharksWithdrawContractAddresses = "0x94019518f82762bb94280211d19d4ac025d98583"
 
 var StarSharksStartingDate = time.Unix(1639612800, 0) // 12-16-2021
+var StarSharksJan10 = time.Unix(1641772800, 0)        // 1-10-2022
+var StarSharksJan20 = time.Unix(1642636800, 0)        // 1-10-2022
 
 var DayInSec = 86400
 
