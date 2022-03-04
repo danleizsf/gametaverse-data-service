@@ -197,13 +197,13 @@ const (
 
 // daily aggregate
 type Summary struct {
-	ActiveUser         []string          `json:"active_user"`
-	NewUser            map[string]string `json:"new_user"`
-	SeaVolume          float64           `json:"sea_volume"`
-	AuctionSharkVolume int64             `json:"auction_shark_volume"`
-	CreateSharkVolume  int64             `json:"create_shark_volume"`
-	RentSharkVolume    int64             `json:"rent_shark_volume"`
-	BuySharkVolume     int64             `json:"buy_shark_volume"`
+	ActiveUser         []string `json:"active_user"`
+	NewUser            []string `json:"new_user"`
+	SeaVolume          float64  `json:"sea_volume"`
+	AuctionSharkVolume int64    `json:"auction_shark_volume"`
+	CreateSharkVolume  int64    `json:"create_shark_volume"`
+	RentSharkVolume    int64    `json:"rent_shark_volume"`
+	BuySharkVolume     int64    `json:"buy_shark_volume"`
 }
 
 type UserAction struct {
