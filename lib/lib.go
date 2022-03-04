@@ -251,36 +251,11 @@ func ExtractNewUsersForTimeRange(allTimeNewUsers map[string]int64, fromTimeObj t
 	return newUsers
 }
 
-func GetPriceHistory(tokenName string, fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) schema.PriceHistory {
-	requestInput :=
-		&s3.GetObjectInput{
-			Bucket: aws.String(schema.PriceBucketName),
-			Key:    aws.String("sea-token-price-history.json"),
-		}
-	result, err := svc.GetObject(requestInput)
-	if err != nil {
-		ExitErrorf("Unable to get object, %v", err)
-	}
-	body, err := ioutil.ReadAll(result.Body)
-	if err != nil {
-		ExitErrorf("Unable to read body, %v", err)
-	}
-
-	priceHistory := schema.PriceHistory{}
-	err = json.Unmarshal(body, &priceHistory)
-	if err != nil {
-		//log.Printf("body: %s", fmt.Sprintf("%s", body))
-		ExitErrorf("Unable to unmarshall user meta info, %v", err)
-	}
-
-	return priceHistory
-}
-
 func GetPriceHistoryV2(svc *s3.S3) schema.PriceHistory {
 	requestInput :=
 		&s3.GetObjectInput{
-			Bucket: aws.String("gametaverse-starsharks"),
-			Key:    aws.String("sea-token-price-history.json"),
+			Bucket: aws.String("gametaverse-daily"),
+			Key:    aws.String("starsharks/sea-token-price-history.json"),
 		}
 	result, err := svc.GetObject(requestInput)
 	if err != nil {
