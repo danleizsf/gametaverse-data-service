@@ -10,8 +10,6 @@ import (
 )
 
 func GetUserRepurchaseRate(s3client *s3.S3, timestampA int64, timestampB int64) float64 {
-	// start := lib.GetDate(timestampA)
-	// end := lib.GetDate(timestampB)
 	start := time.Unix(timestampA, 0)
 	end := time.Unix(timestampB, 0)
 	log.Print(start, end)
