@@ -23,7 +23,7 @@ func GetUserRepurchaseRate(s3client *s3.S3, timestampA int64, timestampB int64) 
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		go func(s3client *s3.S3, d time.Time) {
 			defer wg.Done()
-			date := d.Format("2006-01-02")
+			date := d.Format(schema.DateFormat)
 			ua := lib.GetUserActions(s3client, date)
 			for user, actions := range ua {
 				actionsWithDate := make([]schema.UserAction, len(actions))
