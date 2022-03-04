@@ -110,9 +110,9 @@ func GetPerPayerType(perPayerTransfers map[string][]schema.Transfer) map[string]
 		totalInvestingValue := float64(0)
 		for _, transfer := range transfers {
 			if transfer.ContractAddress == schema.StarSharksPurchaseContractAddresses || transfer.ContractAddress == schema.StarSharksAuctionContractAddresses {
-				totalInvestingValue += transfer.Value / float64(schema.DayInSec)
+				totalInvestingValue += transfer.Value / float64(schema.SeaTokenUnit)
 			} else if transfer.ContractAddress == schema.StarSharksRentContractAddresses {
-				totalRentingValue += transfer.Value / float64(schema.DayInSec)
+				totalRentingValue += transfer.Value / float64(schema.SeaTokenUnit)
 			}
 		}
 		if totalInvestingValue > totalRentingValue {
