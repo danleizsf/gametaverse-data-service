@@ -34,9 +34,6 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Build binary
-        run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o main *.go && zip deployment.zip main 
       - uses: evantorrie/mott-the-tidier@v1-beta
         with:
           gomods: |
