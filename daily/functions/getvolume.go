@@ -14,7 +14,7 @@ func GetTransactionVolumes(s3client *s3.S3, start time.Time, end time.Time) []sc
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		len++
 	}
-	res := make([]schema.DailyTransactionVolume, len)
+	res := make([]schema.DailyTransactionVolume, len+1)
 	var wg sync.WaitGroup
 	wg.Add(len)
 	i := 0

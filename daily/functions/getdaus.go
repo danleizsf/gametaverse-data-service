@@ -14,7 +14,7 @@ func GetDaus(s3client *s3.S3, start time.Time, end time.Time) []schema.Dau {
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		len++
 	}
-	res := make([]schema.Dau, len)
+	res := make([]schema.Dau, len+1)
 	var wg sync.WaitGroup
 	wg.Add(len)
 	i := 0
