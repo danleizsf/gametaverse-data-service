@@ -3,18 +3,29 @@ package daily
 import (
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func GetTransactionVolumes(s3client *s3.S3, start time.Time, end time.Time) []schema.DailyTransactionVolume {
-	res := make([]schema.DailyTransactionVolume, 0)
+	len := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		s := GetTransactionVolume(s3client, d)
-		res = append(res, s)
+		len++
 	}
-
+	res := make([]schema.DailyTransactionVolume, len)
+	var wg sync.WaitGroup
+	wg.Add(len)
+	i := 0
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		go func(i int, s3client *s3.S3, d time.Time) {
+			defer wg.Done()
+			s := GetTransactionVolume(s3client, d)
+			res[i] = s
+		}(i, s3client, d)
+	}
+	wg.Wait()
 	return res
 }
 

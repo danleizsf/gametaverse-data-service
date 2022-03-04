@@ -3,18 +3,30 @@ package daily
 import (
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func GetDaus(s3client *s3.S3, start time.Time, end time.Time) []schema.Dau {
-	res := make([]schema.Dau, 0)
-	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		s := GetDau(s3client, d)
-		res = append(res, s)
-	}
 
+	len := 0
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		len++
+	}
+	res := make([]schema.Dau, len)
+	var wg sync.WaitGroup
+	wg.Add(len)
+	i := 0
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		go func(i int, s3client *s3.S3, d time.Time) {
+			defer wg.Done()
+			s := GetDau(s3client, d)
+			res[i] = s
+		}(i, s3client, d)
+	}
+	wg.Wait()
 	return res
 }
 
