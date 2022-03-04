@@ -37,5 +37,21 @@ func Search() []string {
 		"whale_sort_by_spending",
 
 		"daus2",
+		"daily_transaction_volume2",
+		"new_user_profitable_rate2",
+		"new_user_spending_usd_distribution2",
+		"new_rentee_spending_usd_distribution2",
+		"new_rentee_spending_token_distribution2",
+		"new_purchaser_spending_usd_distribution2",
+		"new_purchaser_spending_token_distribution2",
+		"new_hybrider_spending_usd_distribution2",
+		"new_hybrider_spending_token_distribution2",
+		"new_user_profit_usd_distribution2",
+		"new_rentee_profit_usd_distribution2",
+		"new_rentee_profit_token_distribution2",
+		"new_purchaser_profit_usd_distribution2",
+		"new_purchaser_profit_token_distribution2",
+		"new_hybrider_profit_usd_distribution2",
+		"new_hybrider_profit_token_distribution2",
 	}
 }
