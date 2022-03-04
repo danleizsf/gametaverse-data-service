@@ -25,13 +25,20 @@ func GetDate(timestamp int64) string {
 }
 
 func GetSummary(s3client *s3.S3, date string) schema.Summary {
+	var s schema.Summary
 	summaryRequest := &s3.GetObjectInput{
 		Bucket: aws.String(DailyBucketName),
 		Key:    aws.String("starsharks/" + date + "/summary.json"),
 	}
-	data, _ := s3client.GetObject(summaryRequest)
-	body, _ := ioutil.ReadAll(data.Body)
-	var s schema.Summary
+	data, err := s3client.GetObject(summaryRequest)
+	if err != nil {
+		log.Print("cannot get summary for date: " + date)
+		return s
+	}
+	body, err := ioutil.ReadAll(data.Body)
+	if err != nil {
+		return s
+	}
 	json.Unmarshal(body, &s)
 	return s
 }

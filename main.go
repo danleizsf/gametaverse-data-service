@@ -156,6 +156,14 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			daus := daily.GetDaus(h.s3Client, fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetDauMetrics(daus)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "daily_transaction_volume2" {
+			dailyTransactionVolumes := daily.GetTransactionVolumes(h.s3Client, fromTimeObj, toTimeObj)
+			response := grafana.GetDailyTransactionVolumeMetrics(dailyTransactionVolumes)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_rate2" {
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), false)
+			response := grafana.GetNewUserProfitableRateMetrics(newUserProfitableRate.OverallProfitableRate)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
