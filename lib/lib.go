@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"bytes"
 	"encoding/json"
 	"gametaverse-data-service/schema"
 	"io/ioutil"
@@ -45,7 +46,6 @@ func GetSummary(s3client *s3.S3, date string) schema.Summary {
 }
 
 func GetUserActionsRange(s3client *s3.S3, timestampA int64, timestampB int64) map[string][]schema.UserAction {
-
 	start := time.Unix(timestampA, 0)
 	end := time.Unix(timestampB, 0)
 	length := 0
@@ -66,10 +66,8 @@ func GetUserActionsRange(s3client *s3.S3, timestampA int64, timestampB int64) ma
 		i++
 	}
 	wg.Wait()
-
 	j := 0
 	useractions := make(map[string][]schema.UserAction, 0)
-
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		ua := useractionsByDate[j]
 		date := d.Format(schema.DateFormat)
@@ -110,7 +108,11 @@ func GetUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction
 	if err != nil {
 		log.Print("can't read object " + *req.Key)
 	}
-	json.Unmarshal(body, &s)
+	body = bytes.Replace(body, []byte(":NaN"), []byte(":null"), -1)
+	err = json.Unmarshal(body, &s)
+	if err != nil {
+		log.Print("can't unmarshall object " + *req.Key)
+	}
 	return s
 }
 
