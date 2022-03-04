@@ -52,7 +52,7 @@ func GetUserActionsRange(s3client *s3.S3, timestampA int64, timestampB int64) ma
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		length++
 	}
-	useractionsByDate := make([]map[string][]schema.UserAction, 0)
+	useractionsByDate := make([]map[string][]schema.UserAction, length)
 	var wg sync.WaitGroup
 	wg.Add(length)
 	i := 0
