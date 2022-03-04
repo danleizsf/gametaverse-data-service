@@ -41,7 +41,10 @@ func GetSummary(s3client *s3.S3, date string) schema.Summary {
 	if err != nil {
 		return s
 	}
-	json.Unmarshal(body, &s)
+	err = json.Unmarshal(body, &s)
+	if err != nil {
+		log.Print("can't unmarshall object " + *req.Key)
+	}
 	return s
 }
 
