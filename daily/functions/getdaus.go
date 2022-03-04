@@ -10,7 +10,6 @@ import (
 )
 
 func GetDaus(s3client *s3.S3, start time.Time, end time.Time) []schema.Dau {
-
 	len := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		len++
@@ -25,6 +24,7 @@ func GetDaus(s3client *s3.S3, start time.Time, end time.Time) []schema.Dau {
 			s := GetDau(s3client, d)
 			res[i] = s
 		}(i, s3client, d)
+		i++
 	}
 	wg.Wait()
 	return res

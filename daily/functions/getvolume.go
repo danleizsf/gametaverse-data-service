@@ -24,6 +24,7 @@ func GetTransactionVolumes(s3client *s3.S3, start time.Time, end time.Time) []sc
 			s := GetTransactionVolume(s3client, d)
 			res[i] = s
 		}(i, s3client, d)
+		i++
 	}
 	wg.Wait()
 	return res
