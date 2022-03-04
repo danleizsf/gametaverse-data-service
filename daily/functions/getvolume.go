@@ -20,13 +20,25 @@ func GetTransactionVolumes(s3client *s3.S3, start time.Time, end time.Time) []sc
 
 func GetTransactionVolume(s3client *s3.S3, t time.Time) schema.DailyTransactionVolume {
 	date := t.Format(schema.DateFormat)
-	s := lib.GetSummary(s3client, date)
+	ac := lib.GetUserActions(s3client, date)
+	var r, p, w int64
+	for _, as := range ac {
+		for _, a := range as {
+			if a.Action == schema.UserActionRentSharkSEA {
+				r += a.Value.(int64)
+			} else if a.Action == schema.UserActionAuctionBuySEA || a.Action == schema.UserActionBuySEA {
+				p += a.Value.(int64)
+			} else if a.Action == schema.UserActionWithdrawlSEA {
+				w += a.Value.(int64)
+			}
+		}
+	}
 	return schema.DailyTransactionVolume{
 		DateTimestamp: t.Unix(),
 		TotalTransactionVolume: schema.UserTransactionVolume{
-			RenterTransactionVolume:    s.RentSharkVolume,
-			PurchaserTransactionVolume: s.CreateSharkVolume + s.BuySharkVolume + s.AuctionSharkVolume,
-			TokenVolume:                s.SeaVolume,
+			RenterTransactionVolume:     r,
+			PurchaserTransactionVolume:  p,
+			WithdrawerTransactionVolume: w,
 		},
 	}
 }
