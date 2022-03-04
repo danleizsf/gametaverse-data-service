@@ -37,7 +37,17 @@ jobs:
       - name: Build binary
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o main *.go && zip deployment.zip main 
-
+      - uses: evantorrie/mott-the-tidier@v1-beta
+        with:
+          gomods: |
+            **/go.mod
+            -tools/go.mod
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Auto-fix go.sum discrepancies
+      - name: Build binary
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o main *.go && zip deployment.zip main 
       # Runs a set of commands using the runners shell
       - name: Configure AWS Credentials  
         uses: aws-actions/configure-aws-credentials@v1 #--> Setup the Credential for the AWS cli
