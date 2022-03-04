@@ -63,6 +63,7 @@ var StarSharksJan10 = time.Unix(1641772800, 0)        // 1-10-2022
 var StarSharksJan20 = time.Unix(1642636800, 0)        // 1-10-2022
 
 var DayInSec = 86400
+var DateFormat = "2006-01-02"
 
 type Dau struct {
 	DateTimestamp    int64           `json:"dateTimestamp"`
@@ -83,9 +84,10 @@ type DailyTransactionVolume struct {
 	TotalTransactionVolume UserTransactionVolume `json:"totalTransactionVolume"`
 }
 type UserTransactionVolume struct {
-	RenterTransactionVolume     int64 `json:"renterTransactionVolume"`
-	PurchaserTransactionVolume  int64 `json:"purchaserTransactionVolume"`
-	WithdrawerTransactionVolume int64 `json:"withdrawerTransactionVolume"`
+	TokenVolume                 float64 `json:"tokenVolume"`
+	RenterTransactionVolume     int64   `json:"renterTransactionVolume"`
+	PurchaserTransactionVolume  int64   `json:"purchaserTransactionVolume"`
+	WithdrawerTransactionVolume int64   `json:"withdrawerTransactionVolume"`
 }
 
 type UserRoiDetail struct {
@@ -99,6 +101,7 @@ type UserRoiDetail struct {
 	TotalProfitToken   float64   `json:"totalProfitToken"`
 	ProfitableDays     int64     `json:"profitableDays,omitempty"`
 	UserType           PayerType `json:"userType"`
+	JoinDate           string    `json:"joinDate,omitempty"`
 }
 
 type UserType struct {
@@ -111,6 +114,7 @@ type UserTypeCount struct {
 	RenteeCount    int64 `json:"renteeCount"`
 	PurchaserCount int64 `json:"purchaserCount"`
 	HybridCount    int64 `json:"hybridCount"`
+	OtherCount     int64 `json:"otherCount"`
 }
 
 type AllUserRoiDetails struct {
@@ -190,3 +194,31 @@ const (
 	SortByProfit   WhalesSortType = 2
 	SortBySpending WhalesSortType = 3
 )
+
+// daily aggregate
+type Summary struct {
+	ActiveUser         []string          `json:"active_user"`
+	NewUser            map[string]string `json:"new_user"`
+	SeaVolume          float64           `json:"sea_volume"`
+	AuctionSharkVolume int64             `json:"auction_shark_volume"`
+	CreateSharkVolume  int64             `json:"create_shark_volume"`
+	RentSharkVolume    int64             `json:"rent_shark_volume"`
+	BuySharkVolume     int64             `json:"buy_shark_volume"`
+}
+
+type UserAction struct {
+	Date   string      `json:"date"`
+	Action string      `json:"action"`
+	Value  interface{} `json:"value"`
+	Time   time.Time
+}
+
+var UserActionRentSharkSEA = "rent_shark_SEA"
+var UserActionLendSharkSEA = "lend_rent_SEA"
+var UserActionAuctionBuyNFT = "auction_buy_NFT"
+var UserActionAuctionSellNFT = "auction_sell_NFT"
+var UserActionAuctionBuySEA = "auction_buy_SEA"
+var UserActionAuctionSellSEA = "auction_sell_SEA"
+var UserActionBuyNFT = "buy_NFT"
+var UserActionBuySEA = "buy_SEA"
+var UserActionWithdrawlSEA = "withdrawl_SEA"

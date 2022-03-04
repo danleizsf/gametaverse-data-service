@@ -35,5 +35,7 @@ func Search() []string {
 		"whale_sort_by_gain",
 		"whale_sort_by_profit",
 		"whale_sort_by_spending",
+
+		"daus2",
 	}
 }

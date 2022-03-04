@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	daily "gametaverse-data-service/daily/functions"
 	"gametaverse-data-service/grafana"
 	"gametaverse-data-service/schema"
 	"log"
@@ -12,11 +13,11 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 type handler struct {
-	dynamoDBClient *dynamodb.DynamoDB
+	s3Client *s3.S3
 }
 
 func (h *handler) process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -38,12 +39,12 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		toTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.To)
 		fromTimeDateObj := time.Unix((fromTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 		toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
-		if grafanaQueryRequest.Targets[0].Target == "daus" {
+		if grafanaQueryRequest.Targets[0].Target == "daus" { // done
 			log.Printf("grafana/query request from %v, to %v", fromTimeDateObj, toTimeDateObj)
 			daus := GetGameDaus(fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetDauMetrics(daus)
 			return GenerateResponse(response)
-		} else if grafanaQueryRequest.Targets[0].Target == "daily_transaction_volume" {
+		} else if grafanaQueryRequest.Targets[0].Target == "daily_transaction_volume" { // done
 			dailyTransactionVolumes := GetGameDailyTransactionVolumes(fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetDailyTransactionVolumeMetrics(dailyTransactionVolumes)
 			return GenerateResponse(response)
@@ -51,15 +52,15 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, toTimeDateObj, false)
 			response := grafana.GetNewUserProfitableRateMetrics(newUserProfitableRate.OverallProfitableRate)
 			return GenerateResponse(response)
-		} else if grafanaQueryRequest.Targets[0].Target == "user_repurchase_rate" {
+		} else if grafanaQueryRequest.Targets[0].Target == "user_repurchase_rate" { // done
 			userRepurchaseRate := GetUserRepurchaseRate(fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
-		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution" {
+		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution" { // done
 			userActiveDates := GetUserActiveDates(fromTimeDateObj, toTimeDateObj, 10000000)
 			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
-		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution" {
+		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution" { // done
 			userActiveDates := GetUserActiveDates(fromTimeDateObj, toTimeDateObj, 10000000)
 			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
@@ -119,7 +120,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			newUserProfitableRate := GetNewUserProfitableRate(fromTimeDateObj, time.Now(), true)
 			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
-		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type" {
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type" { // done
 			newUserTypes := GetUserType(fromTimeDateObj, time.Now())
 			response := grafana.GetNewUserTypeMetrics(newUserTypes)
 			return GenerateResponse(response)
@@ -150,6 +151,10 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_spending" {
 			whaleRois := GetWhaleRois(schema.StarSharksStartingDate, time.Now(), schema.SortBySpending)
 			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortBySpending)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "daus2" {
+			daus := daily.GetDaus(h.s3Client, fromTimeDateObj, toTimeDateObj)
+			response := grafana.GetDauMetrics(daus)
 			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
@@ -203,18 +208,6 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		toTimeObj := time.Now()
 		response := GetWhaleRois(fromTimeObj, toTimeObj, schema.SortByGain)
 		return GenerateResponse(response)
-	} else if input.Method == "test" {
-		if h.dynamoDBClient == nil {
-			return GenerateResponse("dynamoDBClient is nil")
-		}
-		tableNames, err := h.dynamoDBClient.ListTables(nil)
-		log.Printf("test handler called, tableNames %v", tableNames)
-		if err != nil {
-			//log.Printf("body: %s", fmt.Sprintf("%s", body))
-			exitErrorf("Unable to list Tables, %v", err)
-		}
-
-		return GenerateResponse(tableNames.TableNames)
 	}
 	return GenerateResponse("")
 }
@@ -228,9 +221,9 @@ func main() {
 			},
 		},
 	)
+	s3client := s3.New(sess)
 	h := handler{
-		dynamoDBClient: dynamodb.New(sess),
+		s3Client: s3client,
 	}
-
 	lambda.Start(h.process)
 }
