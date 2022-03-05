@@ -165,11 +165,11 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution2" { // done
-			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 10000000)
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution2" { // done
-			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 10000000)
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type2" { // done
