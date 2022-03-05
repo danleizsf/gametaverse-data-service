@@ -123,12 +123,5 @@ func GetWhaleRois(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestamp
 		})
 	}
 	resp := userRoiDetails[0:10]
-	uas := make(map[string][]schema.UserAction, len(resp))
-	for _, roi := range resp {
-		uas[roi.UserAddress] = useractions[roi.UserAddress]
-	}
-
-	lib.ToFile(resp, "roi.json")
-	lib.ToFile(uas, "ua.json")
 	return resp
 }
