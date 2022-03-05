@@ -2,6 +2,7 @@ package lib
 
 import (
 	"gametaverse-data-service/schema"
+	"log"
 	"sync"
 )
 
@@ -28,5 +29,8 @@ func (c *Cache) Get(key string) (map[string][]schema.UserAction, bool) {
 	c.mux.Lock()
 	res, exists := c.UA[key]
 	c.mux.Unlock()
+	if exists {
+		log.Print("cache hit!! key: " + key)
+	}
 	return res, exists
 }

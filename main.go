@@ -239,19 +239,19 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_days2" {
-			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewUserProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profitable_days2" {
-			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewRenteeProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profitable_days2" {
-			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewPurchaserProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profitable_days2" {
-			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewHybriderProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		}
@@ -309,11 +309,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 	} else if input.Method == "getUserActiveDays" {
 		response := daily.GetUserActiveDays(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
 		return GenerateResponse(response)
-	} else if input.Method == "getUserRoi2" {
-		response := daily.GetNewUserRoiDebug(h.s3Client, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return GenerateResponse(response)
 	}
-
 	return GenerateResponse("")
 }
 

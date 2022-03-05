@@ -10,13 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetNewUserRoi(s3client *s3.S3, start time.Time, end time.Time) []schema.UserRoiDetail {
+func GetNewUserRoi(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.Time) []schema.UserRoiDetail {
 	length := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		length++
 	}
 	concurrentNewUser := make([][]string, length+1)
-	concurrentUserActions := make([]map[string][]schema.UserAction, length+1)
+	// concurrentUserActions := make([]map[string][]schema.UserAction, length+1)
 
 	var wg sync.WaitGroup
 	wg.Add(length)
@@ -26,37 +26,26 @@ func GetNewUserRoi(s3client *s3.S3, start time.Time, end time.Time) []schema.Use
 			defer wg.Done()
 			date := d.Format(schema.DateFormat)
 			s := lib.GetSummary(s3client, date)
-			uas := lib.GetUserActions(s3client, date)
+			// uas := lib.GetUserActions(s3client, date)
 			concurrentNewUser[i] = s.NewUser
-			concurrentUserActions[i] = uas
+			// concurrentUserActions[i] = uas
 		}(i, s3client, d)
 		i++
 	}
 	wg.Wait()
-
 	newUsers := map[string]bool{}
 	for _, dailyNewUsers := range concurrentNewUser {
 		for _, newUser := range dailyNewUsers {
 			newUsers[newUser] = true
 		}
 	}
-	newUserActions := make(map[string][]schema.UserAction, len(newUsers))
-	for _, dailyUserActions := range concurrentUserActions {
-		for user, actions := range dailyUserActions {
-			if !newUsers[user] {
-				continue
-			}
-
-			if ua, exists := newUserActions[user]; exists {
-				newUserActions[user] = append(ua, actions...)
-			} else {
-				newUserActions[user] = actions
-			}
-		}
-	}
+	userActions := lib.GetUserActionsRangeAsync(s3client, cache, start.Unix(), end.Unix())
 
 	userRois := make([]schema.UserRoiDetail, 0)
-	for _, actions := range newUserActions {
+	for user, actions := range userActions {
+		if !newUsers[user] {
+			continue
+		}
 		payerType := UserType(actions)
 		var value float64
 		profitableIndex := -1
@@ -86,53 +75,5 @@ func GetNewUserRoi(s3client *s3.S3, start time.Time, end time.Time) []schema.Use
 	}
 
 	return userRois
-
-}
-
-func GetNewUserRoiDebug(s3client *s3.S3, start time.Time, end time.Time) map[string][]schema.UserAction {
-	length := 0
-	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		length++
-	}
-	concurrentNewUser := make([][]string, length+1)
-	concurrentUserActions := make([]map[string][]schema.UserAction, length+1)
-
-	var wg sync.WaitGroup
-	wg.Add(length)
-	i := 0
-	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		go func(i int, s3client *s3.S3, d time.Time) {
-			defer wg.Done()
-			date := d.Format(schema.DateFormat)
-			s := lib.GetSummary(s3client, date)
-			uas := lib.GetUserActions(s3client, date)
-			concurrentNewUser[i] = s.NewUser
-			concurrentUserActions[i] = uas
-		}(i, s3client, d)
-		i++
-	}
-	wg.Wait()
-
-	newUsers := map[string]bool{}
-	for _, dailyNewUsers := range concurrentNewUser {
-		for _, newUser := range dailyNewUsers {
-			newUsers[newUser] = true
-		}
-	}
-	newUserActions := make(map[string][]schema.UserAction, len(newUsers))
-	for _, dailyUserActions := range concurrentUserActions {
-		for user, actions := range dailyUserActions {
-			if !newUsers[user] {
-				continue
-			}
-
-			if ua, exists := newUserActions[user]; exists {
-				newUserActions[user] = append(ua, actions...)
-			} else {
-				newUserActions[user] = actions
-			}
-		}
-	}
-	return newUserActions
 
 }
