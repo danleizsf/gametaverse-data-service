@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetNewUserProfitableRate(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64, forDebug bool) schema.AllUserRoiDetails {
+func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64, forDebug bool) schema.AllUserRoiDetails {
 	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
 	perNewUserRoiDetail := map[string]*schema.UserRoiDetail{}
 

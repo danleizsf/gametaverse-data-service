@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	daily "gametaverse-data-service/daily/functions"
 	"gametaverse-data-service/grafana"
+	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"log"
 	"time"
@@ -18,7 +19,7 @@ import (
 
 type handler struct {
 	s3Client *s3.S3
-	cache    *daily.Cache
+	cache    *lib.Cache
 }
 
 func (h *handler) process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -328,7 +329,7 @@ func main() {
 	s3client := s3.New(sess)
 	h := handler{
 		s3Client: s3client,
-		cache:    daily.NewCache(),
+		cache:    lib.NewCache(),
 	}
 	lambda.Start(h.process)
 }
