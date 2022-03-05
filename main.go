@@ -165,11 +165,11 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution2" { // done
-			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
+			userActiveDates := daily.GetUserActiveDaysNoSort(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution2" { // done
-			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
+			userActiveDates := daily.GetUserActiveDaysNoSort(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type2" { // done
@@ -236,6 +236,22 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_days2" {
+			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			response := grafana.GetNewUserProfitableDaysDistributionMetrics(userRois)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profitable_days2" {
+			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			response := grafana.GetNewRenteeProfitableDaysDistributionMetrics(userRois)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profitable_days2" {
+			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			response := grafana.GetNewPurchaserProfitableDaysDistributionMetrics(userRois)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profitable_days2" {
+			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			response := grafana.GetNewHybriderProfitableDaysDistributionMetrics(userRois)
+			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
 	} else if input.Method == "getDaus" {
@@ -287,6 +303,9 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		fromTimeObj := schema.StarSharksStartingDate
 		toTimeObj := time.Now()
 		response := GetWhaleRois(fromTimeObj, toTimeObj, schema.SortByGain)
+		return GenerateResponse(response)
+	} else if input.Method == "getUserActiveDays" { // done
+		response := daily.GetUserActiveDaysNoSort(h.s3Client, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
 		return GenerateResponse(response)
 	}
 	return GenerateResponse("")
