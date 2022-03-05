@@ -8,11 +8,13 @@ func GetDailyTransactionVolumeMetrics(dailyTransactionVolumes []schema.DailyTran
 	renteeDatapoints := make([]Datapoint, len(dailyTransactionVolumes))
 	purchaserDatapoints := make([]Datapoint, len(dailyTransactionVolumes))
 	withdrawerDatapoints := make([]Datapoint, len(dailyTransactionVolumes))
+	totalTransactionVolume := make([]Datapoint, len(dailyTransactionVolumes))
 	for i, dailyTransactionVolume := range dailyTransactionVolumes {
 		timestamp := dailyTransactionVolume.DateTimestamp * 1000
 		renteeDatapoints[i] = []float64{float64(dailyTransactionVolume.TotalTransactionVolume.RenterTransactionVolume), float64(timestamp)}
 		purchaserDatapoints[i] = []float64{float64(dailyTransactionVolume.TotalTransactionVolume.PurchaserTransactionVolume), float64(timestamp)}
 		withdrawerDatapoints[i] = []float64{float64(dailyTransactionVolume.TotalTransactionVolume.WithdrawerTransactionVolume), float64(timestamp)}
+		totalTransactionVolume[i] = []float64{float64(dailyTransactionVolume.TotalTransactionVolume.PurchaserTransactionVolume + dailyTransactionVolume.TotalTransactionVolume.RenterTransactionVolume + dailyTransactionVolume.TotalTransactionVolume.WithdrawerTransactionVolume), float64(timestamp)}
 	}
 	return []QueryResponseMetric{
 		{
@@ -26,6 +28,10 @@ func GetDailyTransactionVolumeMetrics(dailyTransactionVolumes []schema.DailyTran
 		{
 			Target:     "withdrawerTransactionVolume",
 			Datapoints: withdrawerDatapoints,
+		},
+		{
+			Target:     "totalTransactionVolume",
+			Datapoints: totalTransactionVolume,
 		},
 	}
 }
