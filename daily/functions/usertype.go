@@ -8,7 +8,7 @@ import (
 )
 
 func GetUserType(s3client *s3.S3, timestampA int64, timestampB int64) schema.UserTypeCount {
-	useractions := lib.GetUserActionsRange(s3client, timestampA, timestampB)
+	useractions := lib.GetUserActionsRangeAsync(s3client, timestampA, timestampB)
 	return GetUserTypeWithUserActions(useractions)
 }
 

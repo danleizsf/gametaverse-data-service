@@ -8,7 +8,7 @@ import (
 )
 
 func GetNewUserProfitableRate(s3client *s3.S3, timestampA int64, timestampB int64, forDebug bool) schema.AllUserRoiDetails {
-	useractions := lib.GetUserActionsRange(s3client, timestampA, timestampB)
+	useractions := lib.GetUserActionsRangeAsync(s3client, timestampA, timestampB)
 	perNewUserRoiDetail := map[string]*schema.UserRoiDetail{}
 
 	priceHistory := lib.GetPriceHistoryV2(s3client)

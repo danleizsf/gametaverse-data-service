@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -45,6 +46,41 @@ func GetSummary(s3client *s3.S3, date string) schema.Summary {
 		log.Print("can't unmarshall object " + *summaryRequest.Key)
 	}
 	return s
+}
+
+func GetUserActionsRangeAsync(s3client *s3.S3, timestampA int64, timestampB int64) map[string][]schema.UserAction {
+	start := time.Unix(timestampA, 0)
+	end := time.Unix(timestampB, 0)
+	length := 0
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		length++
+	}
+	concurrentUserActions := make([]map[string][]schema.UserAction, length+1)
+
+	var wg sync.WaitGroup
+	wg.Add(length)
+	i := 0
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		go func(i int, s3client *s3.S3, d time.Time) {
+			defer wg.Done()
+			date := d.Format(schema.DateFormat)
+			uas := GetUserActions(s3client, date)
+			concurrentUserActions[i] = uas
+		}(i, s3client, d)
+		i++
+	}
+	wg.Wait()
+	userActions := make(map[string][]schema.UserAction, 0)
+	for _, dailyUserActions := range concurrentUserActions {
+		for user, actions := range dailyUserActions {
+			if ua, exists := userActions[user]; exists {
+				userActions[user] = append(ua, actions...)
+			} else {
+				userActions[user] = actions
+			}
+		}
+	}
+	return userActions
 }
 
 func GetUserActionsRange(s3client *s3.S3, timestampA int64, timestampB int64) map[string][]schema.UserAction {

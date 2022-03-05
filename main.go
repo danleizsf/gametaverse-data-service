@@ -165,11 +165,11 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution2" {
-			userActiveDates := daily.GetUserActiveDaysNoSort(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution2" {
-			userActiveDates := daily.GetUserActiveDaysNoSort(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type2" {
@@ -305,7 +305,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		response := GetWhaleRois(fromTimeObj, toTimeObj, schema.SortByGain)
 		return GenerateResponse(response)
 	} else if input.Method == "getUserActiveDays" {
-		response := daily.GetUserActiveDaysNoSort(h.s3Client, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
+		response := daily.GetUserActiveDays(h.s3Client, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
 		return GenerateResponse(response)
 	} else if input.Method == "getUserRoi2" {
 		response := daily.GetNewUserRoiDebug(h.s3Client, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
