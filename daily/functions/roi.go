@@ -75,7 +75,10 @@ func GetNewUserRoi(s3client *s3.S3, start time.Time, end time.Time) []schema.Use
 		if value <= 0 {
 			continue
 		}
-		profitableDays := int64(math.Ceil(actions[profitableIndex].Time.Sub(actions[0].Time).Hours() / 24))
+
+		firstDate, _ := time.Parse(schema.DateFormat, actions[0].Date)
+		profitableDate, _ := time.Parse(schema.DateFormat, actions[profitableIndex].Date)
+		profitableDays := int64(math.Ceil(profitableDate.Sub(firstDate).Hours() / 24))
 		userRois = append(userRois, schema.UserRoiDetail{
 			ProfitableDays: profitableDays,
 			UserType:       payerType,

@@ -210,7 +210,6 @@ type UserAction struct {
 	Date   string      `json:"date"`
 	Action string      `json:"action"`
 	Value  interface{} `json:"value"`
-	Time   time.Time
 }
 
 var UserActionRentSharkSEA = "rent_shark_SEA"

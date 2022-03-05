@@ -3,6 +3,7 @@ package daily
 import (
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -12,8 +13,8 @@ func GetUserActiveDays(s3client *s3.S3, timestampA int64, timestampB int64, limi
 	perUserActivities := make(map[string]schema.UserActivity, len(useractions))
 
 	for userAddress, actions := range useractions {
-		firstDate := actions[0].Time
-		lastDate := actions[len(actions)-1].Time
+		firstDate, _ := time.Parse(schema.DateFormat, actions[0].Date)
+		lastDate, _ := time.Parse(schema.DateFormat, actions[len(actions)-1].Date)
 		activeDays := map[string]bool{}
 		for _, a := range actions {
 			activeDays[a.Date] = true
