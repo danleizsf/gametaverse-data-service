@@ -57,5 +57,9 @@ func Search() []string {
 		"new_purchaser_profit_token_distribution2",
 		"new_hybrider_profit_usd_distribution2",
 		"new_hybrider_profit_token_distribution2",
+		"new_user_profitable_days2",
+		"new_rentee_profitable_days2",
+		"new_purchaser_profitable_days2",
+		"new_hybrider_profitable_days2",
 	}
 }
