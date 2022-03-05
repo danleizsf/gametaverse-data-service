@@ -71,27 +71,34 @@ func GetWhaleRois(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestamp
 	}
 	for user, actions := range useractions {
 		userType := UserType(actions)
-		var spendingToken, gainToken, spendingUSD, gainUSD float64
+		var totalSpendingToken, totalGainToken, totalSpendingUSD, totalGainUSD float64
 		for _, a := range actions {
+			var spendingToken, gainToken float64
 			if a.Action == schema.UserActionRentSharkSEA || a.Action == schema.UserActionAuctionBuySEA || a.Action == schema.UserActionBuySEA {
-				spendingToken += a.Value.(float64)
+				spendingToken = a.Value.(float64)
+				totalSpendingToken += spendingToken
 			} else if a.Action == schema.UserActionLendSharkSEA || a.Action == schema.UserActionAuctionSellSEA || a.Action == schema.UserActionWithdrawlSEA {
-				gainToken += a.Value.(float64)
+				gainToken = a.Value.(float64)
+				totalGainToken += gainToken
 			}
 			price := priceHisoryMap[a.Date]
-			spendingUSD += spendingToken * price
-			gainUSD += gainToken * price
+			if spendingToken > 0 {
+				totalSpendingUSD += spendingToken * price
+			}
+			if gainToken > 0 {
+				totalGainUSD += gainToken * price
+			}
 		}
 
 		perNewUserRoiDetail[user] = &schema.UserRoiDetail{
 			UserAddress:        user,
 			JoinDate:           actions[0].Date,
-			TotalGainToken:     gainToken,
-			TotalGainUsd:       gainUSD,
-			TotalSpendingToken: spendingToken,
-			TotalSpendingUsd:   spendingUSD,
-			TotalProfitToken:   gainToken - spendingToken,
-			TotalProfitUsd:     gainUSD - spendingUSD,
+			TotalGainToken:     totalGainToken,
+			TotalGainUsd:       totalGainUSD,
+			TotalSpendingToken: totalSpendingToken,
+			TotalSpendingUsd:   totalSpendingUSD,
+			TotalProfitToken:   totalGainToken - totalSpendingToken,
+			TotalProfitUsd:     totalGainUSD - totalSpendingUSD,
 			UserType:           userType,
 		}
 	}
@@ -115,6 +122,13 @@ func GetWhaleRois(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestamp
 			return userRoiDetails[i].TotalSpendingToken > userRoiDetails[j].TotalSpendingToken
 		})
 	}
-	return userRoiDetails[0:10]
+	resp := userRoiDetails[0:10]
+	uas := make(map[string][]schema.UserAction, len(resp))
+	for _, roi := range resp {
+		uas[roi.UserAddress] = useractions[roi.UserAddress]
+	}
 
+	lib.ToFile(resp, "roi.json")
+	lib.ToFile(uas, "ua.json")
+	return resp
 }

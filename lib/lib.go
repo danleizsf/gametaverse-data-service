@@ -3,6 +3,7 @@ package lib
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"gametaverse-data-service/schema"
 	"io/ioutil"
 	"log"
@@ -189,6 +190,22 @@ func GetPerPayerType(perPayerTransfers map[string][]schema.Transfer) map[string]
 	return perPayerType
 }
 
+func ToFile(data interface{}, fileName string) {
+	s, _ := json.Marshal(data)
+	f, err := os.Create(fileName)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+	_, err2 := f.WriteString(string(s))
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+}
+
 func GetActiveUsersFromTransfers(transfers []schema.Transfer) map[string]bool {
 	uniqueAddresses := make(map[string]bool)
 	count := 0
@@ -346,7 +363,7 @@ func GetPriceHistoryV2(svc *s3.S3) schema.PriceHistory {
 	priceHistory := schema.PriceHistory{}
 	err = json.Unmarshal(body, &priceHistory)
 	if err != nil {
-		//log.Printf("body: %s", fmt.Sprintf("%s", body))
+		log.Printf("body: %s", fmt.Sprintf("%s", body))
 		ExitErrorf("Unable to unmarshall user meta info, %v", err)
 	}
 
