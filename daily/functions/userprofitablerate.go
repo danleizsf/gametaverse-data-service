@@ -64,24 +64,34 @@ func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int6
 func GetWhaleRois(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64, sortType schema.WhalesSortType) []schema.UserRoiDetail {
 	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
 	perNewUserRoiDetail := map[string]*schema.UserRoiDetail{}
-
+	priceHistory := lib.GetPriceHistoryV2(s3client)
+	priceHisoryMap := map[string]float64{}
+	for _, price := range priceHistory.Prices {
+		priceHisoryMap[price.Date] = price.Price
+	}
 	for user, actions := range useractions {
 		userType := UserType(actions)
-		var spendingToken, gainToken float64
+		var spendingToken, gainToken, spendingUSD, gainUSD float64
 		for _, a := range actions {
 			if a.Action == schema.UserActionRentSharkSEA || a.Action == schema.UserActionAuctionBuySEA || a.Action == schema.UserActionBuySEA {
 				spendingToken += a.Value.(float64)
 			} else if a.Action == schema.UserActionLendSharkSEA || a.Action == schema.UserActionAuctionSellSEA || a.Action == schema.UserActionWithdrawlSEA {
 				gainToken += a.Value.(float64)
 			}
+			price := priceHisoryMap[a.Date]
+			spendingUSD += spendingToken * price
+			gainUSD += gainToken * price
 		}
 
 		perNewUserRoiDetail[user] = &schema.UserRoiDetail{
 			UserAddress:        user,
 			JoinDate:           actions[0].Date,
 			TotalGainToken:     gainToken,
+			TotalGainUsd:       gainUSD,
 			TotalSpendingToken: spendingToken,
+			TotalSpendingUsd:   spendingUSD,
 			TotalProfitToken:   gainToken - spendingToken,
+			TotalProfitUsd:     gainUSD - spendingUSD,
 			UserType:           userType,
 		}
 	}
