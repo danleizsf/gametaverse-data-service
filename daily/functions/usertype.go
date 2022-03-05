@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetUserType(s3client *s3.S3, timestampA int64, timestampB int64) schema.UserTypeCount {
-	useractions := lib.GetUserActionsRangeAsync(s3client, timestampA, timestampB)
+func GetUserType(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64) schema.UserTypeCount {
+	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
 	return GetUserTypeWithUserActions(useractions)
 }
 

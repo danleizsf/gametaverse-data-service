@@ -3,6 +3,7 @@ package lib
 import (
 	"bytes"
 	"encoding/json"
+	daily "gametaverse-data-service/daily/functions"
 	"gametaverse-data-service/schema"
 	"io/ioutil"
 	"log"
@@ -48,9 +49,14 @@ func GetSummary(s3client *s3.S3, date string) schema.Summary {
 	return s
 }
 
-func GetUserActionsRangeAsync(s3client *s3.S3, timestampA int64, timestampB int64) map[string][]schema.UserAction {
+func GetUserActionsRangeAsync(s3client *s3.S3, cache *daily.Cache, timestampA int64, timestampB int64) map[string][]schema.UserAction {
 	start := time.Unix(timestampA, 0)
 	end := time.Unix(timestampB, 0)
+
+	cacheKey := start.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
+	if resp, exists := cache.Get(cacheKey); exists {
+		return resp
+	}
 	length := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		length++
@@ -80,6 +86,7 @@ func GetUserActionsRangeAsync(s3client *s3.S3, timestampA int64, timestampB int6
 			}
 		}
 	}
+	cache.Add(cacheKey, userActions)
 	return userActions
 }
 

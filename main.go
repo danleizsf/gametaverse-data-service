@@ -18,6 +18,7 @@ import (
 
 type handler struct {
 	s3Client *s3.S3
+	cache    *daily.Cache
 }
 
 func (h *handler) process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -161,79 +162,79 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetDailyTransactionVolumeMetrics(dailyTransactionVolumes)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_repurchase_rate2" {
-			userRepurchaseRate := daily.GetUserRepurchaseRate(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix())
+			userRepurchaseRate := daily.GetUserRepurchaseRate(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix())
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution2" {
-			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution2" {
-			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type2" {
-			newUserTypes := daily.GetUserType(h.s3Client, fromTimeObj.Unix(), time.Now().Unix())
+			newUserTypes := daily.GetUserType(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix())
 			response := grafana.GetNewUserTypeMetrics(newUserTypes)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_rate2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), false)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix(), false)
 			response := grafana.GetNewUserProfitableRateMetrics(newUserProfitableRate.OverallProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_spending_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewUserSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_token_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeSpendingTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_token_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserSpendingTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderSpendingUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_token_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderSpendingTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profit_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewUserProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_token_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_token_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_usd_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderProfitUsdDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_token_distribution2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), time.Now().Unix(), true)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_days2" {
@@ -305,7 +306,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		response := GetWhaleRois(fromTimeObj, toTimeObj, schema.SortByGain)
 		return GenerateResponse(response)
 	} else if input.Method == "getUserActiveDays" {
-		response := daily.GetUserActiveDays(h.s3Client, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
+		response := daily.GetUserActiveDays(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
 		return GenerateResponse(response)
 	} else if input.Method == "getUserRoi2" {
 		response := daily.GetNewUserRoiDebug(h.s3Client, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
@@ -327,6 +328,7 @@ func main() {
 	s3client := s3.New(sess)
 	h := handler{
 		s3Client: s3client,
+		cache:    daily.NewCache(),
 	}
 	lambda.Start(h.process)
 }

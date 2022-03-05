@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetUserActiveDays(s3client *s3.S3, timestampA int64, timestampB int64, limit int64) []schema.UserActivity {
-	useractions := lib.GetUserActionsRangeAsync(s3client, timestampA, timestampB)
+func GetUserActiveDays(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64, limit int64) []schema.UserActivity {
+	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
 	perUserActivities := make(map[string]schema.UserActivity, len(useractions))
 
 	for userAddress, actions := range useractions {
