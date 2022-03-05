@@ -13,6 +13,7 @@ type Cache struct {
 func NewCache() *Cache {
 	mux := &sync.Mutex{}
 	return &Cache{
+		UA:  make(map[string]map[string][]schema.UserAction),
 		mux: mux,
 	}
 }
