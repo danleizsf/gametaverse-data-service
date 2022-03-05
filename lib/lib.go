@@ -72,7 +72,6 @@ func GetUserActionsRange(s3client *s3.S3, timestampA int64, timestampB int64) ma
 					Value:  a.Value,
 					Date:   date,
 					Action: a.Action,
-					Time:   d,
 				}
 			}
 
@@ -111,6 +110,18 @@ func GetUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction
 	err = json.Unmarshal(body, &s)
 	if err != nil {
 		log.Print("can't unmarshall object " + *req.Key)
+	}
+
+	for user, actions := range s {
+		actionsWithDate := make([]schema.UserAction, len(actions))
+		for i, a := range actions {
+			actionsWithDate[i] = schema.UserAction{
+				Value:  a.Value,
+				Date:   date,
+				Action: a.Action,
+			}
+		}
+		s[user] = actionsWithDate
 	}
 	return s
 }
