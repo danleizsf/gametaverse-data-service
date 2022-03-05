@@ -61,5 +61,8 @@ func Search() []string {
 		"new_rentee_profitable_days2",
 		"new_purchaser_profitable_days2",
 		"new_hybrider_profitable_days2",
+		"whale_sort_by_gain2",
+		"whale_sort_by_profit2",
+		"whale_sort_by_spending2",
 	}
 }

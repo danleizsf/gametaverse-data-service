@@ -8,6 +8,7 @@ import (
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -41,6 +42,10 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		toTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.To)
 		fromTimeDateObj := time.Unix((fromTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 		toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
+		// Warm up cache
+		if strings.HasSuffix(grafanaQueryRequest.Targets[0].Target, "2") {
+			lib.GetUserActionsRangeAsync(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix())
+		}
 		if grafanaQueryRequest.Targets[0].Target == "daus" {
 			log.Printf("grafana/query request from %v, to %v", fromTimeDateObj, toTimeDateObj)
 			daus := GetGameDaus(fromTimeDateObj, toTimeDateObj)
@@ -253,6 +258,18 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profitable_days2" {
 			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewHybriderProfitableDaysDistributionMetrics(userRois)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_gain2" {
+			whaleRois := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByGain)
+			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortByGain)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_profit2" {
+			whaleRois := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByProfit)
+			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortByProfit)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_spending2" {
+			whaleRois := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortBySpending)
+			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortBySpending)
 			return GenerateResponse(response)
 		}
 		return GenerateResponse("")

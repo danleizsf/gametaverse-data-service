@@ -3,6 +3,7 @@ package daily
 import (
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -58,4 +59,52 @@ func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int6
 	}
 
 	return response
+}
+
+func GetWhaleRois(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64, sortType schema.WhalesSortType) []schema.UserRoiDetail {
+	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
+	perNewUserRoiDetail := map[string]*schema.UserRoiDetail{}
+
+	for user, actions := range useractions {
+		userType := UserType(actions)
+		var spendingToken, gainToken float64
+		for _, a := range actions {
+			if a.Action == schema.UserActionRentSharkSEA || a.Action == schema.UserActionAuctionBuySEA || a.Action == schema.UserActionBuySEA {
+				spendingToken += a.Value.(float64)
+			} else if a.Action == schema.UserActionLendSharkSEA || a.Action == schema.UserActionAuctionSellSEA || a.Action == schema.UserActionWithdrawlSEA {
+				gainToken += a.Value.(float64)
+			}
+		}
+
+		perNewUserRoiDetail[user] = &schema.UserRoiDetail{
+			UserAddress:        user,
+			JoinDate:           actions[0].Date,
+			TotalGainToken:     gainToken,
+			TotalSpendingToken: spendingToken,
+			TotalProfitToken:   gainToken - spendingToken,
+			UserType:           userType,
+		}
+	}
+	userRoiDetails := make([]schema.UserRoiDetail, len(perNewUserRoiDetail))
+	idx := 0
+	for _, userRoiDetail := range perNewUserRoiDetail {
+		userRoiDetails[idx] = *userRoiDetail
+		idx += 1
+	}
+
+	if sortType == schema.SortByGain {
+		sort.Slice(userRoiDetails, func(i, j int) bool {
+			return userRoiDetails[i].TotalGainToken > userRoiDetails[j].TotalGainToken
+		})
+	} else if sortType == schema.SortByProfit {
+		sort.Slice(userRoiDetails, func(i, j int) bool {
+			return userRoiDetails[i].TotalProfitToken > userRoiDetails[j].TotalProfitToken
+		})
+	} else if sortType == schema.SortBySpending {
+		sort.Slice(userRoiDetails, func(i, j int) bool {
+			return userRoiDetails[i].TotalSpendingToken > userRoiDetails[j].TotalSpendingToken
+		})
+	}
+	return userRoiDetails[0:10]
+
 }
