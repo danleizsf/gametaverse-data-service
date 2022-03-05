@@ -160,6 +160,22 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			dailyTransactionVolumes := daily.GetTransactionVolumes(h.s3Client, fromTimeObj, toTimeObj)
 			response := grafana.GetDailyTransactionVolumeMetrics(dailyTransactionVolumes)
 			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "user_repurchase_rate2" { // done
+			userRepurchaseRate := daily.GetUserRepurchaseRate(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix())
+			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution2" { // done
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 10000000)
+			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution2" { // done
+			userActiveDates := daily.GetUserActiveDays(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), 10000000)
+			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
+			return GenerateResponse(response)
+		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type2" { // done
+			newUserTypes := daily.GetUserType(h.s3Client, fromTimeObj.Unix(), time.Now().Unix())
+			response := grafana.GetNewUserTypeMetrics(newUserTypes)
+			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_rate2" {
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, fromTimeObj.Unix(), toTimeObj.Unix(), false)
 			response := grafana.GetNewUserProfitableRateMetrics(newUserProfitableRate.OverallProfitableRate)
