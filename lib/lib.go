@@ -72,6 +72,7 @@ func GetUserActionsRange(s3client *s3.S3, timestampA int64, timestampB int64) ma
 					Value:  a.Value,
 					Date:   date,
 					Action: a.Action,
+					Time:   d,
 				}
 			}
 

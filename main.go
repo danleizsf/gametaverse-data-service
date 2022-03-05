@@ -237,19 +237,19 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_days2" {
-			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
 			response := grafana.GetNewUserProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profitable_days2" {
-			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
 			response := grafana.GetNewRenteeProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profitable_days2" {
-			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
 			response := grafana.GetNewPurchaserProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profitable_days2" {
-			userRois := GetUserRoi(fromTimeDateObj, time.Now())
+			userRois := daily.GetNewUserRoi(h.s3Client, fromTimeObj, time.Now())
 			response := grafana.GetNewHybriderProfitableDaysDistributionMetrics(userRois)
 			return GenerateResponse(response)
 		}
