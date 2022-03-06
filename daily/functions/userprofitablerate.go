@@ -19,25 +19,34 @@ func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int6
 	}
 	for user, actions := range useractions {
 		userType := UserType(actions)
-		var spendingToken, gainToken, usdSpending, usdGain float64
+		var totalSpendingToken, totalGainToken, totalSpendingUSD, totalGainUSD float64
 		for _, a := range actions {
+			var spendingToken, gainToken float64
 			if a.Action == schema.UserActionRentSharkSEA || a.Action == schema.UserActionAuctionBuySEA || a.Action == schema.UserActionBuySEA {
-				spendingToken += a.Value.(float64)
+				spendingToken = a.Value.(float64)
+				totalSpendingToken += spendingToken
 			} else if a.Action == schema.UserActionLendSharkSEA || a.Action == schema.UserActionAuctionSellSEA || a.Action == schema.UserActionWithdrawlSEA {
-				gainToken += a.Value.(float64)
+				gainToken = a.Value.(float64)
+				totalGainToken += gainToken
 			}
 			price := priceHisoryMap[a.Date]
-			usdSpending += spendingToken * price
-			usdGain += gainToken * price
+			if spendingToken > 0 {
+				totalSpendingUSD += spendingToken * price
+			}
+			if gainToken > 0 {
+				totalGainUSD += gainToken * price
+			}
 		}
 
 		perNewUserRoiDetail[user] = &schema.UserRoiDetail{
 			UserAddress:        user,
 			JoinDate:           actions[0].Date,
-			TotalSpendingUsd:   usdSpending,
-			TotalProfitUsd:     usdGain - usdSpending,
-			TotalSpendingToken: spendingToken,
-			TotalProfitToken:   gainToken - spendingToken,
+			TotalGainToken:     totalGainToken,
+			TotalGainUsd:       totalGainUSD,
+			TotalSpendingToken: totalSpendingToken,
+			TotalSpendingUsd:   totalSpendingUSD,
+			TotalProfitToken:   totalGainToken - totalSpendingToken,
+			TotalProfitUsd:     totalGainUSD - totalSpendingUSD,
 			UserType:           userType,
 		}
 	}
