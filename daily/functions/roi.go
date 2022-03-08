@@ -4,36 +4,16 @@ import (
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func GetNewUserRoi(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.Time) []schema.UserRoiDetail {
-	length := 0
-	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		length++
-	}
-	concurrentNewUser := make([][]string, length+1)
-	// concurrentUserActions := make([]map[string][]schema.UserAction, length+1)
-
-	var wg sync.WaitGroup
-	wg.Add(length)
-	i := 0
-	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		go func(i int, s3client *s3.S3, d time.Time) {
-			defer wg.Done()
-			date := d.Format(schema.DateFormat)
-			s := lib.GetSummary(s3client, date)
-			concurrentNewUser[i] = s.NewUser
-		}(i, s3client, d)
-		i++
-	}
-	wg.Wait()
+	summarys := lib.GetSummaryRangeAsync(s3client, cache, start.Unix(), end.Unix())
 	newUsers := map[string]bool{}
-	for _, dailyNewUsers := range concurrentNewUser {
-		for _, newUser := range dailyNewUsers {
+	for _, dailySummary := range summarys {
+		for _, newUser := range dailySummary.NewUser {
 			newUsers[newUser] = true
 		}
 	}

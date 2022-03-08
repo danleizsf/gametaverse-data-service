@@ -28,7 +28,7 @@ func GetDate(timestamp int64) string {
 	return t.Format("2006-01-02")
 }
 
-func GetSummary(s3client *s3.S3, date string) schema.Summary {
+func getSummary(s3client *s3.S3, date string) schema.Summary {
 	var s schema.Summary
 	summaryRequest := &s3.GetObjectInput{
 		Bucket: aws.String(DailyBucketName),
@@ -71,7 +71,7 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 		go func(i int, s3client *s3.S3, d time.Time) {
 			defer wg.Done()
 			date := d.Format(schema.DateFormat)
-			uas := GetUserActions(s3client, date)
+			uas := getUserActions(s3client, date)
 			concurrentUserActions[i] = uas
 		}(i, s3client, d)
 		i++
@@ -112,7 +112,7 @@ func GetUserActionsRangeAsyncByDate(s3client *s3.S3, cache *Cache, timestampA in
 		go func(i int, s3client *s3.S3, d time.Time) {
 			defer wg.Done()
 			date := d.Format(schema.DateFormat)
-			uas := GetUserActions(s3client, date)
+			uas := getUserActions(s3client, date)
 			concurrentUserActions[i] = uas
 		}(i, s3client, d)
 		i++
@@ -157,7 +157,7 @@ func GetSummaryRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, times
 		go func(i int, s3client *s3.S3, d time.Time) {
 			defer wg.Done()
 			date := d.Format(schema.DateFormat)
-			s := GetSummary(s3client, date)
+			s := getSummary(s3client, date)
 			concurrentSummary[i] = s
 		}(i, s3client, d)
 		i++
@@ -168,7 +168,7 @@ func GetSummaryRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, times
 	return concurrentSummary
 }
 
-func GetUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction {
+func getUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction {
 	var s map[string][]schema.UserAction
 	req := &s3.GetObjectInput{
 		Bucket: aws.String(DailyBucketName),
