@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -448,4 +449,53 @@ func GetPayerTypes(totalTransfers []schema.Transfer) map[string]schema.PayerType
 		}
 	}
 	return userTypes
+}
+
+func GetMysteriousBoxTransfers(fromTimeObj time.Time, toTimeObj time.Time, svc *s3.S3) []schema.Transfer {
+	requestInput :=
+		&s3.GetObjectInput{
+			Bucket: aws.String(schema.PriceBucketName),
+			Key:    aws.String("starsharks-mysterious-box-transfers.csv"),
+		}
+	result, err := svc.GetObject(requestInput)
+	if err != nil {
+		exitErrorf("Unable to get object, %v", err)
+	}
+	body, err := ioutil.ReadAll(result.Body)
+	if err != nil || body == nil {
+		exitErrorf("Unable to get body, %v", err)
+	}
+	bodyString := string(body)
+	lines := strings.Split(bodyString, "\n")
+	transfers := make([]schema.Transfer, 0)
+	//log.Printf("enterred converCsvStringToTransferStructs, content len: %d", len(lines))
+	for lineNum, lineString := range lines {
+		if lineNum == 0 {
+			continue
+		}
+		fields := strings.Split(lineString, ",")
+		if len(fields) < 8 {
+			continue
+		}
+
+		layout := "2006-01-02T15:04:05.000Z"
+		timeObj, _ := time.Parse(layout, fields[2])
+		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+			continue
+		}
+
+		transfers = append(transfers, schema.Transfer{
+			FromAddress:     fields[0],
+			Value:           float64(40 * schema.SeaTokenUnit),
+			TransactionHash: fields[1],
+			Timestamp:       int(timeObj.Unix()),
+		})
+	}
+
+	return transfers
+}
+
+func exitErrorf(msg string, args ...interface{}) {
+	log.Printf(msg + "\n")
+	os.Exit(1)
 }
