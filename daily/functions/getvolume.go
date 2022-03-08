@@ -9,30 +9,29 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetTransactionVolumes(s3client *s3.S3, start time.Time, end time.Time) []schema.DailyTransactionVolume {
+func GetTransactionVolumes(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.Time) []schema.DailyTransactionVolume {
 	len := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		len++
 	}
+	useractions := lib.GetUserActionsRangeAsyncByDate(s3client, cache, start.Unix(), end.Unix())
 	res := make([]schema.DailyTransactionVolume, len+1)
 	var wg sync.WaitGroup
 	wg.Add(len)
 	i := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		go func(i int, s3client *s3.S3, d time.Time) {
+		go func(i int, d time.Time) {
 			defer wg.Done()
-			s := GetTransactionVolume(s3client, d)
+			s := GetTransactionVolume(useractions[i], d)
 			res[i] = s
-		}(i, s3client, d)
+		}(i, d)
 		i++
 	}
 	wg.Wait()
 	return res
 }
 
-func GetTransactionVolume(s3client *s3.S3, t time.Time) schema.DailyTransactionVolume {
-	date := t.Format(schema.DateFormat)
-	ac := lib.GetUserActions(s3client, date)
+func GetTransactionVolume(ac map[string][]schema.UserAction, t time.Time) schema.DailyTransactionVolume {
 	var r, p, w float64
 	for _, as := range ac {
 		for _, a := range as {

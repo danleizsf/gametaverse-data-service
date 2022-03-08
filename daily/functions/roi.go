@@ -26,9 +26,7 @@ func GetNewUserRoi(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.
 			defer wg.Done()
 			date := d.Format(schema.DateFormat)
 			s := lib.GetSummary(s3client, date)
-			// uas := lib.GetUserActions(s3client, date)
 			concurrentNewUser[i] = s.NewUser
-			// concurrentUserActions[i] = uas
 		}(i, s3client, d)
 		i++
 	}

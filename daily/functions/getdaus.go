@@ -9,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetDaus(s3client *s3.S3, start time.Time, end time.Time) []schema.Dau {
+func GetDaus(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.Time) []schema.Dau {
 	len := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		len++
 	}
+	summarys := lib.GetSummaryRangeAsync(s3client, cache, start.Unix(), end.Unix())
+	useractions := lib.GetUserActionsRangeAsyncByDate(s3client, cache, start.Unix(), end.Unix())
 	res := make([]schema.Dau, len+1)
 	var wg sync.WaitGroup
 	wg.Add(len)
 	i := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		go func(i int, s3client *s3.S3, d time.Time) {
+		go func(i int, d time.Time) {
 			defer wg.Done()
-			s := GetDau(s3client, d)
+			s := GetDau(summarys[i], useractions[i], d)
 			res[i] = s
-		}(i, s3client, d)
+		}(i, d)
 		i++
 	}
 	wg.Wait()
@@ -37,10 +39,7 @@ func sliceToMap(s []string) map[string]bool {
 	}
 	return m
 }
-func GetDau(s3client *s3.S3, t time.Time) schema.Dau {
-	date := t.Format(schema.DateFormat)
-	s := lib.GetSummary(s3client, date)
-	ac := lib.GetUserActions(s3client, date)
+func GetDau(s schema.Summary, ac map[string][]schema.UserAction, d time.Time) schema.Dau {
 	newUser := sliceToMap(s.NewUser)
 
 	var np, nr, tp, tr int64
@@ -63,7 +62,7 @@ func GetDau(s3client *s3.S3, t time.Time) schema.Dau {
 
 	}
 	return schema.Dau{
-		DateTimestamp: t.Unix(),
+		DateTimestamp: d.Unix(),
 		NewActiveUsers: schema.ActiveUserCount{
 			PayerCount: schema.PayerCount{
 				RenteeCount:    nr,

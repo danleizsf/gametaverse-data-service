@@ -160,11 +160,11 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortBySpending)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "daus2" {
-			daus := daily.GetDaus(h.s3Client, fromTimeDateObj, toTimeDateObj)
+			daus := daily.GetDaus(h.s3Client, h.cache, fromTimeDateObj, toTimeDateObj)
 			response := grafana.GetDauMetrics(daus)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "daily_transaction_volume2" {
-			dailyTransactionVolumes := daily.GetTransactionVolumes(h.s3Client, fromTimeObj, toTimeObj)
+			dailyTransactionVolumes := daily.GetTransactionVolumes(h.s3Client, h.cache, fromTimeObj, toTimeObj)
 			response := grafana.GetDailyTransactionVolumeMetrics(dailyTransactionVolumes)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_repurchase_rate2" {

@@ -55,7 +55,7 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 	end := time.Unix(timestampB, 0)
 
 	cacheKey := start.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
-	if resp, exists := cache.Get(cacheKey); exists {
+	if resp, exists := cache.GetUA(cacheKey); exists {
 		return resp
 	}
 	length := 0
@@ -87,52 +87,85 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 			}
 		}
 	}
-	cache.Add(cacheKey, userActions)
+	cache.AddUA(cacheKey, userActions)
 	return userActions
 }
 
-func GetUserActionsRange(s3client *s3.S3, timestampA int64, timestampB int64) map[string][]schema.UserAction {
+func GetUserActionsRangeAsyncByDate(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64) []map[string][]schema.UserAction {
 	start := time.Unix(timestampA, 0)
 	end := time.Unix(timestampB, 0)
-	useractions := make(map[string][]schema.UserAction, 0)
 
-	// length := 0
-	// for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-	// 	length++
-	// }
-	// useractionsByDate := make([]map[string][]schema.UserAction, length+1)
-	// var wg sync.WaitGroup
-	// wg.Add(length)
-	// i := 0
+	cacheKey := start.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
+	if resp, exists := cache.GetUAByDate(cacheKey); exists {
+		return resp
+	}
+	length := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		// go func(s3client *s3.S3, d time.Time) {
-		// 	defer wg.Done()
-		date := d.Format(schema.DateFormat)
-		ua := GetUserActions(s3client, date)
-		for user, actions := range ua {
-			actionsWithDate := make([]schema.UserAction, len(actions))
-			for i, a := range actions {
-				actionsWithDate[i] = schema.UserAction{
-					Value:  a.Value,
-					Date:   date,
-					Action: a.Action,
-				}
-			}
+		length++
+	}
+	concurrentUserActions := make([]map[string][]schema.UserAction, length+1)
 
-			if existingActions, exists := useractions[user]; exists {
-				useractions[user] = append(existingActions, actionsWithDate...)
+	var wg sync.WaitGroup
+	wg.Add(length)
+	i := 0
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		go func(i int, s3client *s3.S3, d time.Time) {
+			defer wg.Done()
+			date := d.Format(schema.DateFormat)
+			uas := GetUserActions(s3client, date)
+			concurrentUserActions[i] = uas
+		}(i, s3client, d)
+		i++
+	}
+	wg.Wait()
+	userActions := make([]map[string][]schema.UserAction, len(concurrentUserActions))
+	for i, dailyUserActions := range concurrentUserActions {
+		dailyUserActionMap := make(map[string][]schema.UserAction)
+		for user, actions := range dailyUserActions {
+			if ua, exists := dailyUserActionMap[user]; exists {
+				dailyUserActionMap[user] = append(ua, actions...)
 			} else {
-				useractions[user] = actionsWithDate
+				dailyUserActionMap[user] = actions
 			}
 		}
-		// useractionsByDate[i] = ua
-		// }(s3client, d)
-		// i++
+		userActions[i] = dailyUserActionMap
 	}
-	// wg.Wait()
-	// j := 0
+	cache.AddUAByDate(cacheKey, userActions)
+	return userActions
+}
 
-	return useractions
+func GetSummaryRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64) []schema.Summary {
+	start := time.Unix(timestampA, 0)
+	end := time.Unix(timestampB, 0)
+
+	cacheKey := start.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
+	if resp, exists := cache.GetSummary(cacheKey); exists {
+		return resp
+	}
+	length := 0
+	idxToDate := map[int]time.Time{}
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		idxToDate[length] = d
+		length++
+	}
+	concurrentSummary := make([]schema.Summary, length+1)
+
+	var wg sync.WaitGroup
+	wg.Add(length)
+	i := 0
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		go func(i int, s3client *s3.S3, d time.Time) {
+			defer wg.Done()
+			date := d.Format(schema.DateFormat)
+			s := GetSummary(s3client, date)
+			concurrentSummary[i] = s
+		}(i, s3client, d)
+		i++
+	}
+	wg.Wait()
+
+	cache.AddSummary(cacheKey, concurrentSummary)
+	return concurrentSummary
 }
 
 func GetUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction {
