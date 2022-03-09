@@ -1,6 +1,7 @@
 package daily
 
 import (
+	"encoding/json"
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"sync"
@@ -10,6 +11,13 @@ import (
 )
 
 func GetTransactionVolumes(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.Time) []schema.DailyTransactionVolume {
+	var resp []schema.DailyTransactionVolume
+	key := lib.GetDateRange(start.Unix(), end.Unix())
+	if body, exist := lib.GetRangeCacheFromS3(s3client, key, "GetTransactionVolumes"); exist {
+		json.Unmarshal(body, &resp)
+		return resp
+	}
+
 	len := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		len++
@@ -28,6 +36,8 @@ func GetTransactionVolumes(s3client *s3.S3, cache *lib.Cache, start time.Time, e
 		i++
 	}
 	wg.Wait()
+	body, _ := json.Marshal(res)
+	lib.SetRangeCacheFromS3(s3client, key, "GetTransactionVolumes", body)
 	return res
 }
 

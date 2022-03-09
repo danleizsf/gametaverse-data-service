@@ -50,11 +50,11 @@ func getSummary(s3client *s3.S3, date string) schema.Summary {
 	return s
 }
 
-func GetRangeCacheFromS3(s3client *s3.S3, key string) (map[string][]schema.UserAction, bool) {
+func GetRangeCacheFromS3(s3client *s3.S3, key string, functionName string) ([]byte, bool) {
 	requestInput :=
 		&s3.GetObjectInput{
 			Bucket: aws.String(DailyBucketName),
-			Key:    aws.String("starsharks/cache/" + key),
+			Key:    aws.String("starsharks/cache/" + key + "/" + functionName),
 		}
 	result, err := s3client.GetObject(requestInput)
 	if err != nil {
@@ -65,30 +65,18 @@ func GetRangeCacheFromS3(s3client *s3.S3, key string) (map[string][]schema.UserA
 	if err != nil {
 		log.Printf("Unable to get body, %v", err)
 		return nil, false
-
 	}
-	userActions := make(map[string][]schema.UserAction, 0)
-
-	err = json.Unmarshal(body, &userActions)
-	if err != nil {
-		log.Printf("Unable to unmarshall body, %v", err)
-		return nil, false
-	}
-	return userActions, true
+	return body, true
 }
 
-func SetRangeCacheFromS3(s3client *s3.S3, key string, ua map[string][]schema.UserAction) {
-	b, err := json.Marshal(ua)
-	if err != nil {
-		log.Printf("Can't marshall, %v", err)
-	}
+func SetRangeCacheFromS3(s3client *s3.S3, key string, functionName string, body []byte) {
 	requestInput :=
 		&s3.PutObjectInput{
 			Bucket: aws.String(DailyBucketName),
-			Key:    aws.String("starsharks/cache/" + key),
-			Body:   bytes.NewReader(b),
+			Key:    aws.String("starsharks/cache/" + key + "/" + functionName),
+			Body:   bytes.NewReader(body),
 		}
-	_, err = s3client.PutObject(requestInput)
+	_, err := s3client.PutObject(requestInput)
 	if err != nil {
 		log.Printf("Unable to put object, %v", err)
 	}
@@ -124,25 +112,31 @@ func GetSignatureRangesAfter(date time.Time) []time.Time {
 	return resp
 }
 
-func UploadRangeToS3(s3client *s3.S3, ua map[string][]schema.UserAction, timestampA int64, timestampB int64) {
+// func UploadRangeToS3(s3client *s3.S3, ua map[string][]schema.UserAction, timestampA int64, timestampB int64) {
+// 	start := time.Unix(timestampA, 0)
+// 	end := time.Unix(timestampB, 0)
+// 	endTimes := GetSignatureRangesAfter(start)
+// 	now := time.Now()
+// 	for _, endTime := range endTimes {
+// 		if endTime.Before(now) {
+// 			cacheKey := start.Format(schema.DateFormat) + "-" + endTime.Format(schema.DateFormat)
+// 			SetRangeCacheFromS3(s3client, cacheKey, ua)
+// 		}
+// 	}
+
+// 	startTimes := GetSignatureRangesBefore(end)
+// 	for _, startTime := range startTimes {
+// 		if startTime.After(schema.StarSharksStartingDate) {
+// 			cacheKey := startTime.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
+// 			SetRangeCacheFromS3(s3client, cacheKey, ua)
+// 		}
+// 	}
+// }
+
+func GetDateRange(timestampA int64, timestampB int64) string {
 	start := time.Unix(timestampA, 0)
 	end := time.Unix(timestampB, 0)
-	endTimes := GetSignatureRangesAfter(start)
-	now := time.Now()
-	for _, endTime := range endTimes {
-		if endTime.Before(now) {
-			cacheKey := start.Format(schema.DateFormat) + "-" + endTime.Format(schema.DateFormat)
-			SetRangeCacheFromS3(s3client, cacheKey, ua)
-		}
-	}
-
-	startTimes := GetSignatureRangesBefore(end)
-	for _, startTime := range startTimes {
-		if startTime.After(schema.StarSharksStartingDate) {
-			cacheKey := startTime.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
-			SetRangeCacheFromS3(s3client, cacheKey, ua)
-		}
-	}
+	return start.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
 }
 
 func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64) map[string][]schema.UserAction {
@@ -153,10 +147,10 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 	if resp, exists := cache.GetUA(cacheKey); exists {
 		return resp
 	}
-	resp, exists := GetRangeCacheFromS3(s3client, cacheKey)
-	if exists {
-		return resp
-	}
+	// resp, exists := GetRangeCacheFromS3(s3client, cacheKey)
+	// if exists {
+	// 	return resp
+	// }
 	length := 0
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		length++
@@ -187,7 +181,7 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 		}
 	}
 	cache.AddUA(cacheKey, userActions)
-	go UploadRangeToS3(s3client, userActions, timestampA, timestampB)
+	// go UploadRangeToS3(s3client, userActions, timestampA, timestampB)
 	return userActions
 }
 

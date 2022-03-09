@@ -1,6 +1,7 @@
 package daily
 
 import (
+	"encoding/json"
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 
@@ -8,11 +9,17 @@ import (
 )
 
 func GetUserType(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64) schema.UserTypeCount {
+	var resp schema.UserTypeCount
+	key := lib.GetDateRange(timestampA, timestampB)
+	if body, exist := lib.GetRangeCacheFromS3(s3client, key, "GetUserType"); exist {
+		json.Unmarshal(body, &resp)
+		return resp
+	}
 	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
-	return GetUserTypeWithUserActions(useractions)
+	return GetUserTypeWithUserActions(s3client, key, useractions)
 }
 
-func GetUserTypeWithUserActions(useractions map[string][]schema.UserAction) schema.UserTypeCount {
+func GetUserTypeWithUserActions(s3client *s3.S3, key string, useractions map[string][]schema.UserAction) schema.UserTypeCount {
 	rentees := map[string]bool{}
 	purchasers := map[string]bool{}
 	hybrids := map[string]bool{}
@@ -31,12 +38,15 @@ func GetUserTypeWithUserActions(useractions map[string][]schema.UserAction) sche
 			others[user] = true
 		}
 	}
-	return schema.UserTypeCount{
+	resp := schema.UserTypeCount{
 		RenteeCount:    int64(len(rentees)),
 		PurchaserCount: int64(len(purchasers)),
 		HybridCount:    int64(len(hybrids)),
 		OtherCount:     int64(len(others)),
 	}
+	body, _ := json.Marshal(resp)
+	lib.SetRangeCacheFromS3(s3client, key, "GetUserType", body)
+	return resp
 }
 
 func UserType(actions []schema.UserAction) schema.PayerType {

@@ -1,6 +1,7 @@
 package daily
 
 import (
+	"encoding/json"
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"math"
@@ -10,6 +11,13 @@ import (
 )
 
 func GetNewUserRoi(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.Time) []schema.UserRoiDetail {
+	var resp []schema.UserRoiDetail
+	key := lib.GetDateRange(start.Unix(), end.Unix())
+	if body, exist := lib.GetRangeCacheFromS3(s3client, key, "GetNewUserRoi"); exist {
+		json.Unmarshal(body, &resp)
+		return resp
+	}
+
 	summarys := lib.GetSummaryRangeAsync(s3client, cache, start.Unix(), end.Unix())
 	newUsers := map[string]bool{}
 	for _, dailySummary := range summarys {
@@ -51,7 +59,8 @@ func GetNewUserRoi(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.
 			UserType:       payerType,
 		})
 	}
-
+	body, _ := json.Marshal(userRois)
+	lib.SetRangeCacheFromS3(s3client, key, "GetNewUserRoi", body)
 	return userRois
 
 }

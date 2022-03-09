@@ -1,6 +1,7 @@
 package daily
 
 import (
+	"encoding/json"
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"time"
@@ -9,6 +10,14 @@ import (
 )
 
 func GetUserActiveDays(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64, limit int64) []schema.UserActivity {
+	var resp []schema.UserActivity
+
+	key := lib.GetDateRange(timestampA, timestampB)
+	if body, exist := lib.GetRangeCacheFromS3(s3client, key, "GetUserActiveDays"); exist {
+		json.Unmarshal(body, &resp)
+		return resp
+	}
+
 	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
 	perUserActivities := make(map[string]schema.UserActivity, len(useractions))
 
@@ -26,12 +35,13 @@ func GetUserActiveDays(s3client *s3.S3, cache *lib.Cache, timestampA int64, time
 		}
 
 	}
-	resp := make([]schema.UserActivity, len(perUserActivities))
+	resp = make([]schema.UserActivity, len(perUserActivities))
 	i := 0
 	for _, ac := range perUserActivities {
 		resp[i] = ac
 		i++
 	}
-
+	body, _ := json.Marshal(resp)
+	lib.SetRangeCacheFromS3(s3client, key, "GetUserActiveDays", body)
 	return resp
 }

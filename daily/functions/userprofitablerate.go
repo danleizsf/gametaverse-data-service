@@ -1,6 +1,7 @@
 package daily
 
 import (
+	"encoding/json"
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"sort"
@@ -10,6 +11,18 @@ import (
 )
 
 func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64, forDebug bool, fromTimeObj time.Time, toTimeObj time.Time) schema.AllUserRoiDetails {
+	functionName := "GetNewUserProfitableRate"
+	if forDebug {
+		functionName = "GetNewUserProfitableRateDebug"
+	}
+	var resp schema.AllUserRoiDetails
+
+	key := lib.GetDateRange(timestampA, timestampB)
+	if body, exist := lib.GetRangeCacheFromS3(s3client, key, functionName); exist {
+		json.Unmarshal(body, &resp)
+		return resp
+	}
+
 	useractions := lib.GetUserActionsRangeAsync(s3client, cache, timestampA, timestampB)
 	perNewUserRoiDetail := map[string]*schema.UserRoiDetail{}
 
@@ -81,7 +94,8 @@ func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int6
 	if forDebug {
 		response.UserRoiDetails = userRoiDetails
 	}
-
+	body, _ := json.Marshal(response)
+	lib.SetRangeCacheFromS3(s3client, key, functionName, body)
 	return response
 }
 
