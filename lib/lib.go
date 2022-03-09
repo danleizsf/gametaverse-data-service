@@ -66,6 +66,7 @@ func GetRangeCacheFromS3(s3client *s3.S3, key string, functionName string) ([]by
 		log.Printf("Unable to get body, %v", err)
 		return nil, false
 	}
+	log.Printf("S3 cache hit for key: %s, function: %s", key, functionName)
 	return body, true
 }
 
@@ -80,6 +81,7 @@ func SetRangeCacheFromS3(s3client *s3.S3, key string, functionName string, body 
 	if err != nil {
 		log.Printf("Unable to put object, %v", err)
 	}
+	log.Printf("Upload S3 cache for key: %s, function: %s", key, functionName)
 }
 
 func GetSignatureRangesBefore(date time.Time) []time.Time {
