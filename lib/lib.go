@@ -50,12 +50,107 @@ func getSummary(s3client *s3.S3, date string) schema.Summary {
 	return s
 }
 
+func GetRangeCacheFromS3(s3client *s3.S3, key string) (map[string][]schema.UserAction, bool) {
+	requestInput :=
+		&s3.GetObjectInput{
+			Bucket: aws.String(DailyBucketName),
+			Key:    aws.String("starsharks/cache/" + key),
+		}
+	result, err := s3client.GetObject(requestInput)
+	if err != nil {
+		log.Printf("Unable to get object, %v", err)
+		return nil, false
+	}
+	body, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		log.Printf("Unable to get body, %v", err)
+		return nil, false
+
+	}
+	userActions := make(map[string][]schema.UserAction, 0)
+
+	err = json.Unmarshal(body, &userActions)
+	if err != nil {
+		log.Printf("Unable to unmarshall body, %v", err)
+		return nil, false
+	}
+	return userActions, true
+}
+
+func SetRangeCacheFromS3(s3client *s3.S3, key string, ua map[string][]schema.UserAction) {
+	b, err := json.Marshal(ua)
+	if err != nil {
+		log.Printf("Can't marshall, %v", err)
+	}
+	requestInput :=
+		&s3.PutObjectInput{
+			Bucket: aws.String(DailyBucketName),
+			Key:    aws.String("starsharks/cache/" + key),
+			Body:   bytes.NewReader(b),
+		}
+	_, err = s3client.PutObject(requestInput)
+	if err != nil {
+		log.Printf("Unable to get object, %v", err)
+	}
+}
+
+func GetSignatureRangesBefore(date time.Time) []time.Time {
+	resp := make([]time.Time, 4)
+	resp[0] = date.AddDate(
+		0, 0, -7,
+	)
+	resp[1] = date.AddDate(
+		0, 0, -30,
+	)
+	resp[2] = date.AddDate(
+		0, -1, 0,
+	)
+	resp[3] = schema.StarSharksStartingDate
+	return resp
+}
+
+func GetSignatureRangesAfter(date time.Time) []time.Time {
+	resp := make([]time.Time, 4)
+	resp[0] = date.AddDate(
+		0, 0, 7,
+	)
+	resp[1] = date.AddDate(
+		0, 0, 30,
+	)
+	resp[2] = date.AddDate(
+		0, 1, 0,
+	)
+	resp[3] = time.Now()
+	return resp
+}
+
+func Process(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64) {
+	endTimes := GetSignatureRangesAfter(time.Unix(timestampA, 0))
+	now := time.Now()
+	for _, endTime := range endTimes {
+		if endTime.Before(now) {
+			GetUserActionsRangeAsync(s3client, cache, timestampA, endTime.Unix())
+		}
+	}
+
+	startTimes := GetSignatureRangesBefore(time.Unix(timestampB, 0))
+	for _, startTime := range startTimes {
+		if startTime.After(schema.StarSharksStartingDate) {
+			GetUserActionsRangeAsync(s3client, cache, startTime.Unix(), timestampB)
+		}
+	}
+}
+
 func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64) map[string][]schema.UserAction {
 	start := time.Unix(timestampA, 0)
 	end := time.Unix(timestampB, 0)
 
 	cacheKey := start.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
 	if resp, exists := cache.GetUA(cacheKey); exists {
+		return resp
+	}
+	resp, exists := GetRangeCacheFromS3(s3client, cacheKey)
+	if exists {
 		return resp
 	}
 	length := 0
@@ -88,6 +183,7 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 		}
 	}
 	cache.AddUA(cacheKey, userActions)
+	go Process(s3client, cache, timestampA, timestampB)
 	return userActions
 }
 
