@@ -29,6 +29,6 @@ func GetUserRepurchaseRate(s3client *s3.S3, cache *lib.Cache, timestampA int64, 
 	body, _ := json.Marshal(Wrapper{
 		Rate: res,
 	})
-	lib.SetRangeCacheFromS3(s3client, key, "GetUserRepurchaseRate", body)
+	go lib.SetRangeCacheFromS3(s3client, key, "GetUserRepurchaseRate", body)
 	return res
 }

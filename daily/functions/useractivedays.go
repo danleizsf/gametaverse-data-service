@@ -42,6 +42,6 @@ func GetUserActiveDays(s3client *s3.S3, cache *lib.Cache, timestampA int64, time
 		i++
 	}
 	body, _ := json.Marshal(resp)
-	lib.SetRangeCacheFromS3(s3client, key, "GetUserActiveDays", body)
+	go lib.SetRangeCacheFromS3(s3client, key, "GetUserActiveDays", body)
 	return resp
 }

@@ -45,7 +45,7 @@ func GetUserTypeWithUserActions(s3client *s3.S3, key string, useractions map[str
 		OtherCount:     int64(len(others)),
 	}
 	body, _ := json.Marshal(resp)
-	lib.SetRangeCacheFromS3(s3client, key, "GetUserType", body)
+	go lib.SetRangeCacheFromS3(s3client, key, "GetUserType", body)
 	return resp
 }
 

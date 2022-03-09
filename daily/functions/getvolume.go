@@ -37,7 +37,7 @@ func GetTransactionVolumes(s3client *s3.S3, cache *lib.Cache, start time.Time, e
 	}
 	wg.Wait()
 	body, _ := json.Marshal(res)
-	lib.SetRangeCacheFromS3(s3client, key, "GetTransactionVolumes", body)
+	go lib.SetRangeCacheFromS3(s3client, key, "GetTransactionVolumes", body)
 	return res
 }
 

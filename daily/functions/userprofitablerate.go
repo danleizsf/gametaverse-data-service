@@ -95,7 +95,7 @@ func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int6
 		response.UserRoiDetails = userRoiDetails
 	}
 	body, _ := json.Marshal(response)
-	lib.SetRangeCacheFromS3(s3client, key, functionName, body)
+	go lib.SetRangeCacheFromS3(s3client, key, functionName, body)
 	return response
 }
 

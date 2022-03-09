@@ -39,7 +39,7 @@ func GetDaus(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.Time) 
 	}
 	wg.Wait()
 	body, _ := json.Marshal(res)
-	lib.SetRangeCacheFromS3(s3client, key, "GetDaus", body)
+	go lib.SetRangeCacheFromS3(s3client, key, "GetDaus", body)
 	return res
 }
 

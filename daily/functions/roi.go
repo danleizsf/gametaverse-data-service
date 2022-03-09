@@ -60,7 +60,7 @@ func GetNewUserRoi(s3client *s3.S3, cache *lib.Cache, start time.Time, end time.
 		})
 	}
 	body, _ := json.Marshal(userRois)
-	lib.SetRangeCacheFromS3(s3client, key, "GetNewUserRoi", body)
+	go lib.SetRangeCacheFromS3(s3client, key, "GetNewUserRoi", body)
 	return userRois
 
 }
