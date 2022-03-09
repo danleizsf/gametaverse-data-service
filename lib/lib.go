@@ -137,7 +137,13 @@ func GetSignatureRangesAfter(date time.Time) []time.Time {
 
 func GetDateRange(timestampA int64, timestampB int64) string {
 	start := time.Unix(timestampA, 0)
+	if start.Before(schema.StarSharksStartingDate) {
+		start = schema.StarSharksStartingDate
+	}
 	end := time.Unix(timestampB, 0)
+	if end.After(time.Now()) {
+		end = time.Now()
+	}
 	return start.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
 }
 
