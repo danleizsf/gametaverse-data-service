@@ -44,7 +44,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 		// Warm up cache
 		if strings.HasSuffix(grafanaQueryRequest.Targets[0].Target, "2") {
-			lib.GetUserActionsRangeAsync(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix())
+			go lib.GetUserActionsRangeAsync(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix())
 		}
 		if grafanaQueryRequest.Targets[0].Target == "daus" {
 			log.Printf("grafana/query request from %v, to %v", fromTimeDateObj, toTimeDateObj)

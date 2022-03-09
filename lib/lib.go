@@ -90,7 +90,7 @@ func SetRangeCacheFromS3(s3client *s3.S3, key string, ua map[string][]schema.Use
 		}
 	_, err = s3client.PutObject(requestInput)
 	if err != nil {
-		log.Printf("Unable to get object, %v", err)
+		log.Printf("Unable to put object, %v", err)
 	}
 }
 
@@ -124,19 +124,23 @@ func GetSignatureRangesAfter(date time.Time) []time.Time {
 	return resp
 }
 
-func Process(s3client *s3.S3, cache *Cache, timestampA int64, timestampB int64) {
-	endTimes := GetSignatureRangesAfter(time.Unix(timestampA, 0))
+func UploadRangeToS3(s3client *s3.S3, ua map[string][]schema.UserAction, timestampA int64, timestampB int64) {
+	start := time.Unix(timestampA, 0)
+	end := time.Unix(timestampB, 0)
+	endTimes := GetSignatureRangesAfter(start)
 	now := time.Now()
 	for _, endTime := range endTimes {
 		if endTime.Before(now) {
-			GetUserActionsRangeAsync(s3client, cache, timestampA, endTime.Unix())
+			cacheKey := start.Format(schema.DateFormat) + "-" + endTime.Format(schema.DateFormat)
+			SetRangeCacheFromS3(s3client, cacheKey, ua)
 		}
 	}
 
-	startTimes := GetSignatureRangesBefore(time.Unix(timestampB, 0))
+	startTimes := GetSignatureRangesBefore(end)
 	for _, startTime := range startTimes {
 		if startTime.After(schema.StarSharksStartingDate) {
-			GetUserActionsRangeAsync(s3client, cache, startTime.Unix(), timestampB)
+			cacheKey := startTime.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
+			SetRangeCacheFromS3(s3client, cacheKey, ua)
 		}
 	}
 }
@@ -183,7 +187,7 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 		}
 	}
 	cache.AddUA(cacheKey, userActions)
-	go Process(s3client, cache, timestampA, timestampB)
+	go UploadRangeToS3(s3client, userActions, timestampA, timestampB)
 	return userActions
 }
 
