@@ -172,12 +172,28 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetUserRepurchaseRateMetrics(userRepurchaseRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_actual_active_dates_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "user_actual_active_dates_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			userActiveDates := daily.GetUserActiveDays(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserActualActiveDatesDistributionMetrics(userActiveDates)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "user_actual_active_dates_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "user_total_active_dates_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "user_total_active_dates_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			userActiveDates := daily.GetUserActiveDays(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix(), 1000000)
 			response := grafana.GetUserTotalActiveDatesDistributionMetrics(userActiveDates)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "user_total_active_dates_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_type2" {
 			newUserTypes := daily.GetUserType(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix())
@@ -188,76 +204,220 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetNewUserProfitableRateMetrics(newUserProfitableRate.OverallProfitableRate)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_spending_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_user_spending_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewUserSpendingUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_user_spending_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewRenteeSpendingUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_token_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_token_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewRenteeSpendingTokenDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_token_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewPurchaserSpendingUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_token_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_token_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewPurchaserSpendingTokenDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_token_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewHybriderSpendingUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_token_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_token_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewHybriderSpendingTokenDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_token_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profit_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_user_profit_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewUserProfitUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_user_profit_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewRenteeProfitUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_token_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_token_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewRenteeProfitTokenDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_token_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewPurchaserProfitUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_token_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_token_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewPurchaserProfitTokenDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_token_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_usd_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_usd_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewHybriderProfitUsdDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_usd_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_token_distribution2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_token_distribution2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
 			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_token_distribution2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_days2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_user_profitable_days2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewUserProfitableDaysDistributionMetrics(userRois)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_user_profitable_days2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profitable_days2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_profitable_days2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewRenteeProfitableDaysDistributionMetrics(userRois)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_profitable_days2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profitable_days2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profitable_days2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewPurchaserProfitableDaysDistributionMetrics(userRois)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profitable_days2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profitable_days2" {
+			var resp grafana.QueryResponse
+			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profitable_days2"); exist {
+				json.Unmarshal(body, &resp)
+				return GenerateResponse(resp)
+			}
 			userRois := daily.GetNewUserRoi(h.s3Client, h.cache, fromTimeObj, time.Now())
 			response := grafana.GetNewHybriderProfitableDaysDistributionMetrics(userRois)
+			resByte, _ := json.Marshal(response)
+			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profitable_days2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_gain2" {
 			whaleRois := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByGain)
