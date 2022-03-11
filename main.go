@@ -205,7 +205,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_spending_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_user_spending_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -217,7 +217,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -229,7 +229,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_spending_token_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_token_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -241,7 +241,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -253,7 +253,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_spending_token_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_token_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -265,7 +265,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -277,7 +277,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_spending_token_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_token_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -289,7 +289,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profit_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_user_profit_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -301,7 +301,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -313,7 +313,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profit_token_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_token_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -325,7 +325,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -337,7 +337,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profit_token_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_token_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -349,7 +349,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_usd_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_usd_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -361,7 +361,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profit_token_distribution2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_token_distribution2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -373,7 +373,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_days2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_user_profitable_days2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -385,7 +385,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_rentee_profitable_days2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_rentee_profitable_days2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -397,7 +397,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_purchaser_profitable_days2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profitable_days2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -409,7 +409,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_hybrider_profitable_days2" {
 			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
+			key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
 			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profitable_days2"); exist {
 				json.Unmarshal(body, &resp)
 				return GenerateResponse(resp)
@@ -420,40 +420,40 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profitable_days2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_gain2" {
-			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
-			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_gain2"); exist {
-				json.Unmarshal(body, &resp)
-				return GenerateResponse(resp)
-			}
+			// var resp grafana.QueryResponse
+			// key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
+			// if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_gain2"); exist {
+			// 	json.Unmarshal(body, &resp)
+			// 	return GenerateResponse(resp)
+			// }
 			whaleRois := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByGain)
 			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortByGain)
-			resByte, _ := json.Marshal(response)
-			go lib.SetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_gain2", resByte)
+			// resByte, _ := json.Marshal(response)
+			// go lib.SetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_gain2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_profit2" {
-			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
-			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_profit2"); exist {
-				json.Unmarshal(body, &resp)
-				return GenerateResponse(resp)
-			}
+			// var resp grafana.QueryResponse
+			// key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
+			// if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_profit2"); exist {
+			// 	json.Unmarshal(body, &resp)
+			// 	return GenerateResponse(resp)
+			// }
 			whaleRois := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByProfit)
 			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortByProfit)
-			resByte, _ := json.Marshal(response)
-			go lib.SetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_profit2", resByte)
+			// resByte, _ := json.Marshal(response)
+			// go lib.SetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_profit2", resByte)
 			return GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "whale_sort_by_spending2" {
-			var resp grafana.QueryResponse
-			key := lib.GetDateRange(fromTimeObj.Unix(), toTimeObj.Unix())
-			if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_spending2"); exist {
-				json.Unmarshal(body, &resp)
-				return GenerateResponse(resp)
-			}
+			// var resp grafana.QueryResponse
+			// key := lib.GetDateRange(fromTimeObj.Unix(), time.Now().Unix())
+			// if body, exist := lib.GetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_spending2"); exist {
+			// 	json.Unmarshal(body, &resp)
+			// 	return GenerateResponse(resp)
+			// }
 			whaleRois := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortBySpending)
 			response := grafana.GetWhaleRoisMetrics(whaleRois, schema.SortBySpending)
-			resByte, _ := json.Marshal(response)
-			go lib.SetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_spending2", resByte)
+			// resByte, _ := json.Marshal(response)
+			// go lib.SetRangeCacheFromS3(h.s3Client, key, "whale_sort_by_spending2", resByte)
 			return GenerateResponse(response)
 		}
 		return GenerateResponse("")
