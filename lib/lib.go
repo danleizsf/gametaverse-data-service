@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	DailyBucketName = "gametaverse-daily"
+	DailyBucketName = "gametaverse-daily-starsharks"
 )
 
 func GetDate(timestamp int64) string {
@@ -32,7 +32,7 @@ func getSummary(s3client *s3.S3, date string) schema.Summary {
 	var s schema.Summary
 	summaryRequest := &s3.GetObjectInput{
 		Bucket: aws.String(DailyBucketName),
-		Key:    aws.String("starsharks/" + date + "/summary.json"),
+		Key:    aws.String(date + "/summary.json"),
 	}
 	data, err := s3client.GetObject(summaryRequest)
 	if err != nil {
@@ -54,7 +54,7 @@ func GetRangeCacheFromS3(s3client *s3.S3, key string, functionName string) ([]by
 	requestInput :=
 		&s3.GetObjectInput{
 			Bucket: aws.String(DailyBucketName),
-			Key:    aws.String("starsharks/cache/" + key + "/" + functionName),
+			Key:    aws.String("cache/" + key + "/" + functionName),
 		}
 	result, err := s3client.GetObject(requestInput)
 	if err != nil {
@@ -74,7 +74,7 @@ func SetRangeCacheFromS3(s3client *s3.S3, key string, functionName string, body 
 	requestInput :=
 		&s3.PutObjectInput{
 			Bucket: aws.String(DailyBucketName),
-			Key:    aws.String("starsharks/cache/" + key + "/" + functionName),
+			Key:    aws.String("cache/" + key + "/" + functionName),
 			Body:   bytes.NewReader(body),
 		}
 	_, err := s3client.PutObject(requestInput)
@@ -274,7 +274,7 @@ func getUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction
 	var s map[string][]schema.UserAction
 	req := &s3.GetObjectInput{
 		Bucket: aws.String(DailyBucketName),
-		Key:    aws.String("starsharks/" + date + "/user_actions.json"),
+		Key:    aws.String(date + "/user_actions.json"),
 	}
 	data, err := s3client.GetObject(req)
 	if err != nil || data == nil || data.Body == nil {
@@ -484,8 +484,8 @@ func ExtractNewUsersForTimeRange(allTimeNewUsers map[string]int64, fromTimeObj t
 func GetPriceHistoryV2(svc *s3.S3) schema.PriceHistory {
 	requestInput :=
 		&s3.GetObjectInput{
-			Bucket: aws.String("gametaverse-daily"),
-			Key:    aws.String("starsharks/sea-token-price-history.json"),
+			Bucket: aws.String("gametaverse-daily-starsharks"),
+			Key:    aws.String("sea-token-price-history.json"),
 		}
 	result, err := svc.GetObject(requestInput)
 	if err != nil {
