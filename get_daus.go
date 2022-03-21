@@ -83,7 +83,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 				}
 				result, err := chunckSvc.GetObject(requestInput)
 				if err != nil {
-					exitErrorf("Unable to get object, %v", err)
+					exitErrorf("Unable to get object old, %v", err)
 				}
 				body, err := ioutil.ReadAll(result.Body)
 				if err != nil || body == nil {
@@ -161,7 +161,7 @@ func GetGameDaus(fromTimeObj time.Time, toTimeObj time.Time) []schema.Dau {
 	//		}
 	//	result, err := svc.GetObject(requestInput)
 	//	if err != nil {
-	//		exitErrorf("Unable to get object, %v", err)
+	//		exitErrorf("Unable to get object old, %v", err)
 	//	}
 	//	body, err := ioutil.ReadAll(result.Body)
 	//	if err != nil {

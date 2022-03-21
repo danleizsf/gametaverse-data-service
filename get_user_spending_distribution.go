@@ -42,7 +42,7 @@ func GetUserSpendingDistribution(fromTimeObj time.Time, toTimeObj time.Time) []s
 			}
 		result, err := svc.GetObject(requestInput)
 		if err != nil {
-			exitErrorf("Unable to get object, %v", err)
+			exitErrorf("Unable to get object old, %v", err)
 		}
 		body, err := ioutil.ReadAll(result.Body)
 		if err != nil {
