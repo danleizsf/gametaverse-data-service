@@ -489,7 +489,7 @@ func GetPriceHistoryV2(svc *s3.S3) schema.PriceHistory {
 		}
 	result, err := svc.GetObject(requestInput)
 	if err != nil {
-		ExitErrorf("Unable to get object, %v", err)
+		ExitErrorf("Unable to get sea-token-price-history.json, %v", err)
 	}
 	body, err := ioutil.ReadAll(result.Body)
 	if err != nil {

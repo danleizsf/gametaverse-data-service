@@ -460,7 +460,7 @@ func getMysteriousBoxTransfers(fromTimeObj time.Time, toTimeObj time.Time, svc s
 		}
 	result, err := svc.GetObject(requestInput)
 	if err != nil {
-		exitErrorf("Unable to get object, %v", err)
+		exitErrorf("Unable to get object in getMysteriousBoxTransfers, %v", err)
 	}
 	body, err := ioutil.ReadAll(result.Body)
 	if err != nil || body == nil {
