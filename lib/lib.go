@@ -58,7 +58,7 @@ func GetRangeCacheFromS3(s3client *s3.S3, key string, functionName string) ([]by
 		}
 	result, err := s3client.GetObject(requestInput)
 	if err != nil {
-		log.Printf("Unable to get object, %v", err)
+		log.Printf("Unable to get object, key: %s, func:  %s, %v", key, functionName, err)
 		return nil, false
 	}
 	body, err := ioutil.ReadAll(result.Body)
