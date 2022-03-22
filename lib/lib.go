@@ -8,9 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sort"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -84,57 +81,6 @@ func SetRangeCacheFromS3(s3client *s3.S3, key string, functionName string, body 
 	log.Printf("Upload S3 cache for key: %s, function: %s", key, functionName)
 }
 
-func GetSignatureRangesBefore(date time.Time) []time.Time {
-	resp := make([]time.Time, 4)
-	resp[0] = date.AddDate(
-		0, 0, -7,
-	)
-	resp[1] = date.AddDate(
-		0, 0, -30,
-	)
-	resp[2] = date.AddDate(
-		0, -1, 0,
-	)
-	resp[3] = schema.StarSharksStartingDate
-	return resp
-}
-
-func GetSignatureRangesAfter(date time.Time) []time.Time {
-	resp := make([]time.Time, 4)
-	resp[0] = date.AddDate(
-		0, 0, 7,
-	)
-	resp[1] = date.AddDate(
-		0, 0, 30,
-	)
-	resp[2] = date.AddDate(
-		0, 1, 0,
-	)
-	resp[3] = time.Now()
-	return resp
-}
-
-// func UploadRangeToS3(s3client *s3.S3, ua map[string][]schema.UserAction, timestampA int64, timestampB int64) {
-// 	start := time.Unix(timestampA, 0)
-// 	end := time.Unix(timestampB, 0)
-// 	endTimes := GetSignatureRangesAfter(start)
-// 	now := time.Now()
-// 	for _, endTime := range endTimes {
-// 		if endTime.Before(now) {
-// 			cacheKey := start.Format(schema.DateFormat) + "-" + endTime.Format(schema.DateFormat)
-// 			SetRangeCacheFromS3(s3client, cacheKey, ua)
-// 		}
-// 	}
-
-// 	startTimes := GetSignatureRangesBefore(end)
-// 	for _, startTime := range startTimes {
-// 		if startTime.After(schema.StarSharksStartingDate) {
-// 			cacheKey := startTime.Format(schema.DateFormat) + "-" + end.Format(schema.DateFormat)
-// 			SetRangeCacheFromS3(s3client, cacheKey, ua)
-// 		}
-// 	}
-// }
-
 func GetDateRange(timestampA int64, timestampB int64) string {
 	start := time.Unix(timestampA, 0)
 	if start.Before(schema.StarSharksStartingDate) {
@@ -189,7 +135,6 @@ func GetUserActionsRangeAsync(s3client *s3.S3, cache *Cache, timestampA int64, t
 		}
 	}
 	cache.AddUA(cacheKey, userActions)
-	// go UploadRangeToS3(s3client, userActions, timestampA, timestampB)
 	return userActions
 }
 
@@ -307,25 +252,21 @@ func getUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction
 	return s
 }
 
-func GetPerPayerType(perPayerTransfers map[string][]schema.Transfer) map[string]schema.PayerType {
-	perPayerType := map[string]schema.PayerType{}
-	for payerAddress, transfers := range perPayerTransfers {
-		totalRentingValue := float64(0)
-		totalInvestingValue := float64(0)
-		for _, transfer := range transfers {
-			if transfer.ContractAddress == schema.StarSharksPurchaseContractAddresses || transfer.ContractAddress == schema.StarSharksAuctionContractAddresses {
-				totalInvestingValue += transfer.Value / float64(schema.DayInSec)
-			} else if transfer.ContractAddress == schema.StarSharksRentContractAddresses {
-				totalRentingValue += transfer.Value / float64(schema.DayInSec)
-			}
-		}
-		if totalInvestingValue > totalRentingValue {
-			perPayerType[payerAddress] = schema.Purchaser
-		} else {
-			perPayerType[payerAddress] = schema.Rentee
+func GetPerPayerType(ua []schema.UserAction) schema.PayerType {
+	totalRentingValue := float64(0)
+	totalInvestingValue := float64(0)
+	for _, a := range ua {
+		if a.Action == schema.UserActionAuctionBuySEA || a.Action == schema.UserActionBuySEA {
+			totalInvestingValue += a.Value.(float64)
+		} else if a.Action == schema.UserActionRentSharkSEA {
+			totalRentingValue += a.Value.(float64)
 		}
 	}
-	return perPayerType
+	if totalInvestingValue > totalRentingValue {
+		return schema.Purchaser
+	} else {
+		return schema.Rentee
+	}
 }
 
 func ToFile(data interface{}, fileName string) {
@@ -344,143 +285,9 @@ func ToFile(data interface{}, fileName string) {
 	}
 }
 
-func GetActiveUsersFromTransfers(transfers []schema.Transfer) map[string]bool {
-	uniqueAddresses := make(map[string]bool)
-	count := 0
-	for _, transfer := range transfers {
-		count += 1
-		uniqueAddresses[transfer.FromAddress] = true
-		uniqueAddresses[transfer.ToAddress] = true
-	}
-	return uniqueAddresses
-}
-
 func ExitErrorf(msg string, args ...interface{}) {
 	log.Printf(msg + "\n")
 	os.Exit(1)
-}
-
-func GetPerUserSpending(transfers []schema.Transfer) map[string]int64 {
-	perUserSpending := make(map[string]int64)
-	for _, transfer := range transfers {
-		if _, ok := schema.StarSharksGameWalletAddresses[transfer.FromAddress]; ok {
-			continue
-		}
-		if spending, ok := perUserSpending[transfer.FromAddress]; ok {
-			perUserSpending[transfer.FromAddress] = spending + int64(transfer.Value/1000000000000000000)
-		} else {
-			perUserSpending[transfer.FromAddress] = int64(transfer.Value / 1000000000000000000)
-		}
-	}
-	return perUserSpending
-}
-
-func GenerateValueDistribution(perUserValue map[string]int64) []schema.ValueFrequencyPercentage {
-	valueDistribution := make(map[int64]int64)
-	totalFrequency := int64(0)
-	for _, value := range perUserValue {
-		valueDistribution[value] += 1
-		totalFrequency += 1
-	}
-	valuePercentageDistribution := make(map[int64]float64)
-	for value, frequency := range valueDistribution {
-		valuePercentageDistribution[value] = float64(frequency) / float64(totalFrequency)
-	}
-	result := make([]schema.ValueFrequencyPercentage, len(valuePercentageDistribution))
-	idx := 0
-	for value, percentage := range valuePercentageDistribution {
-		result[idx] = schema.ValueFrequencyPercentage{
-			Value:               value,
-			FrequencyPercentage: percentage,
-		}
-		idx += 1
-	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Value < result[j].Value
-	})
-	return result
-}
-
-func GetNewUsers(fromTimeObj time.Time, toTimeObj time.Time, svc s3.S3) map[string]int64 {
-	requestInput :=
-		&s3.GetObjectInput{
-			Bucket: aws.String(schema.UserBucketName),
-			Key:    aws.String("per-user-join-time.json"),
-		}
-	result, err := svc.GetObject(requestInput)
-	if err != nil {
-		ExitErrorf("Unable to get object, %v", err)
-	}
-	body, err := ioutil.ReadAll(result.Body)
-	if err != nil {
-		ExitErrorf("Unable to read body, %v", err)
-	}
-
-	m := map[string]map[string]string{}
-	err = json.Unmarshal(body, &m)
-	if err != nil {
-		//log.Printf("body: %s", fmt.Sprintf("%s", body))
-		ExitErrorf("Unable to unmarshall user meta info, %v", err)
-	}
-
-	newUsers := map[string]int64{}
-	for address, userMetaInfo := range m {
-		timestamp, _ := strconv.Atoi(userMetaInfo["timestamp"])
-		userJoinTimestampObj := time.Unix(int64(timestamp), 0)
-		if userJoinTimestampObj.Before(fromTimeObj) || userJoinTimestampObj.After(toTimeObj) {
-			continue
-		}
-		if _, ok := schema.StarSharksGameWalletAddresses[address]; ok {
-			continue
-		}
-		newUsers[address] = int64(timestamp)
-	}
-	return newUsers
-}
-
-func GetAllTimeNewUsers(svc s3.S3) map[string]int64 {
-	requestInput :=
-		&s3.GetObjectInput{
-			Bucket: aws.String(schema.UserBucketName),
-			Key:    aws.String("per-user-join-time.json"),
-		}
-	result, err := svc.GetObject(requestInput)
-	if err != nil {
-		ExitErrorf("Unable to get object, %v", err)
-	}
-	body, err := ioutil.ReadAll(result.Body)
-	if err != nil {
-		ExitErrorf("Unable to read body, %v", err)
-	}
-
-	m := map[string]map[string]string{}
-	err = json.Unmarshal(body, &m)
-	if err != nil {
-		//log.Printf("body: %s", fmt.Sprintf("%s", body))
-		ExitErrorf("Unable to unmarshall user meta info, %v", err)
-	}
-
-	newUsers := map[string]int64{}
-	for address, userMetaInfo := range m {
-		timestamp, _ := strconv.Atoi(userMetaInfo["timestamp"])
-		if _, ok := schema.StarSharksGameWalletAddresses[address]; ok {
-			continue
-		}
-		newUsers[address] = int64(timestamp)
-	}
-	return newUsers
-}
-
-func ExtractNewUsersForTimeRange(allTimeNewUsers map[string]int64, fromTimeObj time.Time, toTimeObj time.Time) map[string]int64 {
-	newUsers := map[string]int64{}
-	for address, joinTimestamp := range allTimeNewUsers {
-		userJoinTimestampObj := time.Unix(int64(joinTimestamp), 0)
-		if userJoinTimestampObj.Before(fromTimeObj) || userJoinTimestampObj.After(toTimeObj) {
-			continue
-		}
-		newUsers[address] = int64(joinTimestamp)
-	}
-	return newUsers
 }
 
 func GetPriceHistoryV2(svc *s3.S3) schema.PriceHistory {
@@ -506,17 +313,6 @@ func GetPriceHistoryV2(svc *s3.S3) schema.PriceHistory {
 	}
 
 	return priceHistory
-}
-func GetPerPayerTransfers(transfers []schema.Transfer) map[string][]schema.Transfer {
-	perUserTransfers := map[string][]schema.Transfer{}
-	for _, transfer := range transfers {
-		if _, ok := perUserTransfers[transfer.FromAddress]; ok {
-			perUserTransfers[transfer.FromAddress] = append(perUserTransfers[transfer.FromAddress], transfer)
-		} else {
-			perUserTransfers[transfer.FromAddress] = make([]schema.Transfer, 0)
-		}
-	}
-	return perUserTransfers
 }
 
 func GenerateResponse(respStruct interface{}) (events.APIGatewayProxyResponse, error) {
@@ -588,49 +384,48 @@ func GetPayerTypes(totalTransfers []schema.Transfer) map[string]schema.PayerType
 	return userTypes
 }
 
-func GetMysteriousBoxTransfers(fromTimeObj time.Time, toTimeObj time.Time, svc *s3.S3) []schema.Transfer {
-	requestInput :=
-		&s3.GetObjectInput{
-			Bucket: aws.String(schema.PriceBucketName),
-			Key:    aws.String("starsharks-mysterious-box-transfers.csv"),
-		}
-	result, err := svc.GetObject(requestInput)
-	if err != nil {
-		exitErrorf("Unable to get object, %v", err)
-	}
-	body, err := ioutil.ReadAll(result.Body)
-	if err != nil || body == nil {
-		exitErrorf("Unable to get body, %v", err)
-	}
-	bodyString := string(body)
-	lines := strings.Split(bodyString, "\n")
-	transfers := make([]schema.Transfer, 0)
-	//log.Printf("enterred converCsvStringToTransferStructs, content len: %d", len(lines))
-	for lineNum, lineString := range lines {
-		if lineNum == 0 {
-			continue
-		}
-		fields := strings.Split(lineString, ",")
-		if len(fields) < 8 {
-			continue
-		}
+// func GetMysteriousBoxTransfers(fromTimeObj time.Time, toTimeObj time.Time, svc *s3.S3) []schema.Transfer {
+// 	requestInput :=
+// 		&s3.GetObjectInput{
+// 			Bucket: aws.String(schema.PriceBucketName),
+// 			Key:    aws.String("starsharks-mysterious-box-transfers.csv"),
+// 		}
+// 	result, err := svc.GetObject(requestInput)
+// 	if err != nil {
+// 		exitErrorf("Unable to get object, %v", err)
+// 	}
+// 	body, err := ioutil.ReadAll(result.Body)
+// 	if err != nil || body == nil {
+// 		exitErrorf("Unable to get body, %v", err)
+// 	}
+// 	bodyString := string(body)
+// 	lines := strings.Split(bodyString, "\n")
+// 	transfers := make([]schema.Transfer, 0)
+// 	for lineNum, lineString := range lines {
+// 		if lineNum == 0 {
+// 			continue
+// 		}
+// 		fields := strings.Split(lineString, ",")
+// 		if len(fields) < 8 {
+// 			continue
+// 		}
 
-		layout := "2006-01-02T15:04:05.000Z"
-		timeObj, _ := time.Parse(layout, fields[2])
-		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
-			continue
-		}
+// 		layout := "2006-01-02T15:04:05.000Z"
+// 		timeObj, _ := time.Parse(layout, fields[2])
+// 		if timeObj.Before(fromTimeObj) || timeObj.After(toTimeObj) {
+// 			continue
+// 		}
 
-		transfers = append(transfers, schema.Transfer{
-			FromAddress:     fields[0],
-			Value:           float64(40 * schema.SeaTokenUnit),
-			TransactionHash: fields[1],
-			Timestamp:       int(timeObj.Unix()),
-		})
-	}
+// 		transfers = append(transfers, schema.Transfer{
+// 			FromAddress:     fields[0],
+// 			Value:           float64(40 * schema.SeaTokenUnit),
+// 			TransactionHash: fields[1],
+// 			Timestamp:       int(timeObj.Unix()),
+// 		})
+// 	}
 
-	return transfers
-}
+// 	return transfers
+// }
 
 func exitErrorf(msg string, args ...interface{}) {
 	log.Printf(msg + "\n")

@@ -23,10 +23,6 @@ func main() {
 	)
 
 	s3client := s3.New(sess)
-	// log.Printf("%+v", daily.GetDaus(s3client, 1643741417))
-	// log.Printf("%+v", daily.GetTransactionVolume(s3client, 1643741417))
-	// log.Printf("%+v", daily.GetUserType(s3client, schema.StarSharksStartingDate.Unix(), time.Now().Unix()-86400*2))
 	c := lib.NewCache()
 	daily.GetWhaleRois(s3client, c, schema.StarSharksStartingDate.Unix(), time.Now().Unix()-86400*2, schema.SortByProfit)
-
 }

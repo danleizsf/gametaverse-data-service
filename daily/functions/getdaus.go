@@ -55,7 +55,7 @@ func GetDau(s schema.Summary, ac map[string][]schema.UserAction, d time.Time) sc
 
 	var np, nr, tp, tr int64
 	for u, a := range ac {
-		payerType := GetPerPayerType(a)
+		payerType := lib.GetPerPayerType(a)
 		if payerType == schema.Purchaser {
 			if _, exists := newUser[u]; exists {
 				np++
@@ -88,22 +88,5 @@ func GetDau(s schema.Summary, ac map[string][]schema.UserAction, d time.Time) sc
 			},
 			TotalUserCount: int64(len(s.ActiveUser)),
 		},
-	}
-}
-
-func GetPerPayerType(ua []schema.UserAction) schema.PayerType {
-	totalRentingValue := float64(0)
-	totalInvestingValue := float64(0)
-	for _, a := range ua {
-		if a.Action == schema.UserActionAuctionBuySEA || a.Action == schema.UserActionBuySEA {
-			totalInvestingValue += a.Value.(float64)
-		} else if a.Action == schema.UserActionRentSharkSEA {
-			totalRentingValue += a.Value.(float64)
-		}
-	}
-	if totalInvestingValue > totalRentingValue {
-		return schema.Purchaser
-	} else {
-		return schema.Rentee
 	}
 }

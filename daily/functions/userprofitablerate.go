@@ -65,19 +65,19 @@ func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int6
 		}
 	}
 
-	starSharksMysteriousBoxTransfers := lib.GetMysteriousBoxTransfers(fromTimeObj, toTimeObj, s3client)
-	for _, transfer := range starSharksMysteriousBoxTransfers {
-		date := time.Unix(int64(transfer.Timestamp), 0).Format(schema.DateFormat)
-		address := transfer.FromAddress
-		valueToken := transfer.Value / float64(schema.SeaTokenUnit)
-		valueUsd := valueToken * priceHisoryMap[date]
-		if _, ok := perNewUserRoiDetail[address]; ok {
-			perNewUserRoiDetail[address].TotalProfitToken -= valueToken
-			perNewUserRoiDetail[address].TotalProfitUsd -= valueUsd
-			perNewUserRoiDetail[address].TotalSpendingToken += valueToken
-			perNewUserRoiDetail[address].TotalSpendingUsd += valueUsd
-		}
-	}
+	// starSharksMysteriousBoxTransfers := lib.GetMysteriousBoxTransfers(fromTimeObj, toTimeObj, s3client)
+	// for _, transfer := range starSharksMysteriousBoxTransfers {
+	// 	date := time.Unix(int64(transfer.Timestamp), 0).Format(schema.DateFormat)
+	// 	address := transfer.FromAddress
+	// 	valueToken := transfer.Value / float64(schema.SeaTokenUnit)
+	// 	valueUsd := valueToken * priceHisoryMap[date]
+	// 	if _, ok := perNewUserRoiDetail[address]; ok {
+	// 		perNewUserRoiDetail[address].TotalProfitToken -= valueToken
+	// 		perNewUserRoiDetail[address].TotalProfitUsd -= valueUsd
+	// 		perNewUserRoiDetail[address].TotalSpendingToken += valueToken
+	// 		perNewUserRoiDetail[address].TotalSpendingUsd += valueUsd
+	// 	}
+	// }
 	userRoiDetails := make([]schema.UserRoiDetail, len(perNewUserRoiDetail))
 	profitableUserCount := 0
 	idx := 0

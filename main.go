@@ -24,11 +24,8 @@ type handler struct {
 }
 
 func (h *handler) process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	input := schema.Input{}
-	json.Unmarshal([]byte(request.Body), &input)
 	log.Printf("path: %s, body: %s, httpmethod: %s", request.Path, request.Body, request.HTTPMethod)
 	log.Printf("request: %v", request)
-	log.Printf("Input: %v", input)
 	if request.Path == "/grafana/search" {
 		response := grafana.Search()
 		return lib.GenerateResponse(response)
@@ -37,9 +34,8 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 		json.Unmarshal([]byte(request.Body), &grafanaQueryRequest)
 		log.Printf("grafana/query body: %s", request.Body)
 		log.Printf("grafana/query request: %v", grafanaQueryRequest)
-		layout := "2006-01-02T15:04:05.000Z"
-		fromTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.From)
-		toTimeObj, _ := time.Parse(layout, grafanaQueryRequest.Range.To)
+		fromTimeObj, _ := time.Parse(schema.FullTimeFormat, grafanaQueryRequest.Range.From)
+		toTimeObj, _ := time.Parse(schema.FullTimeFormat, grafanaQueryRequest.Range.To)
 		fromTimeDateObj := time.Unix((fromTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 		toTimeDateObj := time.Unix((toTimeObj.Unix()/int64(schema.DayInSec))*int64(schema.DayInSec), 0)
 		// Warm up cache

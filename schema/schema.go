@@ -33,9 +33,6 @@ type Param struct {
 	Limit         int64  `json:"limit"`
 }
 
-var DailyTransferBucketName = "gametaverse-bucket"
-var UserBucketName = "gametaverse-user-bucket"
-var PriceBucketName = "gametaverse-price-bucket"
 var SeaTokenUnit = 1000000000000000000
 var StarSharksGameWalletAddresses = map[string]bool{
 	"0x0000000000000000000000000000000000000000": true,
@@ -64,6 +61,7 @@ var StarSharksJan20 = time.Unix(1642636800, 0)        // 1-10-2022
 
 var DayInSec = 86400
 var DateFormat = "2006-01-02"
+var FullTimeFormat = "2006-01-02T15:04:05.000Z"
 
 type Dau struct {
 	DateTimestamp    int64           `json:"dateTimestamp"`
