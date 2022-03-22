@@ -284,11 +284,13 @@ func getUserActions(s3client *s3.S3, date string) map[string][]schema.UserAction
 	body, err := ioutil.ReadAll(data.Body)
 	if err != nil {
 		log.Print("can't read object " + *req.Key)
+		return nil
 	}
 	body = bytes.Replace(body, []byte(":NaN"), []byte(":null"), -1)
 	err = json.Unmarshal(body, &s)
 	if err != nil {
 		log.Print("can't unmarshall object " + *req.Key)
+		return nil
 	}
 
 	for user, actions := range s {
