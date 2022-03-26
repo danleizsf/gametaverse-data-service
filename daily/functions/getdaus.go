@@ -59,18 +59,15 @@ func GetDau(s schema.Summary, ac map[string][]schema.UserAction, d time.Time) sc
 		if payerType == schema.Purchaser {
 			if _, exists := newUser[u]; exists {
 				np++
-			} else {
-				tp++
 			}
+			tp++
 		}
 		if payerType == schema.Rentee {
 			if _, exists := newUser[u]; exists {
 				nr++
-			} else {
-				tr++
 			}
+			tr++
 		}
-
 	}
 	return schema.Dau{
 		DateTimestamp: d.Unix(),
