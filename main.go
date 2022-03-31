@@ -28,6 +28,38 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 	log.Printf("request: %v", request)
 	input := schema.Input{}
 	json.Unmarshal([]byte(request.Body), &input)
+	log.Printf("input: %v", input)
+
+	if input.Method == "getDaus" {
+		log.Println("in getDaus")
+		response := daily.GetDaus(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getDailyTransactionVolumes" {
+		response := daily.GetTransactionVolumes(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserRepurchaseRate" {
+		response := daily.GetUserRepurchaseRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserRoi" {
+		response := daily.GetNewUserRoi(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return lib.GenerateResponse(response)
+		//return generateJsonResponse(response)
+	} else if input.Method == "getNewUserProfitableRate" {
+		response := daily.GetNewUserProfitableRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, time.Now().Unix(), false)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getNewUserProfitableRateFull" {
+		response := daily.GetNewUserProfitableRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, time.Now().Unix(), true)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserType" {
+		response := daily.GetUserType(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix())
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getWhaleRois" {
+		response := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByGain)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserActiveDays" {
+		response := daily.GetUserActiveDays(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
+		return lib.GenerateResponse(response)
+	}
 	if request.Path == "/grafana/search" {
 		response := grafana.Search()
 		return lib.GenerateResponse(response)
@@ -345,35 +377,8 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return lib.GenerateResponse(response)
 		}
 		return lib.GenerateResponse("")
-	} else if input.Method == "getDaus" {
-		response := daily.GetDaus(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return lib.GenerateResponse(response)
-	} else if input.Method == "getDailyTransactionVolumes" {
-		response := daily.GetTransactionVolumes(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return lib.GenerateResponse(response)
-	} else if input.Method == "getUserRepurchaseRate" {
-		response := daily.GetUserRepurchaseRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp)
-		return lib.GenerateResponse(response)
-	} else if input.Method == "getUserRoi" {
-		response := daily.GetNewUserRoi(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
-		return lib.GenerateResponse(response)
-		//return generateJsonResponse(response)
-	} else if input.Method == "getNewUserProfitableRate" {
-		response := daily.GetNewUserProfitableRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, time.Now().Unix(), false)
-		return lib.GenerateResponse(response)
-	} else if input.Method == "getNewUserProfitableRateFull" {
-		response := daily.GetNewUserProfitableRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, time.Now().Unix(), true)
-		return lib.GenerateResponse(response)
-	} else if input.Method == "getUserType" {
-		response := daily.GetUserType(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix())
-		return lib.GenerateResponse(response)
-	} else if input.Method == "getWhaleRois" {
-		response := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByGain)
-		return lib.GenerateResponse(response)
-	} else if input.Method == "getUserActiveDays" {
-		response := daily.GetUserActiveDays(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
-		return lib.GenerateResponse(response)
 	}
+
 	return lib.GenerateResponse("")
 }
 
