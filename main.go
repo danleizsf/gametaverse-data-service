@@ -26,6 +26,8 @@ type handler struct {
 func (h *handler) process(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Printf("path: %s, body: %s, httpmethod: %s", request.Path, request.Body, request.HTTPMethod)
 	log.Printf("request: %v", request)
+	input := schema.Input{}
+	json.Unmarshal([]byte(request.Body), &input)
 	if request.Path == "/grafana/search" {
 		response := grafana.Search()
 		return lib.GenerateResponse(response)
@@ -83,7 +85,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			response := grafana.GetNewUserTypeMetrics(newUserTypes)
 			return lib.GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_profitable_rate2" {
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix(), false, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), toTimeObj.Unix(), false)
 			response := grafana.GetNewUserProfitableRateMetrics(newUserProfitableRate.OverallProfitableRate)
 			return lib.GenerateResponse(response)
 		} else if grafanaQueryRequest.Targets[0].Target == "new_user_spending_usd_distribution2" {
@@ -93,7 +95,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewUserSpendingUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_user_spending_usd_distribution2", resByte)
@@ -105,7 +107,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeSpendingUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_usd_distribution2", resByte)
@@ -117,7 +119,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeSpendingTokenDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_spending_token_distribution2", resByte)
@@ -129,7 +131,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserSpendingUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_usd_distribution2", resByte)
@@ -141,7 +143,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserSpendingTokenDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_spending_token_distribution2", resByte)
@@ -153,7 +155,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderSpendingUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_usd_distribution2", resByte)
@@ -165,7 +167,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderSpendingTokenDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_spending_token_distribution2", resByte)
@@ -177,7 +179,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewUserProfitUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_user_profit_usd_distribution2", resByte)
@@ -189,7 +191,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeProfitUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_usd_distribution2", resByte)
@@ -201,7 +203,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewRenteeProfitTokenDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_rentee_profit_token_distribution2", resByte)
@@ -213,7 +215,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserProfitUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_usd_distribution2", resByte)
@@ -225,7 +227,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewPurchaserProfitTokenDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_purchaser_profit_token_distribution2", resByte)
@@ -237,7 +239,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderProfitUsdDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_usd_distribution2", resByte)
@@ -249,7 +251,7 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 				json.Unmarshal(body, &resp)
 				return lib.GenerateResponse(resp)
 			}
-			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true, fromTimeObj, toTimeObj)
+			newUserProfitableRate := daily.GetNewUserProfitableRate(h.s3Client, h.cache, fromTimeObj.Unix(), time.Now().Unix(), true)
 			response := grafana.GetNewHybriderProfitTokenDistributionMetrics(newUserProfitableRate)
 			resByte, _ := json.Marshal(response)
 			go lib.SetRangeCacheFromS3(h.s3Client, key, "new_hybrider_profit_token_distribution2", resByte)
@@ -343,6 +345,34 @@ func (h *handler) process(ctx context.Context, request events.APIGatewayProxyReq
 			return lib.GenerateResponse(response)
 		}
 		return lib.GenerateResponse("")
+	} else if input.Method == "getDaus" {
+		response := daily.GetDaus(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getDailyTransactionVolumes" {
+		response := daily.GetTransactionVolumes(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserRepurchaseRate" {
+		response := daily.GetUserRepurchaseRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserRoi" {
+		response := daily.GetNewUserRoi(h.s3Client, h.cache, time.Unix(input.Params[0].FromTimestamp, 0), time.Unix(input.Params[0].ToTimestamp, 0))
+		return lib.GenerateResponse(response)
+		//return generateJsonResponse(response)
+	} else if input.Method == "getNewUserProfitableRate" {
+		response := daily.GetNewUserProfitableRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, time.Now().Unix(), false)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getNewUserProfitableRateFull" {
+		response := daily.GetNewUserProfitableRate(h.s3Client, h.cache, input.Params[0].FromTimestamp, time.Now().Unix(), true)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserType" {
+		response := daily.GetUserType(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix())
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getWhaleRois" {
+		response := daily.GetWhaleRois(h.s3Client, h.cache, schema.StarSharksStartingDate.Unix(), time.Now().Unix(), schema.SortByGain)
+		return lib.GenerateResponse(response)
+	} else if input.Method == "getUserActiveDays" {
+		response := daily.GetUserActiveDays(h.s3Client, h.cache, input.Params[0].FromTimestamp, input.Params[0].ToTimestamp, 1000000)
+		return lib.GenerateResponse(response)
 	}
 	return lib.GenerateResponse("")
 }

@@ -5,12 +5,11 @@ import (
 	"gametaverse-data-service/lib"
 	"gametaverse-data-service/schema"
 	"sort"
-	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64, forDebug bool, fromTimeObj time.Time, toTimeObj time.Time) schema.AllUserRoiDetails {
+func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int64, timestampB int64, forDebug bool) schema.AllUserRoiDetails {
 	functionName := "GetNewUserProfitableRate"
 	if forDebug {
 		functionName = "GetNewUserProfitableRateDebug"
@@ -64,20 +63,6 @@ func GetNewUserProfitableRate(s3client *s3.S3, cache *lib.Cache, timestampA int6
 			UserType:           userType,
 		}
 	}
-
-	// starSharksMysteriousBoxTransfers := lib.GetMysteriousBoxTransfers(fromTimeObj, toTimeObj, s3client)
-	// for _, transfer := range starSharksMysteriousBoxTransfers {
-	// 	date := time.Unix(int64(transfer.Timestamp), 0).Format(schema.DateFormat)
-	// 	address := transfer.FromAddress
-	// 	valueToken := transfer.Value / float64(schema.SeaTokenUnit)
-	// 	valueUsd := valueToken * priceHisoryMap[date]
-	// 	if _, ok := perNewUserRoiDetail[address]; ok {
-	// 		perNewUserRoiDetail[address].TotalProfitToken -= valueToken
-	// 		perNewUserRoiDetail[address].TotalProfitUsd -= valueUsd
-	// 		perNewUserRoiDetail[address].TotalSpendingToken += valueToken
-	// 		perNewUserRoiDetail[address].TotalSpendingUsd += valueUsd
-	// 	}
-	// }
 	userRoiDetails := make([]schema.UserRoiDetail, len(perNewUserRoiDetail))
 	profitableUserCount := 0
 	idx := 0
